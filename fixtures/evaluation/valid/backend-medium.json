@@ -1,0 +1,530 @@
+{
+  "meta": {
+    "schema_version": "evaluation.v1",
+    "team_id": "fixture-team",
+    "area": "backend",
+    "repo": "https://example.invalid/fixture-team/repository",
+    "commit_sha": "0123456789abcdef0123456789abcdef01234567",
+    "skill_version": "1.0.0",
+    "rubric_version": "backend.v1",
+    "model": "fixture-model",
+    "evaluated_at": "2026-09-21T12:00:00Z"
+  },
+  "metrics": [
+    {
+      "id": "layer_separation",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Разделение слоёв».",
+      "rationale": "Оценка основана на проверке свойства: Разделение транспорта бизнес-логики и доступа к данным",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 1,
+          "line_end": 1,
+          "title": "Наблюдение по метрике «Разделение слоёв»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Разделение слоёв»."
+        }
+      ]
+    },
+    {
+      "id": "module_boundaries",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Границы модулей».",
+      "rationale": "Оценка основана на проверке свойства: Связность модулей и зацепление между ними",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 2,
+          "line_end": 2,
+          "title": "Наблюдение по метрике «Границы модулей»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Границы модулей»."
+        }
+      ]
+    },
+    {
+      "id": "project_structure",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Структура проекта».",
+      "rationale": "Оценка основана на проверке свойства: Предсказуемость структуры каталогов и именования",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 3,
+          "line_end": 3,
+          "title": "Наблюдение по метрике «Структура проекта»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Структура проекта»."
+        }
+      ]
+    },
+    {
+      "id": "dependency_direction",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Направление зависимостей».",
+      "rationale": "Оценка основана на проверке свойства: Направление зависимостей и отсутствие циклов",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 4,
+          "line_end": 4,
+          "title": "Наблюдение по метрике «Направление зависимостей»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Направление зависимостей»."
+        }
+      ]
+    },
+    {
+      "id": "naming_clarity",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Ясность имён».",
+      "rationale": "Оценка основана на проверке свойства: Имена сущностей функций и переменных",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 5,
+          "line_end": 5,
+          "title": "Наблюдение по метрике «Ясность имён»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Ясность имён»."
+        }
+      ]
+    },
+    {
+      "id": "function_complexity",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Сложность функций».",
+      "rationale": "Оценка основана на проверке свойства: Размер и цикломатическая сложность функций",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 6,
+          "line_end": 6,
+          "title": "Наблюдение по метрике «Сложность функций»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Сложность функций»."
+        }
+      ]
+    },
+    {
+      "id": "duplication",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Дублирование».",
+      "rationale": "Оценка основана на проверке свойства: Дублирование логики и копипаста",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 7,
+          "line_end": 7,
+          "title": "Наблюдение по метрике «Дублирование»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Дублирование»."
+        }
+      ]
+    },
+    {
+      "id": "error_propagation",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Распространение ошибок».",
+      "rationale": "Оценка основана на проверке свойства: Распространение обёртывание и отсутствие проглоченных ошибок",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 8,
+          "line_end": 8,
+          "title": "Наблюдение по метрике «Распространение ошибок»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Распространение ошибок»."
+        }
+      ]
+    },
+    {
+      "id": "failure_messages",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Сообщения об ошибках».",
+      "rationale": "Оценка основана на проверке свойства: Информативность ошибок без утечки внутренних деталей",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 9,
+          "line_end": 9,
+          "title": "Наблюдение по метрике «Сообщения об ошибках»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Сообщения об ошибках»."
+        }
+      ]
+    },
+    {
+      "id": "logging",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Логирование».",
+      "rationale": "Оценка основана на проверке свойства: Логирование ключевых событий и отказов",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 10,
+          "line_end": 10,
+          "title": "Наблюдение по метрике «Логирование»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Логирование»."
+        }
+      ]
+    },
+    {
+      "id": "api_consistency",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Согласованность API».",
+      "rationale": "Оценка основана на проверке свойства: Консистентность ресурсов методов и кодов ответов",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 11,
+          "line_end": 11,
+          "title": "Наблюдение по метрике «Согласованность API»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Согласованность API»."
+        }
+      ]
+    },
+    {
+      "id": "api_contract_docs",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Документация API».",
+      "rationale": "Оценка основана на проверке свойства: Описанность контракта схемой или документацией",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 12,
+          "line_end": 12,
+          "title": "Наблюдение по метрике «Документация API»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Документация API»."
+        }
+      ]
+    },
+    {
+      "id": "input_validation",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Валидация входа».",
+      "rationale": "Оценка основана на проверке свойства: Валидация и санитизация входных данных",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 13,
+          "line_end": 13,
+          "title": "Наблюдение по метрике «Валидация входа»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Валидация входа»."
+        }
+      ]
+    },
+    {
+      "id": "schema_design",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Схема данных».",
+      "rationale": "Оценка основана на проверке свойства: Схема ключи и ограничения целостности",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 14,
+          "line_end": 14,
+          "title": "Наблюдение по метрике «Схема данных»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Схема данных»."
+        }
+      ]
+    },
+    {
+      "id": "migrations",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Миграции».",
+      "rationale": "Оценка основана на проверке свойства: Миграции и воспроизводимость схемы",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 15,
+          "line_end": 15,
+          "title": "Наблюдение по метрике «Миграции»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Миграции»."
+        }
+      ]
+    },
+    {
+      "id": "query_correctness",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Корректность запросов».",
+      "rationale": "Оценка основана на проверке свойства: Транзакции консистентность и корректность запросов",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 16,
+          "line_end": 16,
+          "title": "Наблюдение по метрике «Корректность запросов»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Корректность запросов»."
+        }
+      ]
+    },
+    {
+      "id": "data_access_efficiency",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Эффективность доступа».",
+      "rationale": "Оценка основана на проверке свойства: N+1 индексы и объём выборок",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 17,
+          "line_end": 17,
+          "title": "Наблюдение по метрике «Эффективность доступа»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Эффективность доступа»."
+        }
+      ]
+    },
+    {
+      "id": "authn_authz",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Аутентификация и авторизация».",
+      "rationale": "Оценка основана на проверке свойства: Проверка личности и прав доступа",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 18,
+          "line_end": 18,
+          "title": "Наблюдение по метрике «Аутентификация и авторизация»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Аутентификация и авторизация»."
+        }
+      ]
+    },
+    {
+      "id": "secrets_handling",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Работа с секретами».",
+      "rationale": "Оценка основана на проверке свойства: Обращение с секретами и конфигурацией доступа",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 19,
+          "line_end": 19,
+          "title": "Наблюдение по метрике «Работа с секретами»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Работа с секретами»."
+        }
+      ]
+    },
+    {
+      "id": "injection_protection",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Защита от инъекций».",
+      "rationale": "Оценка основана на проверке свойства: Защита от инъекций и небезопасной десериализации",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 20,
+          "line_end": 20,
+          "title": "Наблюдение по метрике «Защита от инъекций»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Защита от инъекций»."
+        }
+      ]
+    },
+    {
+      "id": "test_coverage_meaning",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Покрытие важных путей».",
+      "rationale": "Оценка основана на проверке свойства: Покрыты ли тестами критичные пути",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 21,
+          "line_end": 21,
+          "title": "Наблюдение по метрике «Покрытие важных путей»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Покрытие важных путей»."
+        }
+      ]
+    },
+    {
+      "id": "test_quality",
+      "score": 5.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Качество тестов».",
+      "rationale": "Оценка основана на проверке свойства: Изоляция детерминизм и читаемость тестов",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 22,
+          "line_end": 22,
+          "title": "Наблюдение по метрике «Качество тестов»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Качество тестов»."
+        }
+      ]
+    },
+    {
+      "id": "test_runnability",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Запускаемость тестов».",
+      "rationale": "Оценка основана на проверке свойства: Воспроизводимость запуска тестов по файлам репозитория",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 23,
+          "line_end": 23,
+          "title": "Наблюдение по метрике «Запускаемость тестов»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Запускаемость тестов»."
+        }
+      ]
+    },
+    {
+      "id": "run_reproducibility",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Воспроизводимость запуска».",
+      "rationale": "Оценка основана на проверке свойства: Запуск с нуля по файлам репозитория",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 24,
+          "line_end": 24,
+          "title": "Наблюдение по метрике «Воспроизводимость запуска»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Воспроизводимость запуска»."
+        }
+      ]
+    },
+    {
+      "id": "readme_quality",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Качество README».",
+      "rationale": "Оценка основана на проверке свойства: README как рабочая инструкция",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 25,
+          "line_end": 25,
+          "title": "Наблюдение по метрике «Качество README»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Качество README»."
+        }
+      ]
+    },
+    {
+      "id": "config_management",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Управление конфигурацией».",
+      "rationale": "Оценка основана на проверке свойства: Конфигурация через окружение без захардкоженного доступа",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 26,
+          "line_end": 26,
+          "title": "Наблюдение по метрике «Управление конфигурацией»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Управление конфигурацией»."
+        }
+      ]
+    },
+    {
+      "id": "ci_pipeline",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «CI pipeline».",
+      "rationale": "Оценка основана на проверке свойства: Наличие и содержание конфигурации CI в репозитории",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 27,
+          "line_end": 27,
+          "title": "Наблюдение по метрике «CI pipeline»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «CI pipeline»."
+        }
+      ]
+    }
+  ],
+  "overall_comment": "Фикстурный отчёт для разработки и проверки контракта.",
+  "warnings": []
+}

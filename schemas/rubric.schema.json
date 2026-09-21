@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-slop-detector.local/schemas/rubric.schema.json",
+  "title": "Evaluation rubric",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "rubric_version", "area", "scale", "area_weights", "categories"],
+  "properties": {
+    "schema_version": { "const": "rubric.v1" },
+    "rubric_version": { "type": "string", "pattern": "^(backend|frontend)\\.v1$" },
+    "area": { "type": "string", "enum": ["backend", "frontend"] },
+    "bundle_schema": { "const": "0.1" },
+    "built_at": { "type": "string", "format": "date-time" },
+    "scale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max", "anchors"],
+      "properties": {
+        "min": { "const": 0 },
+        "max": { "const": 10 },
+        "anchors": {
+          "type": "array",
+          "const": [2, 5, 8, 10],
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "type": "integer", "enum": [2, 5, 8, 10] }
+        }
+      }
+    },
+    "area_weights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "frontend"],
+      "properties": {
+        "backend": { "type": "number", "minimum": 0, "maximum": 1 },
+        "frontend": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/category" }
+    }
+  },
+  "$defs": {
+    "category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "weight", "subcategories"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "subcategories": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/subcategory" }
+        }
+      }
+    },
+    "subcategory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "weight", "metrics"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/metric" }
+        }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "weight", "description", "anchors"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "anchors": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["2", "5", "8", "10"],
+          "properties": {
+            "2": { "type": "string", "minLength": 1, "maxLength": 1000 },
+            "5": { "type": "string", "minLength": 1, "maxLength": 1000 },
+            "8": { "type": "string", "minLength": 1, "maxLength": 1000 },
+            "10": { "type": "string", "minLength": 1, "maxLength": 1000 }
+          }
+        }
+      }
+    }
+  }
+}

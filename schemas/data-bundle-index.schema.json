@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-slop-detector.local/schemas/data-bundle-index.schema.json",
+  "title": "Leaderboard index bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bundle_schema", "built_at", "meta", "teams"],
+  "properties": {
+    "bundle_schema": { "const": "0.1" },
+    "built_at": { "type": "string", "format": "date-time" },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bundle_schema",
+        "built_at",
+        "report_schema",
+        "rubric_versions",
+        "skill_versions",
+        "models"
+      ],
+      "properties": {
+        "bundle_schema": { "const": "0.1" },
+        "built_at": { "type": "string", "format": "date-time" },
+        "report_schema": { "const": "1.0" },
+        "rubric_versions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "skill_versions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+        },
+        "models": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "teams": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["team_id", "name", "rank", "total", "areas", "status", "partial"],
+        "properties": {
+          "team_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "rank": { "type": ["integer", "null"], "minimum": 1 },
+          "total": { "type": ["number", "null"], "minimum": 0, "maximum": 10 },
+          "areas": { "type": "object", "additionalProperties": { "type": "number", "minimum": 0, "maximum": 10 } },
+          "status": { "type": "string", "enum": ["done", "failed", "no_data", "running"] },
+          "warnings": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+          "partial": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

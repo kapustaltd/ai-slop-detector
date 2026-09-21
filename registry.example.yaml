@@ -1,0 +1,11 @@
+version: "1"
+teams:
+  - id: team-01
+    name: Команда 01
+    repo: https://github.com/example/team-01.git
+    branch: main
+    active: true
+    # Необязательно: если область лежит в подпапке, укажите относительный путь.
+    paths:
+      backend: backend
+      frontend: frontend

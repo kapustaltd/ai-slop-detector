@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-slop-detector.local/schemas/data-bundle-team.schema.json",
+  "title": "Team bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bundle_schema", "built_at", "team_id", "name", "status", "total", "partial", "areas"],
+  "properties": {
+    "bundle_schema": { "const": "0.1" },
+    "built_at": { "type": "string", "format": "date-time" },
+    "team_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "status": { "type": "string", "enum": ["done", "failed", "no_data", "running"] },
+    "commit_sha": { "type": "string", "pattern": "^[0-9a-fA-F]{40}$" },
+    "total": { "type": ["number", "null"], "minimum": 0, "maximum": 10 },
+    "partial": { "type": "boolean" },
+    "warnings": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "meta": { "$ref": "#/$defs/meta" },
+    "areas": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/area" }
+    }
+  },
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "skill_version", "rubric_version", "model", "evaluated_at"],
+      "properties": {
+        "schema_version": { "const": "evaluation.v1" },
+        "skill_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "rubric_version": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "evaluated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "area": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "score", "max", "categories"],
+      "properties": {
+        "status": { "type": "string", "enum": ["done", "failed", "no_data", "running"] },
+        "score": { "type": ["number", "null"], "minimum": 0, "maximum": 10 },
+        "max": { "const": 10 },
+        "error": { "type": "string", "maxLength": 1000 },
+        "categories": { "type": "array", "items": { "$ref": "#/$defs/category" } },
+        "metrics": { "type": "array", "items": { "$ref": "#/$defs/metric" } }
+      }
+    },
+    "category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "weight", "score", "subcategories"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "score": { "type": "number", "minimum": 0, "maximum": 10 },
+        "subcategories": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/subcategory" } }
+      }
+    },
+    "subcategory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "weight", "score", "metrics"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "score": { "type": "number", "minimum": 0, "maximum": 10 },
+        "metrics": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/metric" } }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "weight", "score", "max", "confidence", "summary", "rationale", "findings"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "score": { "type": "number", "minimum": 0, "maximum": 10 },
+        "max": { "const": 10 },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "findings": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/finding" } }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "severity", "file", "line_start", "line_end", "title", "explanation"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["strength", "issue"] },
+        "severity": { "type": "string", "enum": ["info", "minor", "major", "critical"] },
+        "file": { "type": "string", "minLength": 1 },
+        "line_start": { "type": "integer", "minimum": 1 },
+        "line_end": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "explanation": { "type": "string", "minLength": 1 },
+        "suggestion": { "type": "string" },
+        "link_status": { "type": "string", "enum": ["verified", "unverified", "missing_file", "invalid_range", "unsafe_path"] },
+        "snippet": { "type": "string" },
+        "permalink": { "type": "string", "format": "uri" }
+      }
+    }
+  }
+}

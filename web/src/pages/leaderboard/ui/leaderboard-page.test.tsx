@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
@@ -23,6 +24,32 @@ describe('LeaderboardPage', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('—')).toBeInTheDocument()
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+  })
+
+  it('фильтрует команды с предупреждениями из адреса страницы', () => {
+    render(
+      <MemoryRouter initialEntries={['/?warnings=1']}>
+        <LeaderboardPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Команда 02')).toBeInTheDocument()
+    expect(screen.queryByText('Команда 01')).not.toBeInTheDocument()
+  })
+
+  it('переключает направление сортировки кнопкой числовой колонки', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <LeaderboardPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(screen.getByRole('button', { name: /Итог/ }))
+    expect(screen.getByRole('columnheader', { name: /Итог/ })).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    )
   })
 })
