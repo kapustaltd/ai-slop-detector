@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-22
 
-**Status**: Draft
+**Status**: Implemented; pending production secrets and one-time web-server setup
 
 **Input**: User description: "Реализовать CI/CD через GitHub runner, который автоматически деплоит изменения по SSH на `root@13.143.132.116`."
 
@@ -144,8 +144,8 @@ job деплоя не запускается.
 
 ## Assumptions and Dependencies
 
-- На сервере доступны `bash`, `tar`, `readlink`, `ln`, `mv`, `find` и файловая система с правом
-  записи для root.
+- На сервере Ubuntu доступны `bash`, `tar`, `readlink`, `ln`, GNU `mv` с поддержкой `-T`, `ls`,
+  `tail` и файловая система с правом записи для root.
 - Nginx/Caddy или другой static web-server настраивается отдельно и читает каталог `current`.
 - В GitHub создан Environment с именем `production`, а secrets добавлены владельцем репозитория.
 - Значение `DEPLOY_KNOWN_HOSTS` содержит заранее проверенную строку host key для
@@ -154,6 +154,7 @@ job деплоя не запускается.
 ## Acceptance Criteria
 
 - `bash -n deploy/deploy-static.sh deploy/rollback-static.sh` проходит.
+- `bash deploy/test-static-deployment.sh` проходит для двух релизов, повторного deploy и rollback.
 - `npm run check` и `npm run build` проходят в CI до deploy job.
 - Для PR production secrets не доступны.
 - Для push в `main` deploy использует только strict host-key verification и завершается после

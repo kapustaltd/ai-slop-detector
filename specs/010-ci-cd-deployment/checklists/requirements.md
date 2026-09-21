@@ -18,7 +18,7 @@
 - [x] Success criteria include quality gate, deploy, rollback and secret handling.
 - [x] Acceptance scenarios cover success and failure paths.
 - [x] Edge cases include missing credentials, repeated deploy, missing previous release and failed
-  pre-switch deployment.
+      pre-switch deployment.
 - [x] Non-goals prevent accidental server provisioning scope expansion.
 
 ## Feature Readiness
@@ -26,7 +26,7 @@
 - [x] Every functional requirement maps to a planned implementation unit.
 - [x] User stories have independent tests.
 - [ ] Production server access and web-server configuration are validated after the owner adds the
-  GitHub secrets and performs one deployment.
+      GitHub secrets and performs one deployment.
 
 ## Notes
 

@@ -1,0 +1,163 @@
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  DEPLOY_HOST: 13.143.132.116
+  DEPLOY_USER: root
+  DEPLOY_ROOT: /var/www/ai-slop-detector
+  RELEASES_TO_KEEP: "5"
+
+jobs:
+  quality:
+    name: Check and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run quality gate
+        run: npm run check
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Test release scripts
+        working-directory: ${{ github.workspace }}
+        run: bash deploy/test-static-deployment.sh
+
+      - name: Package static site
+        run: tar -C dist -czf "$RUNNER_TEMP/ai-slop-detector-dist.tar.gz" .
+
+      - name: Upload static artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: ${{ runner.temp }}/ai-slop-detector-dist.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy production
+    needs: quality
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Checkout deployment scripts
+        uses: actions/checkout@v4
+
+      - name: Download static artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: artifact
+
+      - name: Configure strict SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOY_SSH_KEY" || { echo 'DEPLOY_SSH_KEY is not configured' >&2; exit 1; }
+          test -n "$DEPLOY_KNOWN_HOSTS" || { echo 'DEPLOY_KNOWN_HOSTS is not configured' >&2; exit 1; }
+
+          install -d -m 700 "$HOME/.ssh"
+          umask 077
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/deploy_key" >/dev/null
+
+      - name: Verify SSH target
+        run: |
+          set -euo pipefail
+          ssh_opts=(
+            -i "$HOME/.ssh/deploy_key"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+          )
+          ssh "${ssh_opts[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
+            'command -v bash >/dev/null && command -v tar >/dev/null && command -v readlink >/dev/null && command -v mv >/dev/null'
+
+      - name: Upload release archive
+        run: |
+          set -euo pipefail
+          ssh_opts=(
+            -i "$HOME/.ssh/deploy_key"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+          )
+          scp "${ssh_opts[@]}" artifact/ai-slop-detector-dist.tar.gz \
+            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/ai-slop-detector-${GITHUB_SHA}.tar.gz"
+
+      - name: Install release atomically
+        run: |
+          set -euo pipefail
+          ssh_opts=(
+            -i "$HOME/.ssh/deploy_key"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+          )
+          ssh "${ssh_opts[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "ARTIFACT_PATH='/tmp/ai-slop-detector-${GITHUB_SHA}.tar.gz' DEPLOY_ROOT='$DEPLOY_ROOT' RELEASE_ID='$GITHUB_SHA' KEEP_RELEASES='$RELEASES_TO_KEEP' bash -s" \
+            < deploy/deploy-static.sh
+
+      - name: Smoke check and rollback on failure
+        if: ${{ vars.DEPLOY_HEALTHCHECK_URL != '' }}
+        env:
+          DEPLOY_HEALTHCHECK_URL: ${{ vars.DEPLOY_HEALTHCHECK_URL }}
+        run: |
+          set -euo pipefail
+          if curl --fail --show-error --silent --location --max-time 20 "$DEPLOY_HEALTHCHECK_URL" >/dev/null; then
+            exit 0
+          fi
+
+          echo 'HTTP smoke check failed; rolling back the release' >&2
+          ssh_opts=(
+            -i "$HOME/.ssh/deploy_key"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+          )
+          ssh "${ssh_opts[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "DEPLOY_ROOT='$DEPLOY_ROOT' bash -s" < deploy/rollback-static.sh
+          exit 1
+
+      - name: Remove local SSH material
+        if: always()
+        run: rm -f -- "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts"
