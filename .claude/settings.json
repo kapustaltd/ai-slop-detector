@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Read(./node_modules/**)",
+      "Read(./web/node_modules/**)",
+      "Read(./web/dist/**)",
+      "Read(./web/coverage/**)",
+      "Read(./web/data/**)",
+      "Read(./package-lock.json)",
+      "Read(./web/package-lock.json)"
+    ],
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prettier:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(rg:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/format-web.sh\"",
+            "timeout": 30,
+            "statusMessage": "Форматирую фронтенд"
+          }
+        ]
+      }
+    ]
+  }
+}

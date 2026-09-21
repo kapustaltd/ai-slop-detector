@@ -16,17 +16,17 @@ npm run dev
 
 ## Команды
 
-| Команда | Что делает |
-|---|---|
-| `npm run dev` | dev-сервер с горячей перезагрузкой |
-| `npm run build` | production-сборка в `dist/` |
-| `npm run preview` | просмотр собранного приложения |
-| `npm run check` | формат, линт, границы FSD, типы и тесты — одной командой |
-| `npm run lint` | ESLint, включая проверку границ слоёв |
-| `npm run lint:fsd` | steiger: проверка структуры Feature-Sliced Design |
-| `npm run typecheck` | проверка типов |
-| `npm run test` | тесты (Vitest) |
-| `npm run format` | форматирование Prettier |
+| Команда             | Что делает                                               |
+| ------------------- | -------------------------------------------------------- |
+| `npm run dev`       | dev-сервер с горячей перезагрузкой                       |
+| `npm run build`     | production-сборка в `dist/`                              |
+| `npm run preview`   | просмотр собранного приложения                           |
+| `npm run check`     | формат, линт, границы FSD, типы и тесты — одной командой |
+| `npm run lint`      | ESLint, включая проверку границ слоёв                    |
+| `npm run lint:fsd`  | steiger: проверка структуры Feature-Sliced Design        |
+| `npm run typecheck` | проверка типов                                           |
+| `npm run test`      | тесты (Vitest)                                           |
+| `npm run format`    | форматирование Prettier                                  |
 
 Перед коммитом достаточно `npm run check`.
 
