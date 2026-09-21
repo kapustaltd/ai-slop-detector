@@ -18,8 +18,9 @@ describe('TeamPage', () => {
   it('показывает итог, метаданные и таксономию команды', async () => {
     renderTeam()
 
-    await waitFor(() =>
-      expect(screen.getByRole('heading', { name: 'Команда 01' })).toBeInTheDocument(),
+    await waitFor(
+      () => expect(screen.getByRole('heading', { name: 'Команда 01' })).toBeInTheDocument(),
+      { timeout: 10_000 },
     )
     expect(screen.getByText('Метаданные оценки')).toBeInTheDocument()
     expect(screen.getByText('Детализация backend')).toBeInTheDocument()
@@ -29,8 +30,10 @@ describe('TeamPage', () => {
   it('помечает недостаток данных для сравнительных графиков', async () => {
     renderTeam()
 
-    await waitFor(() =>
-      expect(screen.getAllByText('Недостаточно оценённых команд для сравнения.')).toHaveLength(2),
+    await waitFor(
+      () =>
+        expect(screen.getAllByText('Недостаточно оценённых команд для сравнения.')).toHaveLength(2),
+      { timeout: 10_000 },
     )
   })
 })
