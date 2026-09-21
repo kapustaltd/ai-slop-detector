@@ -1,0 +1,9 @@
+{
+  "bundle_schema": "0.1",
+  "built_at": "2026-09-21T12:00:00Z",
+  "teams": [
+    { "team_id": "team-01", "name": "Команда 01", "rank": 1, "total": 7.8, "status": "done" },
+    { "team_id": "team-02", "name": "Команда 02", "rank": 2, "total": 6.1, "status": "done" },
+    { "team_id": "team-03", "name": "Команда 03", "rank": null, "total": null, "status": "failed" }
+  ]
+}
