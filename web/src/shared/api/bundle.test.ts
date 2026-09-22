@@ -5,7 +5,7 @@ import { BundleError, getLeaderboardIndex, loadTeam } from './bundle'
 describe('доступ к дата-бандлу', () => {
   it('отдаёт индекс рейтинга из бандла', () => {
     const index = getLeaderboardIndex()
-    expect(index.teams).toHaveLength(3)
+    expect(index.teams).toHaveLength(4)
   })
 
   it('загружает файл команды отдельным модулем', async () => {

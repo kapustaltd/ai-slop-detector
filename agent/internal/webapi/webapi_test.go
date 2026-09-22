@@ -1,0 +1,103 @@
+package webapi
+
+import (
+	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+)
+
+func testManager(t *testing.T, execute Execute) *Manager {
+	t.Helper()
+	manager, err := NewManager(Config{DataDir: t.TempDir(), Execute: execute, Now: func() time.Time { return time.Date(2026, 9, 22, 12, 0, 0, 0, time.UTC) }})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return manager
+}
+
+func validPayload() string {
+	return `{"repository_url":"https://github.com/example/team-01.git","repository_id":"team-01","branch":"main","area":"both"}`
+}
+
+func TestValidateRequestRejectsUnsafeValues(t *testing.T) {
+	cases := []Request{
+		{RepositoryURL: "https://evil.example/repo.git", RepositoryID: "team-01", Branch: "main", Area: "both"},
+		{RepositoryURL: "https://github.com/example/repo.git", RepositoryID: "team-01", Branch: "main;rm", Area: "both"},
+		{RepositoryURL: "https://user:pass@github.com/example/repo.git", RepositoryID: "team-01", Branch: "main", Area: "both"},
+		{RepositoryURL: "https://github.com/example/repo.git", RepositoryID: "team-01", Branch: "main", Area: "shell"},
+	}
+	for _, value := range cases {
+		if err := ValidateRequest(value); err == nil {
+			t.Fatalf("expected request to be rejected: %#v", value)
+		}
+	}
+}
+
+func TestHTTPAuthValidationAndRunLifecycle(t *testing.T) {
+	started := make(chan struct{})
+	release := make(chan struct{})
+	manager := testManager(t, func(context.Context, Request, io.Writer) (Summary, error) {
+		close(started)
+		<-release
+		return Summary{TeamsTotal: 1, TeamsDone: 1}, nil
+	})
+	handler := NewHandler(manager, "operator-token")
+
+	unauthorized := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/runs", strings.NewReader(validPayload()))
+	handler.ServeHTTP(unauthorized, request)
+	if unauthorized.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want 401", unauthorized.Code)
+	}
+
+	created := httptest.NewRecorder()
+	request = httptest.NewRequest(http.MethodPost, "/api/v1/runs", strings.NewReader(validPayload()))
+	request.Header.Set("Authorization", "Bearer operator-token")
+	handler.ServeHTTP(created, request)
+	if created.Code != http.StatusAccepted {
+		t.Fatalf("status = %d, want 202", created.Code)
+	}
+	if created.Header().Get("Location") == "" {
+		t.Fatal("Location header is missing")
+	}
+	<-started
+
+	busy := httptest.NewRecorder()
+	request = httptest.NewRequest(http.MethodPost, "/api/v1/runs", strings.NewReader(validPayload()))
+	request.Header.Set("Authorization", "Bearer operator-token")
+	handler.ServeHTTP(busy, request)
+	if busy.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, want 429", busy.Code)
+	}
+
+	close(release)
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		job, err := manager.Get(strings.TrimPrefix(created.Header().Get("Location"), "/api/v1/runs/"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if job.Status == StatusSucceeded {
+			if job.Summary == nil || job.Summary.TeamsDone != 1 {
+				t.Fatalf("unexpected summary: %#v", job.Summary)
+			}
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatal("run did not finish")
+}
+
+func TestHTTPRejectsUnknownJSONField(t *testing.T) {
+	manager := testManager(t, func(context.Context, Request, io.Writer) (Summary, error) { return Summary{}, nil })
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/runs", strings.NewReader(`{"repository_url":"https://github.com/example/repo.git","repository_id":"repo","branch":"main","area":"backend","command":"rm -rf /"}`))
+	NewHandler(manager, "").ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", recorder.Code)
+	}
+}

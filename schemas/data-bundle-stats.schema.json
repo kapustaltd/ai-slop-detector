@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-slop-detector.local/schemas/data-bundle-stats.schema.json",
+  "title": "Bundle statistics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bundle_schema", "built_at", "meta", "areas"],
+  "properties": {
+    "bundle_schema": { "const": "0.1" },
+    "built_at": { "type": "string", "format": "date-time" },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bundle_schema",
+        "built_at",
+        "report_schema",
+        "rubric_versions",
+        "skill_versions",
+        "models"
+      ],
+      "properties": {
+        "bundle_schema": { "const": "0.1" },
+        "built_at": { "type": "string", "format": "date-time" },
+        "report_schema": { "const": "1.0" },
+        "rubric_versions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "skill_versions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+        },
+        "models": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "areas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["area", "sample_size", "insufficient_data", "categories", "metrics"],
+        "properties": {
+          "area": { "type": "string", "enum": ["backend", "frontend"] },
+          "sample_size": { "type": "integer", "minimum": 0 },
+          "insufficient_data": { "type": "boolean" },
+          "categories": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+          "metrics": { "type": "array", "items": { "$ref": "#/$defs/node" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "mean", "median", "count"],
+      "properties": {
+        "id": { "type": "string" },
+        "mean": { "type": "number", "minimum": 0, "maximum": 10 },
+        "median": { "type": "number", "minimum": 0, "maximum": 10 },
+        "count": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

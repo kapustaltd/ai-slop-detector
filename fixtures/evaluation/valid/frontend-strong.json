@@ -1,0 +1,454 @@
+{
+  "meta": {
+    "schema_version": "evaluation.v1",
+    "team_id": "fixture-team",
+    "area": "frontend",
+    "repo": "https://example.invalid/fixture-team/repository",
+    "commit_sha": "0123456789abcdef0123456789abcdef01234567",
+    "skill_version": "1.0.0",
+    "rubric_version": "frontend.v1",
+    "model": "fixture-model",
+    "evaluated_at": "2026-09-21T12:00:00Z"
+  },
+  "metrics": [
+    {
+      "id": "component_decomposition",
+      "score": 8.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Декомпозиция компонентов».",
+      "rationale": "Оценка основана на проверке свойства: Размер и ответственность компонентов",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 1,
+          "line_end": 1,
+          "title": "Наблюдение по метрике «Декомпозиция компонентов»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Декомпозиция компонентов»."
+        }
+      ]
+    },
+    {
+      "id": "component_reuse",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Переиспользование».",
+      "rationale": "Оценка основана на проверке свойства: Переиспользование вместо копирования",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 2,
+          "line_end": 2,
+          "title": "Наблюдение по метрике «Переиспользование»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Переиспользование»."
+        }
+      ]
+    },
+    {
+      "id": "project_structure",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Структура проекта».",
+      "rationale": "Оценка основана на проверке свойства: Предсказуемость структуры и именования",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 3,
+          "line_end": 3,
+          "title": "Наблюдение по метрике «Структура проекта»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Структура проекта»."
+        }
+      ]
+    },
+    {
+      "id": "separation_of_concerns",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Разделение ответственности».",
+      "rationale": "Оценка основана на проверке свойства: Разделение представления логики и доступа к данным",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 4,
+          "line_end": 4,
+          "title": "Наблюдение по метрике «Разделение ответственности»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Разделение ответственности»."
+        }
+      ]
+    },
+    {
+      "id": "state_placement",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Размещение состояния».",
+      "rationale": "Оценка основана на проверке свойства: Локальное против глобального и уровень подъёма состояния",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 5,
+          "line_end": 5,
+          "title": "Наблюдение по метрике «Размещение состояния»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Размещение состояния»."
+        }
+      ]
+    },
+    {
+      "id": "state_predictability",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Предсказуемость состояния».",
+      "rationale": "Оценка основана на проверке свойства: Единственный источник истины и отсутствие рассинхрона",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 6,
+          "line_end": 6,
+          "title": "Наблюдение по метрике «Предсказуемость состояния»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Предсказуемость состояния»."
+        }
+      ]
+    },
+    {
+      "id": "data_fetching",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Получение данных».",
+      "rationale": "Оценка основана на проверке свойства: Организация запросов кеширование и инвалидация",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 7,
+          "line_end": 7,
+          "title": "Наблюдение по метрике «Получение данных»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Получение данных»."
+        }
+      ]
+    },
+    {
+      "id": "async_states",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Асинхронные состояния».",
+      "rationale": "Оценка основана на проверке свойства: Состояния загрузки ошибок и пустых данных",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 8,
+          "line_end": 8,
+          "title": "Наблюдение по метрике «Асинхронные состояния»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Асинхронные состояния»."
+        }
+      ]
+    },
+    {
+      "id": "type_strictness",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Строгость типов».",
+      "rationale": "Оценка основана на проверке свойства: Strict-режим и отсутствие немотивированных any",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 9,
+          "line_end": 9,
+          "title": "Наблюдение по метрике «Строгость типов»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Строгость типов»."
+        }
+      ]
+    },
+    {
+      "id": "api_types",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Типы API».",
+      "rationale": "Оценка основана на проверке свойства: Типы данных API происходят из контракта",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 10,
+          "line_end": 10,
+          "title": "Наблюдение по метрике «Типы API»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Типы API»."
+        }
+      ]
+    },
+    {
+      "id": "props_contracts",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Контракты props».",
+      "rationale": "Оценка основана на проверке свойства: Типизация props и публичных интерфейсов модулей",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 11,
+          "line_end": 11,
+          "title": "Наблюдение по метрике «Контракты props»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Контракты props»."
+        }
+      ]
+    },
+    {
+      "id": "render_efficiency",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Эффективность рендеринга».",
+      "rationale": "Оценка основана на проверке свойства: Лишние перерисовки и оправданная мемоизация",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 12,
+          "line_end": 12,
+          "title": "Наблюдение по метрике «Эффективность рендеринга»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Эффективность рендеринга»."
+        }
+      ]
+    },
+    {
+      "id": "bundle_and_assets",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Бандл и ассеты».",
+      "rationale": "Оценка основана на проверке свойства: Размер бандла код-сплиттинг и работа с изображениями",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 13,
+          "line_end": 13,
+          "title": "Наблюдение по метрике «Бандл и ассеты»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Бандл и ассеты»."
+        }
+      ]
+    },
+    {
+      "id": "semantic_markup",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Семантическая разметка».",
+      "rationale": "Оценка основана на проверке свойства: Семантические элементы вместо div-супа",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 14,
+          "line_end": 14,
+          "title": "Наблюдение по метрике «Семантическая разметка»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Семантическая разметка»."
+        }
+      ]
+    },
+    {
+      "id": "aria_usage",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Использование ARIA».",
+      "rationale": "Оценка основана на проверке свойства: ARIA там где семантики не хватает и без вреда",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 15,
+          "line_end": 15,
+          "title": "Наблюдение по метрике «Использование ARIA»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Использование ARIA»."
+        }
+      ]
+    },
+    {
+      "id": "keyboard_navigation",
+      "score": 7.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Навигация с клавиатуры».",
+      "rationale": "Оценка основана на проверке свойства: Доступность с клавиатуры и порядок фокуса",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 16,
+          "line_end": 16,
+          "title": "Наблюдение по метрике «Навигация с клавиатуры»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Навигация с клавиатуры»."
+        }
+      ]
+    },
+    {
+      "id": "contrast_and_focus",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Контраст и фокус».",
+      "rationale": "Оценка основана на проверке свойства: Контраст и видимость фокуса",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 17,
+          "line_end": 17,
+          "title": "Наблюдение по метрике «Контраст и фокус»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Контраст и фокус»."
+        }
+      ]
+    },
+    {
+      "id": "styling_approach",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Подход к стилям».",
+      "rationale": "Оценка основана на проверке свойства: Единый подход к стилям и токены вместо магических значений",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 18,
+          "line_end": 18,
+          "title": "Наблюдение по метрике «Подход к стилям»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Подход к стилям»."
+        }
+      ]
+    },
+    {
+      "id": "design_consistency",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Консистентность дизайна».",
+      "rationale": "Оценка основана на проверке свойства: Единообразие однотипных элементов",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 19,
+          "line_end": 19,
+          "title": "Наблюдение по метрике «Консистентность дизайна»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Консистентность дизайна»."
+        }
+      ]
+    },
+    {
+      "id": "responsiveness",
+      "score": 9,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Адаптивность».",
+      "rationale": "Оценка основана на проверке свойства: Поведение на разных размерах экрана",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 20,
+          "line_end": 20,
+          "title": "Наблюдение по метрике «Адаптивность»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Адаптивность»."
+        }
+      ]
+    },
+    {
+      "id": "test_coverage_meaning",
+      "score": 6,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Покрытие сценариев».",
+      "rationale": "Оценка основана на проверке свойства: Покрыты ли тестами ключевые сценарии интерфейса",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 21,
+          "line_end": 21,
+          "title": "Наблюдение по метрике «Покрытие сценариев»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Покрытие сценариев»."
+        }
+      ]
+    },
+    {
+      "id": "test_quality",
+      "score": 6.5,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Качество тестов».",
+      "rationale": "Оценка основана на проверке свойства: Устойчивость тестов и отсутствие завязки на случайную разметку",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 22,
+          "line_end": 22,
+          "title": "Наблюдение по метрике «Качество тестов»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Качество тестов»."
+        }
+      ]
+    },
+    {
+      "id": "test_runnability",
+      "score": 7,
+      "max": 10,
+      "confidence": "medium",
+      "summary": "Оценка по метрике «Запускаемость тестов».",
+      "rationale": "Оценка основана на проверке свойства: Воспроизводимость запуска тестов",
+      "findings": [
+        {
+          "kind": "strength",
+          "severity": "info",
+          "file": "src/main.go",
+          "line_start": 23,
+          "line_end": 23,
+          "title": "Наблюдение по метрике «Запускаемость тестов»",
+          "explanation": "В репозитории есть участок, относящийся к метрике «Запускаемость тестов»."
+        }
+      ]
+    }
+  ],
+  "overall_comment": "Фикстурный отчёт для разработки и проверки контракта.",
+  "warnings": []
+}
