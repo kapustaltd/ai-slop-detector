@@ -7,9 +7,16 @@ import {
   type LeaderboardIndexStub,
   type LeaderboardTeam,
 } from '@/shared/api'
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Badge } from '@/shared/ui/shadcn/badge'
+import { Button } from '@/shared/ui/shadcn/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/shadcn/table'
 
 type SortKey = 'rank' | 'total' | 'frontend' | 'backend'
 
