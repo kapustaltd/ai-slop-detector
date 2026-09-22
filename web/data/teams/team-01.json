@@ -38,8 +38,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Разделение транспорта бизнес-логики и доступа к данным",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Разделение транспорта бизнес-логики и доступа к данным",
                   "findings": [
                     {
                       "kind": "issue",
@@ -47,9 +47,9 @@
                       "file": "src/main.go",
                       "line_start": 1,
                       "line_end": 3,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L1-L3"
@@ -63,8 +63,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Связность модулей и зацепление между ними",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Связность модулей и зацепление между ними",
                   "findings": [
                     {
                       "kind": "strength",
@@ -72,8 +72,8 @@
                       "file": "src/main.go",
                       "line_start": 2,
                       "line_end": 4,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L2-L4"
@@ -95,8 +95,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Предсказуемость структуры каталогов и именования",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Предсказуемость структуры каталогов и именования",
                   "findings": [
                     {
                       "kind": "strength",
@@ -104,8 +104,8 @@
                       "file": "src/main.go",
                       "line_start": 3,
                       "line_end": 5,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L3-L5"
@@ -119,8 +119,8 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Направление зависимостей и отсутствие циклов",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Направление зависимостей и отсутствие циклов",
                   "findings": [
                     {
                       "kind": "strength",
@@ -128,8 +128,8 @@
                       "file": "src/main.go",
                       "line_start": 4,
                       "line_end": 6,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L4-L6"
@@ -159,8 +159,8 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Имена сущностей функций и переменных",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Имена сущностей функций и переменных",
                   "findings": [
                     {
                       "kind": "strength",
@@ -168,8 +168,8 @@
                       "file": "src/main.go",
                       "line_start": 5,
                       "line_end": 7,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L5-L7"
@@ -183,8 +183,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Размер и цикломатическая сложность функций",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Размер и цикломатическая сложность функций",
                   "findings": [
                     {
                       "kind": "issue",
@@ -192,9 +192,9 @@
                       "file": "src/main.go",
                       "line_start": 6,
                       "line_end": 8,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L6-L8"
@@ -216,8 +216,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Дублирование логики и копипаста",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Дублирование логики и копипаста",
                   "findings": [
                     {
                       "kind": "strength",
@@ -225,8 +225,8 @@
                       "file": "src/main.go",
                       "line_start": 7,
                       "line_end": 9,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L7-L9"
@@ -256,8 +256,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Распространение обёртывание и отсутствие проглоченных ошибок",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Распространение обёртывание и отсутствие проглоченных ошибок",
                   "findings": [
                     {
                       "kind": "strength",
@@ -265,8 +265,8 @@
                       "file": "src/main.go",
                       "line_start": 8,
                       "line_end": 10,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L8-L10"
@@ -280,8 +280,8 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Информативность ошибок без утечки внутренних деталей",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Информативность ошибок без утечки внутренних деталей",
                   "findings": [
                     {
                       "kind": "strength",
@@ -289,8 +289,8 @@
                       "file": "src/main.go",
                       "line_start": 9,
                       "line_end": 11,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L9-L11"
@@ -312,8 +312,8 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Логирование ключевых событий и отказов",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Логирование ключевых событий и отказов",
                   "findings": [
                     {
                       "kind": "strength",
@@ -321,8 +321,8 @@
                       "file": "src/main.go",
                       "line_start": 10,
                       "line_end": 12,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L10-L12"
@@ -352,8 +352,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Консистентность ресурсов методов и кодов ответов",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Консистентность ресурсов методов и кодов ответов",
                   "findings": [
                     {
                       "kind": "issue",
@@ -361,9 +361,9 @@
                       "file": "src/main.go",
                       "line_start": 11,
                       "line_end": 13,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L11-L13"
@@ -377,8 +377,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Описанность контракта схемой или документацией",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Описанность контракта схемой или документацией",
                   "findings": [
                     {
                       "kind": "strength",
@@ -386,8 +386,8 @@
                       "file": "src/main.go",
                       "line_start": 12,
                       "line_end": 14,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L12-L14"
@@ -409,8 +409,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Валидация и санитизация входных данных",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Валидация и санитизация входных данных",
                   "findings": [
                     {
                       "kind": "strength",
@@ -418,8 +418,8 @@
                       "file": "src/main.go",
                       "line_start": 13,
                       "line_end": 15,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L13-L15"
@@ -449,8 +449,8 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Схема ключи и ограничения целостности",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Схема ключи и ограничения целостности",
                   "findings": [
                     {
                       "kind": "strength",
@@ -458,8 +458,8 @@
                       "file": "src/main.go",
                       "line_start": 14,
                       "line_end": 16,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L14-L16"
@@ -473,8 +473,8 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Миграции и воспроизводимость схемы",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Миграции и воспроизводимость схемы",
                   "findings": [
                     {
                       "kind": "strength",
@@ -482,8 +482,8 @@
                       "file": "src/main.go",
                       "line_start": 15,
                       "line_end": 17,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L15-L17"
@@ -505,8 +505,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Транзакции консистентность и корректность запросов",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Транзакции консистентность и корректность запросов",
                   "findings": [
                     {
                       "kind": "issue",
@@ -514,9 +514,9 @@
                       "file": "src/main.go",
                       "line_start": 16,
                       "line_end": 18,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L16-L18"
@@ -530,8 +530,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: N+1 индексы и объём выборок",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "N+1 индексы и объём выборок",
                   "findings": [
                     {
                       "kind": "strength",
@@ -539,8 +539,8 @@
                       "file": "src/main.go",
                       "line_start": 17,
                       "line_end": 19,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L17-L19"
@@ -570,8 +570,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Проверка личности и прав доступа",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Проверка личности и прав доступа",
                   "findings": [
                     {
                       "kind": "strength",
@@ -579,8 +579,8 @@
                       "file": "src/main.go",
                       "line_start": 18,
                       "line_end": 20,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L18-L20"
@@ -602,8 +602,8 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Обращение с секретами и конфигурацией доступа",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Обращение с секретами и конфигурацией доступа",
                   "findings": [
                     {
                       "kind": "strength",
@@ -611,8 +611,8 @@
                       "file": "src/main.go",
                       "line_start": 19,
                       "line_end": 21,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L19-L21"
@@ -626,8 +626,8 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Защита от инъекций и небезопасной десериализации",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Защита от инъекций и небезопасной десериализации",
                   "findings": [
                     {
                       "kind": "strength",
@@ -635,8 +635,8 @@
                       "file": "src/main.go",
                       "line_start": 20,
                       "line_end": 22,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L20-L22"
@@ -666,8 +666,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Покрыты ли тестами критичные пути",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Покрыты ли тестами критичные пути",
                   "findings": [
                     {
                       "kind": "issue",
@@ -675,9 +675,9 @@
                       "file": "src/main.go",
                       "line_start": 21,
                       "line_end": 23,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L21-L23"
@@ -691,8 +691,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Изоляция детерминизм и читаемость тестов",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Изоляция детерминизм и читаемость тестов",
                   "findings": [
                     {
                       "kind": "strength",
@@ -700,8 +700,8 @@
                       "file": "src/main.go",
                       "line_start": 22,
                       "line_end": 24,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L22-L24"
@@ -723,8 +723,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Воспроизводимость запуска тестов по файлам репозитория",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Воспроизводимость запуска тестов по файлам репозитория",
                   "findings": [
                     {
                       "kind": "strength",
@@ -732,8 +732,8 @@
                       "file": "src/main.go",
                       "line_start": 23,
                       "line_end": 25,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L23-L25"
@@ -763,8 +763,8 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Запуск с нуля по файлам репозитория",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Запуск с нуля по файлам репозитория",
                   "findings": [
                     {
                       "kind": "strength",
@@ -772,8 +772,8 @@
                       "file": "src/main.go",
                       "line_start": 24,
                       "line_end": 26,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L24-L26"
@@ -787,8 +787,8 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: README как рабочая инструкция",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "README как рабочая инструкция",
                   "findings": [
                     {
                       "kind": "strength",
@@ -796,8 +796,8 @@
                       "file": "src/main.go",
                       "line_start": 25,
                       "line_end": 27,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L25-L27"
@@ -819,8 +819,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Конфигурация через окружение без захардкоженного доступа",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Конфигурация через окружение без захардкоженного доступа",
                   "findings": [
                     {
                       "kind": "issue",
@@ -828,9 +828,9 @@
                       "file": "src/main.go",
                       "line_start": 26,
                       "line_end": 28,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L26-L28"
@@ -844,8 +844,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Наличие и содержание конфигурации CI в репозитории",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Наличие и содержание конфигурации CI в репозитории",
                   "findings": [
                     {
                       "kind": "strength",
@@ -853,8 +853,8 @@
                       "file": "src/main.go",
                       "line_start": 27,
                       "line_end": 29,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L27-L29"
@@ -891,8 +891,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Размер и ответственность компонентов",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Размер и ответственность компонентов",
                   "findings": [
                     {
                       "kind": "issue",
@@ -900,9 +900,9 @@
                       "file": "src/main.tsx",
                       "line_start": 1,
                       "line_end": 3,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L1-L3"
@@ -916,8 +916,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Переиспользование вместо копирования",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Переиспользование вместо копирования",
                   "findings": [
                     {
                       "kind": "strength",
@@ -925,8 +925,8 @@
                       "file": "src/main.tsx",
                       "line_start": 2,
                       "line_end": 4,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L2-L4"
@@ -948,8 +948,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Предсказуемость структуры и именования",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Предсказуемость структуры и именования",
                   "findings": [
                     {
                       "kind": "strength",
@@ -957,8 +957,8 @@
                       "file": "src/main.tsx",
                       "line_start": 3,
                       "line_end": 5,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L3-L5"
@@ -972,8 +972,8 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Разделение представления логики и доступа к данным",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Разделение представления логики и доступа к данным",
                   "findings": [
                     {
                       "kind": "strength",
@@ -981,8 +981,8 @@
                       "file": "src/main.tsx",
                       "line_start": 4,
                       "line_end": 6,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L4-L6"
@@ -1012,8 +1012,8 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Локальное против глобального и уровень подъёма состояния",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Локальное против глобального и уровень подъёма состояния",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1021,8 +1021,8 @@
                       "file": "src/main.tsx",
                       "line_start": 5,
                       "line_end": 7,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L5-L7"
@@ -1036,8 +1036,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Единственный источник истины и отсутствие рассинхрона",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Единственный источник истины и отсутствие рассинхрона",
                   "findings": [
                     {
                       "kind": "issue",
@@ -1045,9 +1045,9 @@
                       "file": "src/main.tsx",
                       "line_start": 6,
                       "line_end": 8,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L6-L8"
@@ -1069,8 +1069,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Организация запросов кеширование и инвалидация",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Организация запросов кеширование и инвалидация",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1078,8 +1078,8 @@
                       "file": "src/main.tsx",
                       "line_start": 7,
                       "line_end": 9,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L7-L9"
@@ -1093,8 +1093,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Состояния загрузки ошибок и пустых данных",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Состояния загрузки ошибок и пустых данных",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1102,8 +1102,8 @@
                       "file": "src/main.tsx",
                       "line_start": 8,
                       "line_end": 10,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L8-L10"
@@ -1133,8 +1133,8 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Strict-режим и отсутствие немотивированных any",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Strict-режим и отсутствие немотивированных any",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1142,8 +1142,8 @@
                       "file": "src/main.tsx",
                       "line_start": 9,
                       "line_end": 11,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L9-L11"
@@ -1157,8 +1157,8 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Типы данных API происходят из контракта",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Типы данных API происходят из контракта",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1166,8 +1166,8 @@
                       "file": "src/main.tsx",
                       "line_start": 10,
                       "line_end": 12,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L10-L12"
@@ -1189,8 +1189,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Типизация props и публичных интерфейсов модулей",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Типизация props и публичных интерфейсов модулей",
                   "findings": [
                     {
                       "kind": "issue",
@@ -1198,9 +1198,9 @@
                       "file": "src/main.tsx",
                       "line_start": 11,
                       "line_end": 13,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L11-L13"
@@ -1230,8 +1230,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Лишние перерисовки и оправданная мемоизация",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Лишние перерисовки и оправданная мемоизация",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1239,8 +1239,8 @@
                       "file": "src/main.tsx",
                       "line_start": 12,
                       "line_end": 14,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L12-L14"
@@ -1262,8 +1262,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Размер бандла код-сплиттинг и работа с изображениями",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Размер бандла код-сплиттинг и работа с изображениями",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1271,8 +1271,8 @@
                       "file": "src/main.tsx",
                       "line_start": 13,
                       "line_end": 15,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L13-L15"
@@ -1302,8 +1302,8 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Семантические элементы вместо div-супа",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Семантические элементы вместо div-супа",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1311,8 +1311,8 @@
                       "file": "src/main.tsx",
                       "line_start": 14,
                       "line_end": 16,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L14-L16"
@@ -1326,8 +1326,8 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: ARIA там где семантики не хватает и без вреда",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "ARIA там где семантики не хватает и без вреда",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1335,8 +1335,8 @@
                       "file": "src/main.tsx",
                       "line_start": 15,
                       "line_end": 17,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L15-L17"
@@ -1358,8 +1358,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Доступность с клавиатуры и порядок фокуса",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Доступность с клавиатуры и порядок фокуса",
                   "findings": [
                     {
                       "kind": "issue",
@@ -1367,9 +1367,9 @@
                       "file": "src/main.tsx",
                       "line_start": 16,
                       "line_end": 18,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L16-L18"
@@ -1383,8 +1383,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Контраст и видимость фокуса",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Контраст и видимость фокуса",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1392,8 +1392,8 @@
                       "file": "src/main.tsx",
                       "line_start": 17,
                       "line_end": 19,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L17-L19"
@@ -1423,8 +1423,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Единый подход к стилям и токены вместо магических значений",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Единый подход к стилям и токены вместо магических значений",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1432,8 +1432,8 @@
                       "file": "src/main.tsx",
                       "line_start": 18,
                       "line_end": 20,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L18-L20"
@@ -1447,8 +1447,8 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Единообразие однотипных элементов",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Единообразие однотипных элементов",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1456,8 +1456,8 @@
                       "file": "src/main.tsx",
                       "line_start": 19,
                       "line_end": 21,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L19-L21"
@@ -1479,8 +1479,8 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Поведение на разных размерах экрана",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Поведение на разных размерах экрана",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1488,8 +1488,8 @@
                       "file": "src/main.tsx",
                       "line_start": 20,
                       "line_end": 22,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L20-L22"
@@ -1519,8 +1519,8 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Есть рабочая основа, но остаётся заметная зона для улучшения.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Покрыты ли тестами ключевые сценарии интерфейса",
+                  "summary": "Нужна доработка.",
+                  "rationale": "Покрыты ли тестами ключевые сценарии интерфейса",
                   "findings": [
                     {
                       "kind": "issue",
@@ -1528,9 +1528,9 @@
                       "file": "src/main.tsx",
                       "line_start": 21,
                       "line_end": 23,
-                      "title": "Локальный недочёт",
-                      "explanation": "Участок работает, но его можно сделать более явным и устойчивым.",
-                      "suggestion": "Вынести ответственность в отдельный модуль и добавить проверку сценария.",
+                      "title": "Точка для доработки",
+                      "explanation": "Участок можно сделать явнее и устойчивее.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L21-L23"
@@ -1544,8 +1544,8 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Устойчивость тестов и отсутствие завязки на случайную разметку",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Устойчивость тестов и отсутствие завязки на случайную разметку",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1553,8 +1553,8 @@
                       "file": "src/main.tsx",
                       "line_start": 22,
                       "line_end": 24,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L22-L24"
@@ -1576,8 +1576,8 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Основной сценарий реализован последовательно.",
-                  "rationale": "Оценка опирается на наблюдаемое свойство: Воспроизводимость запуска тестов",
+                  "summary": "Сценарий работает последовательно.",
+                  "rationale": "Воспроизводимость запуска тестов",
                   "findings": [
                     {
                       "kind": "strength",
@@ -1585,8 +1585,8 @@
                       "file": "src/main.tsx",
                       "line_start": 23,
                       "line_end": 25,
-                      "title": "Положительный пример",
-                      "explanation": "Участок демонстрирует заявленное свойство кода.",
+                      "title": "Подтверждённое свойство",
+                      "explanation": "Участок показывает это свойство кода.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L23-L25"

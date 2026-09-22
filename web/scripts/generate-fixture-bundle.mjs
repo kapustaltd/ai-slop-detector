@@ -18,10 +18,8 @@ function makeMetric(metric, index, area) {
     score: Number((6.5 + (index % 5) * 0.4).toFixed(1)),
     max: 10,
     confidence: index % 4 === 0 ? 'medium' : 'high',
-    summary: issue
-      ? 'Есть рабочая основа, но остаётся заметная зона для улучшения.'
-      : 'Основной сценарий реализован последовательно.',
-    rationale: `Оценка опирается на наблюдаемое свойство: ${metric.description}`,
+    summary: issue ? 'Нужна доработка.' : 'Сценарий работает последовательно.',
+    rationale: metric.description,
     findings: [
       {
         kind: issue ? 'issue' : 'strength',
@@ -29,14 +27,13 @@ function makeMetric(metric, index, area) {
         file: area === 'frontend' ? 'src/main.tsx' : 'src/main.go',
         line_start: index + 1,
         line_end: index + 3,
-        title: issue ? 'Локальный недочёт' : 'Положительный пример',
+        title: issue ? 'Точка для доработки' : 'Подтверждённое свойство',
         explanation: issue
-          ? 'Участок работает, но его можно сделать более явным и устойчивым.'
-          : 'Участок демонстрирует заявленное свойство кода.',
+          ? 'Участок можно сделать явнее и устойчивее.'
+          : 'Участок показывает это свойство кода.',
         ...(issue
           ? {
-              suggestion:
-                'Вынести ответственность в отдельный модуль и добавить проверку сценария.',
+              suggestion: 'Вынесите ответственность в отдельный модуль и проверьте сценарий.',
             }
           : {}),
         link_status: 'verified',
