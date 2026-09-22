@@ -77,7 +77,7 @@ specs/      спецификации фич (SDD)
 docs/       план, таксономия оценки, журнал решений
 rubrics/    backend.v1.yaml, frontend.v1.yaml (фича 001)
 web/        статический интерфейс — см. web/CLAUDE.md
-.claude/    скиллы: speckit-* (SDD) и проектные
+.claude/    скиллы: speckit-* (SDD), review-* и проектные, включая remove-text-slop
 ```
 
 Перед работой с `web/` прочитай `web/CLAUDE.md` — там правила фронтенда.
