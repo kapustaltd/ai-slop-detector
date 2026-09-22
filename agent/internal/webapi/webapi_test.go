@@ -101,3 +101,35 @@ func TestHTTPRejectsUnknownJSONField(t *testing.T) {
 		t.Fatalf("status = %d, want 400", recorder.Code)
 	}
 }
+
+func TestHTTPMarksSummaryFailuresAsFailed(t *testing.T) {
+	manager := testManager(t, func(context.Context, Request, io.Writer) (Summary, error) {
+		return Summary{TeamsTotal: 1, TeamsFailed: 1, AreasFailed: 2}, nil
+	})
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/runs", strings.NewReader(validPayload()))
+	NewHandler(manager, "").ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusAccepted {
+		t.Fatalf("status = %d, want 202", recorder.Code)
+	}
+
+	runID := strings.TrimPrefix(recorder.Header().Get("Location"), "/api/v1/runs/")
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		job, err := manager.Get(runID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if job.Status == StatusFailed {
+			if job.Summary == nil || job.Summary.AreasFailed != 2 {
+				t.Fatalf("failure summary was not preserved: %#v", job.Summary)
+			}
+			if job.Error == "" || job.Progress["backend"] != StatusFailed || job.Progress["frontend"] != StatusFailed {
+				t.Fatalf("failure state is incomplete: %#v", job)
+			}
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatal("run did not finish as failed")
+}

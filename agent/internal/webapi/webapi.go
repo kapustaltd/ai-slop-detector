@@ -198,14 +198,18 @@ func (m *Manager) execute(parent context.Context, request Request) {
 	finished := m.config.Now().UTC()
 	job.FinishedAt = finished.Format(time.RFC3339)
 	job.Logs = logs.Values()
-	job.Summary = nil
+	job.Summary = &summary
 	if err != nil {
 		job.Status = StatusFailed
 		job.Error = sanitizeMessage(err.Error())
 		job.Progress = progressFor(request.Area, StatusFailed)
+	} else if summary.TeamsFailed > 0 || summary.AreasFailed > 0 {
+		job.Status = StatusFailed
+		job.Error = fmt.Sprintf("прогон завершён с ошибками: областей с ошибками — %d, команд с ошибками — %d", summary.AreasFailed, summary.TeamsFailed)
+		job.Progress = progressFor(request.Area, StatusFailed)
 	} else {
 		job.Status = StatusSucceeded
-		job.Summary = &summary
+		job.Error = ""
 		job.Progress = progressFor(request.Area, StatusSucceeded)
 	}
 	m.active--
