@@ -1,4 +1,4 @@
 dist
 coverage
 public/data
-src/shared/ui
+src/shared/ui/shadcn

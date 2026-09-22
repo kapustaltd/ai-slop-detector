@@ -1,0 +1,290 @@
+/**
+ * Дизайн-токены интерфейса.
+ *
+ * Источник правды — design/reference/tokens.json. Значения перенесены как есть:
+ * не округлять к сетке 4/8 px и не подменять дефолтами Tailwind или shadcn.
+ *
+ * Сырые токены объявлены с префиксом --ds-, чтобы не конфликтовать с переменными,
+ * которые в src/index.css генерирует и перезаписывает shadcn CLI. Семантические
+ * переменные shadcn переназначаются на эти токены в конце src/index.css.
+ */
+
+:root {
+  /* Поверхности и текст */
+  --ds-bg: #fbfbfc;
+  --ds-surface: #ffffff;
+  --ds-muted: #f3f4f7;
+  --ds-muted-open: #fafafd;
+  --ds-code: #f7f8fa;
+  --ds-border: #e4e6eb;
+  --ds-border-strong: #c9ced8;
+  --ds-fg: #14161a;
+  --ds-fg-muted: #565c6b;
+  --ds-fg-subtle: #7a8191;
+  --ds-fg-faint: #b4bac6;
+  --ds-primary: #5b5bd6;
+  --ds-primary-soft: #eeeefb;
+  --ds-link: #4a4ac4;
+  --ds-link-hover: #3a3aa8;
+  --ds-on-accent: #fefefe;
+  --ds-track: #e9ebef;
+  --ds-track-partial: repeating-linear-gradient(
+    135deg,
+    #e9ebef,
+    #e9ebef 4px,
+    #dde0e6 4px,
+    #dde0e6 8px
+  );
+
+  /* Шкала баллов: один тон, пять ступеней по светлоте */
+  --ds-score-1: #708598;
+  --ds-score-2: #52738b;
+  --ds-score-3: #38637c;
+  --ds-score-4: #215269;
+  --ds-score-5: #0e4255;
+
+  /* Серьёзность находок — единственное место, где цвет несёт тревогу */
+  --ds-sev-critical-bg: #fce9e7;
+  --ds-sev-critical-fg: #9f1f1a;
+  --ds-sev-critical-border: #f3c9c5;
+  --ds-sev-critical-chart: #9f1f1a;
+  --ds-sev-major-bg: #fdf1e3;
+  --ds-sev-major-fg: #8a4b0a;
+  --ds-sev-major-border: #f2dbbb;
+  --ds-sev-major-chart: #c46a12;
+  --ds-sev-minor-bg: #f2f1e5;
+  --ds-sev-minor-fg: #63591a;
+  --ds-sev-minor-border: #e2dfc7;
+  --ds-sev-minor-chart: #8a7a2a;
+  --ds-sev-info-bg: #eef0f4;
+  --ds-sev-info-fg: #4a5261;
+  --ds-sev-info-border: #dce0e7;
+  --ds-sev-info-chart: #6b7482;
+  --ds-sev-strength-bg: #e8f3ec;
+  --ds-sev-strength-fg: #245c3a;
+  --ds-sev-strength-border: #c8e1d2;
+
+  /* Предупреждения оценки: песочный, не красный */
+  --ds-warn-bg: #fbf5e8;
+  --ds-warn-fg: #8a4b0a;
+  --ds-warn-fg-body: #6b3c09;
+  --ds-warn-border: #eddfbe;
+
+  /* Графики */
+  --ds-chart-team-stroke: #215269;
+  --ds-chart-team-fill: rgb(33 82 105 / 14%);
+  --ds-chart-median-stroke: #b08b4f;
+  --ds-chart-average-bar: #c9ced8;
+  --ds-chart-grid: #e4e6eb;
+  --ds-chart-grid-outer: #c9ced8;
+
+  /* Подсветка кода: раскраска приходит из бандла, цвета — отсюда */
+  --ds-code-plain: #24292f;
+  --ds-code-keyword: #8250df;
+  --ds-code-string: #0a3069;
+  --ds-code-type: #0550ae;
+  --ds-code-decorator: #953800;
+  --ds-code-line-number: #b4bac6;
+
+  /* Высота дорожки балла */
+  --ds-gauge-hero: 10px;
+  --ds-gauge-row: 8px;
+  --ds-gauge-inline: 6px;
+  --ds-gauge-micro: 4px;
+
+  /* Размеры интерактивных элементов */
+  --ds-control-desktop: 36px;
+  --ds-control-mobile: 44px;
+  --ds-control-compact: 30px;
+  --ds-badge-height: 22px;
+  --ds-table-row: 46px;
+}
+
+.dark {
+  --ds-bg: #0d0f12;
+  --ds-surface: #15181d;
+  --ds-muted: #1c2027;
+  --ds-muted-open: #191d23;
+  --ds-code: #111419;
+  --ds-border: #272c34;
+  --ds-border-strong: #39404a;
+  --ds-fg: #eceef2;
+  --ds-fg-muted: #a0a7b4;
+  --ds-fg-subtle: #767e8c;
+  --ds-fg-faint: #6e7681;
+  --ds-primary: #9b9bf7;
+  --ds-primary-soft: #232345;
+  --ds-link: #a8a8fa;
+  --ds-link-hover: #bdbdfc;
+  --ds-on-accent: #10121a;
+  --ds-track: #262b33;
+  --ds-track-partial: repeating-linear-gradient(
+    135deg,
+    #262b33,
+    #262b33 4px,
+    #2a3039 4px,
+    #2a3039 8px
+  );
+
+  /* Шкала разворачивается: светлее всегда значит выше */
+  --ds-score-1: #687885;
+  --ds-score-2: #7f9aad;
+  --ds-score-3: #9dbbcc;
+  --ds-score-4: #bcd9e6;
+  --ds-score-5: #e2f3f9;
+
+  --ds-sev-critical-bg: #2c1a19;
+  --ds-sev-critical-fg: #f3908a;
+  --ds-sev-critical-border: #4a2624;
+  --ds-sev-critical-chart: #f3908a;
+  --ds-sev-major-bg: #2d2318;
+  --ds-sev-major-fg: #eba35f;
+  --ds-sev-major-border: #4a3720;
+  --ds-sev-major-chart: #e09a54;
+  --ds-sev-minor-bg: #23241a;
+  --ds-sev-minor-fg: #cfc47e;
+  --ds-sev-minor-border: #3a3a26;
+  --ds-sev-minor-chart: #c2b36a;
+  --ds-sev-info-bg: #1b2028;
+  --ds-sev-info-fg: #9aa4b4;
+  --ds-sev-info-border: #2e353f;
+  --ds-sev-info-chart: #98a1af;
+  --ds-sev-strength-bg: #16241c;
+  --ds-sev-strength-fg: #74c295;
+  --ds-sev-strength-border: #27412f;
+
+  --ds-warn-bg: #221e14;
+  --ds-warn-fg: #eba35f;
+  --ds-warn-fg-body: #d9a56e;
+  --ds-warn-border: #3b331f;
+
+  --ds-chart-team-stroke: #bcd9e6;
+  --ds-chart-team-fill: rgb(188 217 230 / 16%);
+  --ds-chart-median-stroke: #d8b579;
+  --ds-chart-average-bar: #39404a;
+  --ds-chart-grid: #272c34;
+  --ds-chart-grid-outer: #39404a;
+
+  --ds-code-plain: #c9d1d9;
+  --ds-code-keyword: #d2a8ff;
+  --ds-code-string: #a5d6ff;
+  --ds-code-type: #79c0ff;
+  --ds-code-decorator: #ffa657;
+  --ds-code-line-number: #6e7681;
+}
+
+/* Токены, доступные утилитами Tailwind: bg-surface, text-fg-muted, text-lead и т. д. */
+@theme inline {
+  --color-bg: var(--ds-bg);
+  --color-surface: var(--ds-surface);
+  --color-muted-surface: var(--ds-muted);
+  --color-muted-open: var(--ds-muted-open);
+  --color-code: var(--ds-code);
+  --color-line: var(--ds-border);
+  --color-line-strong: var(--ds-border-strong);
+  --color-fg: var(--ds-fg);
+  --color-fg-muted: var(--ds-fg-muted);
+  --color-fg-subtle: var(--ds-fg-subtle);
+  --color-fg-faint: var(--ds-fg-faint);
+  --color-brand: var(--ds-primary);
+  --color-brand-soft: var(--ds-primary-soft);
+  --color-link: var(--ds-link);
+  --color-link-hover: var(--ds-link-hover);
+  --color-on-accent: var(--ds-on-accent);
+  --color-track: var(--ds-track);
+
+  --color-score-1: var(--ds-score-1);
+  --color-score-2: var(--ds-score-2);
+  --color-score-3: var(--ds-score-3);
+  --color-score-4: var(--ds-score-4);
+  --color-score-5: var(--ds-score-5);
+
+  --color-sev-critical-bg: var(--ds-sev-critical-bg);
+  --color-sev-critical-fg: var(--ds-sev-critical-fg);
+  --color-sev-critical-border: var(--ds-sev-critical-border);
+  --color-sev-major-bg: var(--ds-sev-major-bg);
+  --color-sev-major-fg: var(--ds-sev-major-fg);
+  --color-sev-major-border: var(--ds-sev-major-border);
+  --color-sev-minor-bg: var(--ds-sev-minor-bg);
+  --color-sev-minor-fg: var(--ds-sev-minor-fg);
+  --color-sev-minor-border: var(--ds-sev-minor-border);
+  --color-sev-info-bg: var(--ds-sev-info-bg);
+  --color-sev-info-fg: var(--ds-sev-info-fg);
+  --color-sev-info-border: var(--ds-sev-info-border);
+  --color-sev-strength-bg: var(--ds-sev-strength-bg);
+  --color-sev-strength-fg: var(--ds-sev-strength-fg);
+  --color-sev-strength-border: var(--ds-sev-strength-border);
+
+  --color-warn-bg: var(--ds-warn-bg);
+  --color-warn-fg: var(--ds-warn-fg);
+  --color-warn-fg-body: var(--ds-warn-fg-body);
+  --color-warn-border: var(--ds-warn-border);
+
+  --text-score-hero: 44px;
+  --text-score-hero--font-weight: 300;
+  --text-score-hero--letter-spacing: -0.02em;
+  --text-score-large: 32px;
+  --text-score-large--font-weight: 300;
+  --text-score-large--letter-spacing: -0.02em;
+  --text-score-metric: 26px;
+  --text-score-metric--font-weight: 300;
+  --text-score-metric--letter-spacing: -0.02em;
+  --text-h1: 26px;
+  --text-h1--font-weight: 500;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h2: 22px;
+  --text-h2--font-weight: 500;
+  --text-h2--letter-spacing: -0.02em;
+  --text-count: 20px;
+  --text-count--font-weight: 300;
+  --text-lead: 15px;
+  --text-lead--line-height: 1.55;
+  --text-strong: 14px;
+  --text-strong--font-weight: 500;
+  --text-body: 13px;
+  --text-prose: 12.5px;
+  --text-prose--line-height: 1.7;
+  --text-meta: 11.5px;
+  --text-meta--font-weight: 500;
+  --text-overline: 11px;
+  --text-overline--font-weight: 500;
+  --text-overline--letter-spacing: 0.05em;
+
+  --radius-badge: 6px;
+  --radius-control: 8px;
+  --radius-panel: 10px;
+  --radius-card: 12px;
+}
+
+@layer base {
+  body {
+    background-color: var(--ds-bg);
+    color: var(--ds-fg);
+    /* tokens.json → typography.$numbers: tabular-nums на всех числах без исключения */
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* tokens.json → focus: outline: none не допускается нигде */
+  :focus-visible {
+    outline: 2px solid var(--ds-primary);
+    outline-offset: 2px;
+  }
+
+  a {
+    color: var(--ds-link);
+  }
+
+  a:hover {
+    color: var(--ds-link-hover);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+}

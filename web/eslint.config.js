@@ -13,7 +13,7 @@ const LAYERS = ['shared', 'entities', 'features', 'widgets', 'pages', 'app']
 const allowedFrom = (layer) => LAYERS.slice(0, LAYERS.indexOf(layer))
 
 export default tseslint.config(
-  { ignores: ['dist', 'src/shared/ui/**', 'coverage'] },
+  { ignores: ['dist', 'src/shared/ui/shadcn/**', 'coverage'] },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -32,9 +32,12 @@ export default tseslint.config(
       'import/resolver': {
         typescript: { project: './tsconfig.app.json' },
       },
+      // В `shared` и `app` срезов нет — только сегменты, поэтому слой целиком
+      // считается одним элементом и сегменты внутри вправе ссылаться друг на друга.
+      // В остальных слоях элемент — срез.
       'boundaries/elements': LAYERS.map((layer) => ({
         type: layer,
-        pattern: `src/${layer}/*`,
+        pattern: layer === 'shared' || layer === 'app' ? `src/${layer}` : `src/${layer}/*`,
       })),
       'boundaries/include': ['src/**/*'],
     },
