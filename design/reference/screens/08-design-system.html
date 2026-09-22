@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Токены, шкала баллов, бейджи, типографика</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+body { margin: 0; font-family: 'Geist', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: #4A4AC4; }
+a:hover { color: #3A3AA8; }
+table { border-collapse: collapse; }
+</style>
+<style>
+html { background: #FBFBFC; }
+body { display: flex; justify-content: center; padding: 24px 0; }
+</style>
+</head>
+<body>
+<div style="width: 1440px; height: 2240px; box-sizing: border-box; background: #FBFBFC; color: #14161A; padding: 28px 40px 36px; display: flex; flex-direction: column; gap: 20px; overflow: hidden;">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.02em;">Система</h1>
+      <div style="max-width: 940px; font-size: 12.5px; line-height: 1.6; color: #565C6B;">Всё определяется CSS-переменными на <code style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px;">:root</code> и <code style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px;">.dark</code> — в разметке нет ни одного литерального цвета. Шрифты Geist и Geist Mono подключаются локально, без обращения к сети.</div>
+    </div>
+    <span style="padding: 5px 10px; border: 1px solid #E4E6EB; border-radius: 7px; background: #F3F4F7; color: #565C6B; font-size: 11.5px;">Tailwind 4 · shadcn/ui · пресет radix-nova</span>
+  </div>
+
+  <div style="display: flex; gap: 16px; align-items: stretch;">
+
+    <div style="width: 660px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; padding: 18px; border: 1px solid #E4E6EB; border-radius: 12px; background: #FFFFFF;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <h2 style="margin: 0; font-size: 14px; font-weight: 500;">Цветовые токены</h2>
+        <span style="font-size: 11px; color: #7A8191;">светлая / тёмная</span>
+      </div>
+      <table style="width: 100%;">
+        <thead><tr>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Переменная</th>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Назначение</th>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Light</th>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Dark</th>
+        </tr></thead>
+        <tbody><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--bg</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Фон страницы</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #FBFBFC; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#FBFBFC</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #0D0F12; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#0D0F12</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--surface</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Карточки, таблицы, поповеры</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #FFFFFF; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#FFFFFF</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #15181D; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#15181D</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--muted</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Шапки таблиц, вторичные панели</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #F3F4F7; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#F3F4F7</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #1C2027; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#1C2027</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--code</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Подложка фрагментов кода</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #F7F8FA; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#F7F8FA</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #111419; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#111419</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--border</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Разделители, рамки карточек</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #E4E6EB; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#E4E6EB</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #272C34; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#272C34</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--border-strong</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Рамки полей и кнопок</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #C9CED8; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#C9CED8</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #39404A; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#39404A</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--fg</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Основной текст, числа баллов</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #14161A; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#14161A</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #ECEEF2; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#ECEEF2</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--fg-muted</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Пояснения, подписи осей</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #565C6B; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#565C6B</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #A0A7B4; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#A0A7B4</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--fg-subtle</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Метаданные, единицы, пути</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #7A8191; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#7A8191</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #767E8C; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#767E8C</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--primary</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Ссылки, фокус, вес узла</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #5B5BD6; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#5B5BD6</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #9B9BF7; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#9B9BF7</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--primary-soft</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Подложка активного состояния</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #EEEEFB; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#EEEEFB</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #232345; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#232345</span></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 7px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #14161A;">--track</th>
+<td style="padding: 7px 12px; font-size: 11.5px; color: #565C6B;">Дорожка шкалы под баллом</td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #E9EBEF; border: 1px solid #E4E6EB; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#E9EBEF</span></span></td>
+<td style="padding: 7px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 22px; height: 22px; border-radius: 6px; background: #262B33; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#262B33</span></span></td>
+</tr></tbody>
+      </table>
+      <div style="margin-top: 4px; padding: 10px 12px; border: 1px solid #E4E6EB; border-radius: 8px; background: #F3F4F7; font-size: 11px; line-height: 1.55; color: #565C6B;">Контраст основного текста: 18.1:1 в светлой, 15.3:1 в тёмной. Пояснительный серый — 6.7:1 и 7.4:1. Самый бледный <code style="font-family: 'Geist Mono', ui-monospace, monospace;">--fg-subtle</code> держит 3.9:1 и 4.3:1 — он допущен только для 11–12 px метаданных, дублирующих то, что уже сказано рядом.</div>
+    </div>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 18px; border: 1px solid #E4E6EB; border-radius: 12px; background: #FFFFFF;">
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <h2 style="margin: 0; font-size: 14px; font-weight: 500;">Шкала баллов 0–10</h2>
+        <div style="font-size: 11.5px; line-height: 1.6; color: #565C6B;">Один тон, пять ступеней по светлоте. Красного и зелёного в шкале нет намеренно: низкий балл — не ошибка и не тревога, а положение на шкале. Порядок ступеней читается при любой форме дальтонизма, потому что несёт его светлота, а не оттенок — последняя колонка показывает ту же шкалу в градациях серого.</div>
+      </div>
+      <table style="width: 100%;">
+        <thead><tr>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Ступень</th>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Словом</th>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Light · контраст к фону</th>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B; background: #15181D;">Dark · контраст к фону</th>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Ч/б</th>
+        </tr></thead>
+        <tbody><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-size: 12px; font-weight: 400;">Уровень 1<span style="display: block; font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">0 – 2.9</span></th>
+<td style="padding: 9px 12px; font-size: 12px; color: #14161A;">низкий</td>
+<td style="padding: 9px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #708598;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#708598</span><span style="font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">3.8:1</span></span></td>
+<td style="padding: 9px 12px; background: #15181D;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #687885;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #A0A7B4;">#687885</span><span style="font-size: 11px; color: #767E8C; font-variant-numeric: tabular-nums;">3.9:1</span></span></td>
+<td style="padding: 9px 12px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #818181;"></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-size: 12px; font-weight: 400;">Уровень 2<span style="display: block; font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">3 – 4.9</span></th>
+<td style="padding: 9px 12px; font-size: 12px; color: #14161A;">ниже среднего</td>
+<td style="padding: 9px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #52738B;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#52738B</span><span style="font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">5.0:1</span></span></td>
+<td style="padding: 9px 12px; background: #15181D;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #7F9AAD;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #A0A7B4;">#7F9AAD</span><span style="font-size: 11px; color: #767E8C; font-variant-numeric: tabular-nums;">6.0:1</span></span></td>
+<td style="padding: 9px 12px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #6F6F6F;"></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-size: 12px; font-weight: 400;">Уровень 3<span style="display: block; font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">5 – 6.9</span></th>
+<td style="padding: 9px 12px; font-size: 12px; color: #14161A;">средний</td>
+<td style="padding: 9px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #38637C;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#38637C</span><span style="font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">6.5:1</span></span></td>
+<td style="padding: 9px 12px; background: #15181D;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #9DBBCC;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #A0A7B4;">#9DBBCC</span><span style="font-size: 11px; color: #767E8C; font-variant-numeric: tabular-nums;">8.8:1</span></span></td>
+<td style="padding: 9px 12px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #5E5E5E;"></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-size: 12px; font-weight: 400;">Уровень 4<span style="display: block; font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">7 – 8.4</span></th>
+<td style="padding: 9px 12px; font-size: 12px; color: #14161A;">выше среднего</td>
+<td style="padding: 9px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #215269;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#215269</span><span style="font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">8.5:1</span></span></td>
+<td style="padding: 9px 12px; background: #15181D;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #BCD9E6;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #A0A7B4;">#BCD9E6</span><span style="font-size: 11px; color: #767E8C; font-variant-numeric: tabular-nums;">12.0:1</span></span></td>
+<td style="padding: 9px 12px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #4E4E4E;"></span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-size: 12px; font-weight: 400;">Уровень 5<span style="display: block; font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">8.5 – 10</span></th>
+<td style="padding: 9px 12px; font-size: 12px; color: #14161A;">высокий</td>
+<td style="padding: 9px 12px;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #0E4255;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #565C6B;">#0E4255</span><span style="font-size: 11px; color: #7A8191; font-variant-numeric: tabular-nums;">10.9:1</span></span></td>
+<td style="padding: 9px 12px; background: #15181D;"><span style="display: inline-flex; align-items: center; gap: 8px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #E2F3F9;"></span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #A0A7B4;">#E2F3F9</span><span style="font-size: 11px; color: #767E8C; font-variant-numeric: tabular-nums;">15.6:1</span></span></td>
+<td style="padding: 9px 12px;"><span aria-hidden="true" style="display: block; width: 46px; height: 10px; border-radius: 5px; background: #3F3F3F;"></span></td>
+</tr></tbody>
+      </table>
+      <div style="display: flex; gap: 12px;">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid #E4E6EB; border-radius: 10px; background: #F3F4F7;">
+          <div style="font-size: 11.5px; font-weight: 500;">Цвет — не единственный носитель смысла</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="display: flex; align-items: baseline; gap: 6px;"><span style="font-size: 22px; font-weight: 300; font-variant-numeric: tabular-nums; line-height: 1;">6.2</span><span style="font-size: 12px; color: #7A8191;">/ 10</span></span>
+            <span aria-hidden="true" style="display: block; width: 96px; height: 8px; border-radius: 4px; background: #E9EBEF; overflow: hidden;"><span style="display: block; width: 62%; height: 8px; border-radius: 4px; background: #38637C;"></span></span>
+            <span style="font-size: 11.5px; color: #565C6B;">средний</span>
+          </div>
+          <div style="font-size: 11px; line-height: 1.55; color: #565C6B;">Число, длина дорожки и слово повторяют друг друга. Если убрать цвет совсем, значение по-прежнему читается — этим проверяется каждый элемент со шкалой.</div>
+        </div>
+        <div style="width: 236px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px dashed #C9CED8; border-radius: 10px; background: #F3F4F7;">
+          <div style="font-size: 11.5px; font-weight: 500;">Отсутствие данных</div>
+          <span style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 18px; font-weight: 300; color: #7A8191;">—</span><span aria-hidden="true" style="display: block; width: 96px; height: 8px; border-radius: 4px; border: 1px dashed #C9CED8; box-sizing: border-box;"></span></span>
+          <div style="font-size: 11px; line-height: 1.55; color: #565C6B;">Пустая пунктирная дорожка и прочерк. Ни одна ступень шкалы не может быть спутана с «нет данных».</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 16px; align-items: stretch;">
+    <div style="width: 660px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px; border: 1px solid #E4E6EB; border-radius: 12px; background: #FFFFFF;">
+      <h2 style="margin: 0; font-size: 14px; font-weight: 500;">Бейджи</h2>
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+  <div style="font-size: 12px; font-weight: 500;">Статус оценки</div>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid #E4E6EB; border-radius: 10px; background: #FFFFFF;"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #C8E1D2; border-radius: 7px; background: #E8F3EC; color: #245C3A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4 10-10"></path></svg>Оценено</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #DCE0E7; border-radius: 7px; background: #EEF0F4; color: #4A5261; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"></path><path d="M12 3a9 9 0 0 1 0 18"></path></svg>Частично</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px dashed #C9CED8; border-radius: 7px; background: #F3F4F7; color: #7A8191; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg>Нет данных</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #F3C9C5; border-radius: 7px; background: #FCE9E7; color: #9F1F1A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg>Не удалось</span></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid #272C34; border-radius: 10px; background: #15181D;"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #27412F; border-radius: 7px; background: #16241C; color: #74C295; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4 10-10"></path></svg>Оценено</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #2E353F; border-radius: 7px; background: #1B2028; color: #9AA4B4; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"></path><path d="M12 3a9 9 0 0 1 0 18"></path></svg>Частично</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px dashed #39404A; border-radius: 7px; background: #1C2027; color: #767E8C; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg>Нет данных</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #4A2624; border-radius: 7px; background: #2C1A19; color: #F3908A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg>Не удалось</span></div>
+  <div style="font-size: 10.5px; line-height: 1.5; color: #7A8191;">Контраст текста к подложке, светлая / тёмная: оценено 6.9:1 / 7.6:1 · частично 6.9:1 / 6.5:1 · нет данных 3.6:1 / 4.0:1 · не удалось 6.7:1 / 7.2:1</div>
+</div><div style="display: flex; flex-direction: column; gap: 9px;">
+  <div style="font-size: 12px; font-weight: 500;">Серьёзность находки</div>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid #E4E6EB; border-radius: 10px; background: #FFFFFF;"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #F3C9C5; border-radius: 7px; background: #FCE9E7; color: #9F1F1A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="8.2,2.6 15.8,2.6 21.4,8.2 21.4,15.8 15.8,21.4 8.2,21.4 2.6,15.8 2.6,8.2"></polygon><path d="M12 7.5v5"></path><path d="M12 16h.01"></path></svg>Критическая</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #F2DBBB; border-radius: 7px; background: #FDF1E3; color: #8A4B0A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>Серьёзная</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #E2DFC7; border-radius: 7px; background: #F2F1E5; color: #63591A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"></circle></svg>Незначительная</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #DCE0E7; border-radius: 7px; background: #EEF0F4; color: #4A5261; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 7.6h.01"></path></svg>Информационная</span></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid #272C34; border-radius: 10px; background: #15181D;"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #4A2624; border-radius: 7px; background: #2C1A19; color: #F3908A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="8.2,2.6 15.8,2.6 21.4,8.2 21.4,15.8 15.8,21.4 8.2,21.4 2.6,15.8 2.6,8.2"></polygon><path d="M12 7.5v5"></path><path d="M12 16h.01"></path></svg>Критическая</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #4A3720; border-radius: 7px; background: #2D2318; color: #EBA35F; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>Серьёзная</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #3A3A26; border-radius: 7px; background: #23241A; color: #CFC47E; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"></circle></svg>Незначительная</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #2E353F; border-radius: 7px; background: #1B2028; color: #9AA4B4; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 7.6h.01"></path></svg>Информационная</span></div>
+  <div style="font-size: 10.5px; line-height: 1.5; color: #7A8191;">Контраст текста к подложке, светлая / тёмная: критическая 6.7:1 / 7.2:1 · серьёзная 6.1:1 / 7.3:1 · незначительная 6.2:1 / 8.9:1 · информационная 6.9:1 / 6.5:1</div>
+</div><div style="display: flex; flex-direction: column; gap: 9px;">
+  <div style="font-size: 12px; font-weight: 500;">Признак оценки</div>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid #E4E6EB; border-radius: 10px; background: #FFFFFF;"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #EDDFBE; border-radius: 7px; background: #FBF5E8; color: #8A4B0A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="M12 8v4"></path><path d="M12 15h.01"></path></svg>Влияние на оценку</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #EDDFBE; border-radius: 7px; background: #FBF5E8; color: #8A4B0A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>Лимит размера</span></div>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid #272C34; border-radius: 10px; background: #15181D;"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #3B331F; border-radius: 7px; background: #221E14; color: #EBA35F; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="M12 8v4"></path><path d="M12 15h.01"></path></svg>Влияние на оценку</span> <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #3B331F; border-radius: 7px; background: #221E14; color: #EBA35F; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>Лимит размера</span></div>
+  <div style="font-size: 10.5px; line-height: 1.5; color: #7A8191;">Контраст текста к подложке, светлая / тёмная: влияние на оценку 6.3:1 / 7.9:1 · лимит размера 6.3:1 / 7.9:1</div>
+</div>
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+  <div style="font-size: 12px; font-weight: 500;">Уверенность модели</div>
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid #E4E6EB; border-radius: 10px; background: #FFFFFF;">
+  <span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border: 1px solid #C9CED8; border-radius: 7px; background: #FFFFFF; color: #14161A; font-size: 11.5px; font-weight: 500;"><span aria-hidden="true" style="display: flex; gap: 3px;"><span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #565C6B;"></span><span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #565C6B;"></span><span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #565C6B;"></span></span>Уверенность высокая</span><span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border: 1px solid #C9CED8; border-radius: 7px; background: #FFFFFF; color: #14161A; font-size: 11.5px; font-weight: 500;"><span aria-hidden="true" style="display: flex; gap: 3px;"><span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #565C6B;"></span><span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #565C6B;"></span><span style="display: block; width: 6px; height: 6px; border-radius: 50%; border: 1px solid #C9CED8; box-sizing: border-box;"></span></span>Уверенность средняя</span><span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border: 1px dashed #C9CED8; border-radius: 7px; background: #F3F4F7; color: #14161A; font-size: 11.5px; font-weight: 500;"><span aria-hidden="true" style="display: flex; gap: 3px;"><span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #565C6B;"></span><span style="display: block; width: 6px; height: 6px; border-radius: 50%; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="display: block; width: 6px; height: 6px; border-radius: 50%; border: 1px solid #C9CED8; box-sizing: border-box;"></span></span>Уверенность низкая</span>
+  </div>
+  <div style="font-size: 10.5px; line-height: 1.5; color: #7A8191;">Цветом не кодируется вовсе: разница читается числом заполненных точек, словом и типом рамки. Низкая уверенность — единственная с пунктиром.</div>
+</div>
+    </div>
+
+    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 14px; padding: 18px; border: 1px solid #E4E6EB; border-radius: 12px; background: #FFFFFF;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <h2 style="margin: 0; font-size: 14px; font-weight: 500;">Типографическая шкала</h2>
+        <span style="font-size: 11px; color: #7A8191;">Geist · числа всегда табличные</span>
+      </div>
+      <table style="width: 100%;">
+        <thead><tr>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Размер / начертание</th>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Где применяется</th>
+          <th scope="col" style="padding: 6px 12px; text-align: left; font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #565C6B;">Образец</th>
+        </tr></thead>
+        <tbody><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #565C6B; white-space: nowrap;">44 / 300</th>
+<td style="padding: 9px 12px; font-size: 11.5px; color: #7A8191;">Итоговый балл на странице команды</td>
+<td style="padding: 9px 12px;"><span style="font-size: 44px; font-weight: 300;  color: #14161A;">8.0</span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #565C6B; white-space: nowrap;">26 / 500</th>
+<td style="padding: 9px 12px; font-size: 11.5px; color: #7A8191;">Название команды, заголовок экрана</td>
+<td style="padding: 9px 12px;"><span style="font-size: 26px; font-weight: 500;  color: #14161A;">«Кодовый шторм»</span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #565C6B; white-space: nowrap;">20 / 300</th>
+<td style="padding: 9px 12px; font-size: 11.5px; color: #7A8191;">Счётчики находок</td>
+<td style="padding: 9px 12px;"><span style="font-size: 20px; font-weight: 300;  color: #14161A;">14</span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #565C6B; white-space: nowrap;">15 / 400</th>
+<td style="padding: 9px 12px; font-size: 11.5px; color: #7A8191;">Краткий вывод метрики</td>
+<td style="padding: 9px 12px;"><span style="font-size: 15px; font-weight: 400;  color: #14161A;">Владелец ресурса проверяется не везде</span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #565C6B; white-space: nowrap;">14 / 500</th>
+<td style="padding: 9px 12px; font-size: 11.5px; color: #7A8191;">Названия категорий, строки таблиц</td>
+<td style="padding: 9px 12px;"><span style="font-size: 14px; font-weight: 500;  color: #14161A;">Безопасность</span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #565C6B; white-space: nowrap;">13 / 400</th>
+<td style="padding: 9px 12px; font-size: 11.5px; color: #7A8191;">Базовый текст интерфейса</td>
+<td style="padding: 9px 12px;"><span style="font-size: 13px; font-weight: 400;  color: #14161A;">Проверка прав на уровне ресурса</span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #565C6B; white-space: nowrap;">12.5 / 400</th>
+<td style="padding: 9px 12px; font-size: 11.5px; color: #7A8191;">Обоснование, длинный текст</td>
+<td style="padding: 9px 12px;"><span style="font-size: 12.5px; font-weight: 400;  color: #14161A;">Глобальный guard закрывает вход анонимным пользователям</span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #565C6B; white-space: nowrap;">11.5 / 500</th>
+<td style="padding: 9px 12px; font-size: 11.5px; color: #7A8191;">Бейджи, подписи, метаданные</td>
+<td style="padding: 9px 12px;"><span style="font-size: 11.5px; font-weight: 500;  color: #14161A;">вес 0.13 в backend</span></td>
+</tr><tr style="border-top: 1px solid #E4E6EB;">
+<th scope="row" style="padding: 9px 12px; text-align: left; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; font-weight: 400; color: #565C6B; white-space: nowrap;">11 / 500</th>
+<td style="padding: 9px 12px; font-size: 11.5px; color: #7A8191;">Заголовки колонок, надзаголовки</td>
+<td style="padding: 9px 12px;"><span style="font-size: 11px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: #14161A;">КАТЕГОРИЯ</span></td>
+</tr></tbody>
+      </table>
+      <div style="padding: 11px 13px; border: 1px solid #E4E6EB; border-radius: 9px; background: #F3F4F7; font-size: 11.5px; line-height: 1.6; color: #565C6B;">Баллы набираются светлым начертанием 300 и без выделения цветом: крупное тонкое число читается как показание прибора, а не как рекорд. Рядом с каждым баллом стоит «/ 10» — знаменатель не даёт прочитать 8.0 как абсолютную величину.</div>
+      <div style="display: flex; gap: 20px; padding-top: 4px;">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 9px;">
+          <div style="font-size: 12px; font-weight: 500;">Отступы, шаг 2 px</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">4</span>
+ <span aria-hidden="true" style="display: block; width: 8px; height: 14px; border-radius: 3px; background: #EEEEFB; border: 1px solid #5B5BD6;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Внутри бейджа, между иконкой и словом</span></div><div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">6 / 8</span>
+ <span aria-hidden="true" style="display: block; width: 12px; height: 14px; border-radius: 3px; background: #EEEEFB; border: 1px solid #5B5BD6;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Между связанными элементами строки</span></div><div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">10 / 12</span>
+ <span aria-hidden="true" style="display: block; width: 20px; height: 14px; border-radius: 3px; background: #EEEEFB; border: 1px solid #5B5BD6;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Между элементами внутри карточки</span></div><div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">14 / 16</span>
+ <span aria-hidden="true" style="display: block; width: 28px; height: 14px; border-radius: 3px; background: #EEEEFB; border: 1px solid #5B5BD6;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Внутренние поля карточек и ячеек таблицы</span></div><div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">18 / 20</span>
+ <span aria-hidden="true" style="display: block; width: 36px; height: 14px; border-radius: 3px; background: #EEEEFB; border: 1px solid #5B5BD6;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Между блоками одного экрана</span></div><div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">28 / 40</span>
+ <span aria-hidden="true" style="display: block; width: 56px; height: 14px; border-radius: 3px; background: #EEEEFB; border: 1px solid #5B5BD6;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Поля страницы: 28 сверху, 40 по бокам</span></div>
+        </div>
+        <div style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 9px;">
+          <div style="font-size: 12px; font-weight: 500;">Радиусы и высоты</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">6</span>
+ <span aria-hidden="true" style="display: block; width: 34px; height: 22px; border-radius: 6px; background: #F3F4F7; border: 1px solid #C9CED8;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Бейджи, мелкие чипы</span></div><div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">7 / 8</span>
+ <span aria-hidden="true" style="display: block; width: 34px; height: 22px; border-radius: 7px; background: #F3F4F7; border: 1px solid #C9CED8;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Кнопки, поля, чипы фильтров</span></div><div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">10</span>
+ <span aria-hidden="true" style="display: block; width: 34px; height: 22px; border-radius: 10px; background: #F3F4F7; border: 1px solid #C9CED8;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Вложенные панели, блоки кода</span></div><div style="display: flex; align-items: center; gap: 12px;">
+ <span style="width: 54px; flex-shrink: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #14161A;">12</span>
+ <span aria-hidden="true" style="display: block; width: 34px; height: 22px; border-radius: 12px; background: #F3F4F7; border: 1px solid #C9CED8;"></span>
+ <span style="font-size: 11.5px; color: #565C6B;">Карточки и таблицы верхнего уровня</span></div>
+          <div style="margin-top: 4px; font-size: 11.5px; line-height: 1.6; color: #565C6B;">Высота контролов: 36 px на десктопе, 44 px на телефоне. Строка таблицы — 46 px, ячейка кода — 12 px / 1.75.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 16px; align-items: stretch;">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 18px; border: 1px solid #272C34; border-radius: 12px; background: #0D0F12;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <h2 style="margin: 0; font-size: 14px; font-weight: 500; color: #ECEEF2;">Те же элементы в тёмной теме</h2>
+        <span style="font-size: 11px; color: #767E8C;">переключение только через переопределение переменных</span>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: stretch;">
+        <div style="width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 9px; padding: 15px 17px; border: 1px solid #272C34; border-radius: 12px; background: #15181D;">
+          <div style="font-size: 11.5px; letter-spacing: 0.03em; text-transform: uppercase; color: #A0A7B4;">Оценка инструмента, итог</div>
+          <div style="display: flex; align-items: baseline; gap: 9px;"><span style="font-size: 40px; font-weight: 300; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; color: #ECEEF2;">8.0</span><span style="font-size: 16px; font-weight: 300; color: #767E8C;">/ 10</span></div>
+          <span aria-hidden="true" style="display: block; width: 100%; height: 10px; border-radius: 5px; background: #262B33; overflow: hidden;"><span style="display: block; width: 80%; height: 10px; border-radius: 5px; background: #BCD9E6;"></span></span>
+          <div style="display: flex; align-items: baseline; justify-content: space-between;"><span style="font-size: 11.5px; color: #A0A7B4;">выше среднего</span><span style="font-size: 11px; color: #767E8C;">0.5 × backend + 0.5 × frontend</span></div>
+        </div>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px; padding: 15px 17px; border: 1px solid #272C34; border-radius: 12px; background: #15181D;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <span style="flex-grow: 1; font-size: 13.5px; font-weight: 500; color: #ECEEF2;">Проверка прав на уровне ресурса</span>
+            <span style="display: flex; align-items: center; gap: 9px;"><span aria-hidden="true" style="display: block; width: 90px; height: 8px; border-radius: 4px; background: #262B33; overflow: hidden;"><span style="display: block; width: 40%; height: 8px; border-radius: 4px; background: #7F9AAD;"></span></span><span style="font-size: 16px; font-weight: 400; font-variant-numeric: tabular-nums; color: #ECEEF2;">4.0</span></span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border: 1px dashed #39404A; border-radius: 7px; background: #1C2027; color: #ECEEF2; font-size: 11.5px; font-weight: 500;"><span aria-hidden="true" style="display: flex; gap: 3px;"><span style="display: block; width: 6px; height: 6px; border-radius: 50%; background: #A0A7B4;"></span><span style="display: block; width: 6px; height: 6px; border-radius: 50%; border: 1px solid #39404A; box-sizing: border-box;"></span><span style="display: block; width: 6px; height: 6px; border-radius: 50%; border: 1px solid #39404A; box-sizing: border-box;"></span></span>Уверенность низкая</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #27412F; border-radius: 7px; background: #16241C; color: #74C295; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4 10-10"></path></svg>Оценено</span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #2E353F; border-radius: 7px; background: #1B2028; color: #9AA4B4; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"></path><path d="M12 3a9 9 0 0 1 0 18"></path></svg>Частично</span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px dashed #39404A; border-radius: 7px; background: #1C2027; color: #767E8C; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg>Нет данных</span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #4A2624; border-radius: 7px; background: #2C1A19; color: #F3908A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg>Не удалось</span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #4A2624; border-radius: 7px; background: #2C1A19; color: #F3908A; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="8.2,2.6 15.8,2.6 21.4,8.2 21.4,15.8 15.8,21.4 8.2,21.4 2.6,15.8 2.6,8.2"></polygon><path d="M12 7.5v5"></path><path d="M12 16h.01"></path></svg>Критическая</span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #4A3720; border-radius: 7px; background: #2D2318; color: #EBA35F; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>Серьёзная</span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #3A3A26; border-radius: 7px; background: #23241A; color: #CFC47E; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"></circle></svg>Незначительная</span>
+            <span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid #3B331F; border-radius: 7px; background: #221E14; color: #EBA35F; font-size: 11.5px; font-weight: 500; white-space: nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="M12 8v4"></path><path d="M12 15h.01"></path></svg>Влияние на оценку</span>
+          </div>
+          <div style="padding: 10px 12px; border: 1px solid #272C34; border-radius: 8px; background: #1C2027; font-size: 11px; line-height: 1.6; color: #A0A7B4;">В тёмной теме шкала баллов разворачивается: высокий балл — самый светлый тон, низкий — самый тёмный. Порядок ступеней по светлоте сохраняется, поэтому привычка «светлее = выше» работает в обеих темах одинаково.</div>
+        </div>
+        <div style="width: 264px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; padding: 15px 17px; border: 1px solid #272C34; border-radius: 12px; background: #15181D;">
+          <div style="font-size: 12px; font-weight: 500; color: #ECEEF2;">Фокус</div>
+          <button type="button" style="height: 36px; padding: 0 12px; border: 1px solid #39404A; border-radius: 8px; background: #15181D; color: #ECEEF2; font-family: inherit; font-size: 13px; outline: 2px solid #9B9BF7; outline-offset: 2px; cursor: pointer;">Развернуть метрику</button>
+          <div style="font-size: 11px; line-height: 1.6; color: #A0A7B4;">Кольцо фокуса — 2 px <code style="font-family: 'Geist Mono', ui-monospace, monospace;">--primary</code> с отступом 2 px, одинаковое для кнопок, ссылок, строк таблицы и сегментов диаграммы. Контраст кольца к фону 7.1:1 в тёмной и 5.4:1 в светлой — выше требуемых 3:1.</div>
+          <button type="button" style="height: 36px; padding: 0 12px; border: 1px solid #C9CED8; border-radius: 8px; background: #FFFFFF; color: #14161A; font-family: inherit; font-size: 13px; outline: 2px solid #5B5BD6; outline-offset: 2px; cursor: pointer;">То же в светлой</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

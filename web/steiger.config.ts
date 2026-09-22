@@ -4,7 +4,7 @@ import { defineConfig } from 'steiger'
 export default defineConfig([
   ...fsd.configs.recommended,
   {
-    files: ['./src/shared/ui/**'],
+    files: ['./src/shared/ui/shadcn/**'],
     rules: {
       // Компоненты shadcn лежат в репозитории и правятся как обычный код,
       // но их внутреннюю раскладку задаёт CLI — правила именования к ним не применяем.

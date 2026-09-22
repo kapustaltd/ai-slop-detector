@@ -11,8 +11,8 @@ import {
   type RunRequest,
   type RunStatus,
 } from '@/shared/api'
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
+import { Badge } from '@/shared/ui/shadcn/badge'
+import { Button } from '@/shared/ui/shadcn/button'
 
 const statusLabels: Record<RunStatus, string> = {
   queued: 'В очереди',

@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Раскрытие метрики до кода</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+body { margin: 0; font-family: 'Geist', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: #4A4AC4; }
+a:hover { color: #3A3AA8; }
+table { border-collapse: collapse; }
+</style>
+<style>
+html { background: #FBFBFC; }
+body { display: flex; justify-content: center; padding: 24px 0; }
+</style>
+</head>
+<body>
+<div style="width: 1440px; height: 2000px; box-sizing: border-box; background: #FBFBFC; color: #14161A; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 40px; background: #FFFFFF; border-bottom: 1px solid #E4E6EB;">
+    <nav aria-label="Хлебные крошки" style="display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #565C6B; flex-wrap: wrap;">
+      <a href="Main.dc.html" style="text-decoration: none;">Рейтинг</a><span style="color: #7A8191;">/</span>
+      <a href="Team.dc.html" style="text-decoration: none;">«Кодовый шторм»</a><span style="color: #7A8191;">/</span>
+      <a href="Team.dc.html" style="text-decoration: none;">Backend</a><span style="color: #7A8191;">/</span>
+      <a href="Team.dc.html" style="text-decoration: none;">Безопасность</a><span style="color: #7A8191;">/</span>
+      <a href="Team.dc.html" style="text-decoration: none;">Аутентификация и авторизация</a><span style="color: #7A8191;">/</span>
+      <span style="color: #14161A;">Проверка прав на уровне ресурса</span>
+    </nav>
+    <button type="button" style="display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 11px; border: 1px solid #C9CED8; border-radius: 8px; background: #FFFFFF; color: #14161A; font-family: inherit; font-size: 12.5px; cursor: pointer;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg>Скопировать ссылку на метрику</button>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px 40px 30px;">
+
+    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #F3F4F7; border: 1px solid #E4E6EB; border-radius: 8px;">
+      <code style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px;">/team/code-storm?area=backend&amp;node=<span style="background: #EEEEFB; border-radius: 3px; padding: 1px 3px; color: #4A4AC4;">security.authz.resource-level</span>&amp;finding=f-214</code>
+      <span style="font-size: 11.5px; color: #7A8191;">— каждый узел таксономии и каждая находка адресуемы: ссылка открывает дерево уже раскрытым на этом месте и подсвечивает находку</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; border: 1px solid #E4E6EB; border-radius: 12px; background: #FFFFFF; overflow: hidden;">
+
+      <div style="display: flex; align-items: center; gap: 14px; padding: 13px 16px; background: #F3F4F7;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#565C6B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        <span style="width: 44px; flex-shrink: 0; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #7A8191;">1 ур.</span>
+        <span style="width: 236px; flex-shrink: 0; font-size: 14px; font-weight: 500;">Безопасность</span>
+        <span style="display: flex; align-items: center; gap: 8px; width: 200px; flex-shrink: 0;"><span aria-hidden="true" style="display: block; width: 49px; height: 4px; border-radius: 2px; background: #5B5BD6; opacity: 0.55;"></span><span style="font-size: 11.5px; color: #565C6B; font-variant-numeric: tabular-nums;">вес 0.13 в backend</span></span>
+        <span style="display: flex; align-items: center; gap: 10px; width: 170px; flex-shrink: 0;"><span aria-hidden="true" style="display: block; width: 100px; height: 8px; border-radius: 4px; background: #E9EBEF; overflow: hidden;"><span style="display: block; width: 62%; height: 8px; border-radius: 4px; background: #38637C;"></span></span><span style="font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums;">6.2</span></span>
+        <span style="font-size: 11.5px; color: #565C6B; font-variant-numeric: tabular-nums;">вклад в backend <span style="color: #14161A;">0.81</span> из 8.20 — самый слабый узел области</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; padding: 12px 16px 12px 40px; border-top: 1px solid #E4E6EB; background: #FAFAFD;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#565C6B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+        <span style="width: 44px; flex-shrink: 0; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #7A8191;">2 ур.</span>
+        <span style="width: 236px; flex-shrink: 0; font-size: 13.5px;">Аутентификация и авторизация</span>
+        <span style="display: flex; align-items: center; gap: 8px; width: 200px; flex-shrink: 0;"><span aria-hidden="true" style="display: block; width: 90px; height: 4px; border-radius: 2px; background: #5B5BD6; opacity: 0.4;"></span><span style="font-size: 11.5px; color: #565C6B; font-variant-numeric: tabular-nums;">вес 0.60 в категории</span></span>
+        <span style="display: flex; align-items: center; gap: 10px; width: 170px; flex-shrink: 0;"><span aria-hidden="true" style="display: block; width: 100px; height: 8px; border-radius: 4px; background: #E9EBEF; overflow: hidden;"><span style="display: block; width: 54%; height: 8px; border-radius: 4px; background: #38637C;"></span></span><span style="font-size: 13.5px; font-weight: 500; font-variant-numeric: tabular-nums;">5.4</span></span>
+        <span style="font-size: 11.5px; color: #565C6B; font-variant-numeric: tabular-nums;">вклад в категорию <span style="color: #14161A;">3.24</span> из 6.20</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; padding: 9px 16px 9px 68px; border-top: 1px dashed #E4E6EB;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7A8191" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+        <span style="width: 44px; flex-shrink: 0; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #7A8191;">3 ур.</span>
+        <span style="width: 236px; flex-shrink: 0; font-size: 13px;">Хранение и срок жизни токенов</span>
+        <span style="width: 200px; flex-shrink: 0; font-size: 11.5px; color: #565C6B; font-variant-numeric: tabular-nums;">вес 0.40 в подкатегории</span>
+        <span style="display: flex; align-items: center; gap: 10px; width: 170px; flex-shrink: 0;"><span aria-hidden="true" style="display: block; width: 100px; height: 6px; border-radius: 3px; background: #E9EBEF; overflow: hidden;"><span style="display: block; width: 60%; height: 6px; border-radius: 3px; background: #38637C;"></span></span><span style="font-size: 13px; font-variant-numeric: tabular-nums;">6.0</span></span>
+        <span style="font-size: 11.5px; color: #7A8191;">2 находки</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; padding: 9px 16px 9px 68px; border-top: 1px dashed #E4E6EB;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7A8191" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+        <span style="width: 44px; flex-shrink: 0; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #7A8191;">3 ур.</span>
+        <span style="width: 236px; flex-shrink: 0; font-size: 13px;">Защита от перебора и брутфорса</span>
+        <span style="width: 200px; flex-shrink: 0; font-size: 11.5px; color: #565C6B; font-variant-numeric: tabular-nums;">вес 0.20 в подкатегории</span>
+        <span style="display: flex; align-items: center; gap: 10px; width: 170px; flex-shrink: 0;"><span aria-hidden="true" style="display: block; width: 100px; height: 6px; border-radius: 3px; background: #E9EBEF; overflow: hidden;"><span style="display: block; width: 70%; height: 6px; border-radius: 3px; background: #215269;"></span></span><span style="font-size: 13px; font-variant-numeric: tabular-nums;">7.0</span></span>
+        <span style="font-size: 11.5px; color: #7A8191;">1 находка</span>
+      </div>
+
+      <div id="metric" style="border-top: 1px solid #E4E6EB; background: #FFFFFF;">
+
+        <div style="display: flex; align-items: flex-start; gap: 14px; padding: 16px 16px 16px 68px; background: #FAFAFD; border-left: 3px solid #5B5BD6; box-sizing: border-box;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#565C6B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 4px; flex-shrink: 0;"><path d="m6 9 6 6 6-6"></path></svg>
+          <span style="width: 44px; flex-shrink: 0; margin-top: 5px; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #7A8191;">3 ур.</span>
+          <div style="display: flex; flex-direction: column; gap: 5px; width: 236px; flex-shrink: 0;">
+            <span style="font-size: 13.5px; font-weight: 500;">Проверка прав на уровне ресурса</span>
+            <span style="font-size: 11px; color: #7A8191; font-family: 'Geist Mono', ui-monospace, monospace;">security.authz.resource-level</span>
+          </div>
+          <span style="width: 200px; flex-shrink: 0; margin-top: 3px; font-size: 11.5px; color: #565C6B; font-variant-numeric: tabular-nums;">вес 0.40 в подкатегории<br><span style="color: #7A8191;">= 0.031 от backend</span></span>
+          <span style="display: flex; align-items: baseline; gap: 10px; width: 170px; flex-shrink: 0;">
+            <span style="font-size: 26px; font-weight: 300; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1;">4.0</span>
+            <span style="font-size: 13px; font-weight: 300; color: #7A8191;">/ 10</span>
+          </span>
+          <div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1;">
+            <span aria-hidden="true" style="display: block; width: 100%; max-width: 260px; height: 8px; border-radius: 4px; background: #E9EBEF; overflow: hidden;"><span style="display: block; width: 40%; height: 8px; border-radius: 4px; background: #52738B;"></span></span>
+            <span style="font-size: 11.5px; color: #565C6B;">уровень «ниже среднего» · медиана по всем командам 5.5</span>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 18px; padding: 20px 24px 24px 68px;">
+
+          <div style="display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px dashed #C9CED8; border-radius: 10px; background: #F3F4F7;">
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+              <span aria-hidden="true" style="display: flex; gap: 3px;"><span style="display: block; width: 7px; height: 7px; border-radius: 50%; background: #565C6B;"></span><span style="display: block; width: 7px; height: 7px; border-radius: 50%; border: 1px solid #C9CED8; box-sizing: border-box;"></span><span style="display: block; width: 7px; height: 7px; border-radius: 50%; border: 1px solid #C9CED8; box-sizing: border-box;"></span></span>
+              <span style="font-size: 12px; font-weight: 500; color: #14161A;">Уверенность модели низкая</span>
+            </div>
+            <span style="font-size: 12px; line-height: 1.55; color: #565C6B;">В репозитории два слоя авторизации: глобальный guard и ручные проверки в отдельных обработчиках. Сигналы противоречат друг другу, и по коду не удалось установить, применяется ли guard ко всем маршрутам. Балл стоит проверить вручную прежде, чем на него опираться.</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #7A8191;">Краткий вывод</div>
+            <div style="max-width: 1060px; font-size: 15px; line-height: 1.55; font-weight: 400;">Аутентификация есть и работает, но принадлежность ресурса запрашивающему пользователю проверяется не везде: в четырёх обработчиках объект возвращается сразу после поиска по идентификатору.</div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #7A8191;">Развёрнутое обоснование</div>
+            <div style="max-width: 1060px; font-size: 13px; line-height: 1.7; color: #565C6B;">Глобальный <code style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; padding: 1px 4px; background: #F3F4F7; border-radius: 4px; color: #14161A;">JwtAuthGuard</code> подключён в <code style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; padding: 1px 4px; background: #F3F4F7; border-radius: 4px; color: #14161A;">app.module.ts</code> и закрывает вход анонимным пользователям — это соответствует уровню 2 и выше. Дальше картина расходится: в <code style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; padding: 1px 4px; background: #F3F4F7; border-radius: 4px; color: #14161A;">invoices.controller.ts</code> и <code style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; padding: 1px 4px; background: #F3F4F7; border-radius: 4px; color: #14161A;">reports.controller.ts</code> владелец сверяется явно, а в <code style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; padding: 1px 4px; background: #F3F4F7; border-radius: 4px; color: #14161A;">orders.controller.ts</code> и трёх соседних файлах такой проверки нет. Единого места, где правило доступа было бы выражено один раз, в коде не нашлось, поэтому уровень 8 недостижим. Тестов на отказ в доступе нет. Балл ближе к 5, чем к 2, потому что часть маршрутов защищена, но ниже 5, потому что правило не выражено централизованно и нарушается в наиболее нагруженном ресурсе.</div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border: 1px solid #E4E6EB; border-radius: 12px; background: #F3F4F7;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#565C6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19 19 5"></path><circle cx="7.5" cy="7.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg>
+              <span style="font-size: 13px; font-weight: 500;">Как это оценивается</span>
+              <span style="font-size: 11.5px; color: #7A8191;">якоря шкалы для этой метрики · рубрика backend v1.4</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+
+              <div style="display: flex; align-items: flex-start; gap: 14px; padding: 10px 12px; border-radius: 8px; background: #FFFFFF; border: 1px solid #E4E6EB;">
+                <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0; border-radius: 7px; background: #E9EBEF; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums;">2</span>
+                <span style="font-size: 12.5px; line-height: 1.6; color: #565C6B;">Проверки прав нет: любой аутентифицированный пользователь получает любой ресурс по идентификатору.</span>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 10px; padding: 3px 12px;">
+                <span style="display: flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 7px; background: #14161A; color: #FEFEFE; font-size: 11.5px; font-weight: 500;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5"></path><path d="m5 12 7-7 7 7"></path></svg>инструмент поставил 4.0</span>
+                <span style="flex-grow: 1; height: 1px; background: #C9CED8;"></span>
+                <span style="font-size: 11.5px; color: #565C6B;">между якорями 2 и 5, ближе к 5</span>
+              </div>
+
+              <div style="display: flex; align-items: flex-start; gap: 14px; padding: 10px 12px; border-radius: 8px; background: #FFFFFF; border: 1px solid #C9CED8;">
+                <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0; border-radius: 7px; background: #E9EBEF; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums;">5</span>
+                <span style="font-size: 12.5px; line-height: 1.6; color: #14161A;">Проверки есть в части обработчиков, правило не выражено в одном месте — его легко забыть при добавлении нового маршрута.</span>
+              </div>
+
+              <div style="display: flex; align-items: flex-start; gap: 14px; padding: 10px 12px; border-radius: 8px; background: #FFFFFF; border: 1px solid #E4E6EB;">
+                <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0; border-radius: 7px; background: #E9EBEF; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums;">8</span>
+                <span style="font-size: 12.5px; line-height: 1.6; color: #565C6B;">Правило доступа выражено централизованно — guard, политика или middleware — и применяется по умолчанию; исключения перечислены явно.</span>
+              </div>
+
+              <div style="display: flex; align-items: flex-start; gap: 14px; padding: 10px 12px; border-radius: 8px; background: #FFFFFF; border: 1px solid #E4E6EB;">
+                <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0; border-radius: 7px; background: #E9EBEF; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums;">10</span>
+                <span style="font-size: 12.5px; line-height: 1.6; color: #565C6B;">Всё из уровня 8, плюс тесты на отказ в доступе: смежные роли, чужие ресурсы, удалённые объекты.</span>
+              </div>
+
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 13px; font-weight: 500;">Находки по этой метрике</span>
+              <span style="font-size: 11.5px; color: #7A8191;">3: одна сильная сторона, две проблемы</span>
+              <span style="flex-grow: 1;"></span>
+              <button type="button" style="height: 30px; padding: 0 10px; border: 1px solid #C9CED8; border-radius: 7px; background: #FFFFFF; color: #14161A; font-family: inherit; font-size: 12px; cursor: pointer;">Развернуть весь код</button>
+            </div>
+
+            <div style="border: 1px solid #F2DBBB; border-radius: 12px; background: #FFFFFF; overflow: hidden;">
+              <div style="display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; background: #FDF1E3;">
+                <span style="display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; flex-shrink: 0; border: 1px solid #F2DBBB; border-radius: 6px; background: #FFFFFF; color: #8A4B0A; font-size: 11px; font-weight: 500;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>Серьёзная</span>
+                <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1;">
+                  <span style="font-size: 13.5px; font-weight: 500;">Заказ возвращается без проверки владельца</span>
+                  <span style="font-size: 12px; color: #565C6B;">Проблема · <span style="font-family: 'Geist Mono', ui-monospace, monospace;">src/orders/orders.controller.ts : 41–51</span></span>
+                </div>
+                <a href="#gh" style="display: flex; align-items: center; gap: 5px; flex-shrink: 0; height: 28px; padding: 0 10px; border: 1px solid #C9CED8; border-radius: 7px; background: #FFFFFF; color: #14161A; font-size: 12px; text-decoration: none;">Открыть на a91b73e<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg></a>
+                <button type="button" aria-expanded="true" style="display: flex; align-items: center; gap: 5px; flex-shrink: 0; height: 28px; padding: 0 10px; border: 1px solid #C9CED8; border-radius: 7px; background: #FFFFFF; color: #14161A; font-family: inherit; font-size: 12px; cursor: pointer;">Свернуть код<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg></button>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 12px; padding: 14px 16px;">
+                <div style="max-width: 1000px; font-size: 12.5px; line-height: 1.65; color: #565C6B;">Обработчик находит заказ по идентификатору из пути и отдаёт его целиком. Идентификатор последовательный, поэтому чужой заказ открывается подбором номера. Guard в этом файле проверяет только наличие валидного токена.</div>
+                <div style="border: 1px solid #E4E6EB; border-radius: 10px; background: #F7F8FA; overflow: hidden;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; border-bottom: 1px solid #E4E6EB; background: #FFFFFF;">
+                    <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11.5px; color: #565C6B;">src/orders/orders.controller.ts</span>
+                    <span style="font-size: 11px; color: #7A8191;">TypeScript · строки 41–51</span>
+                  </div>
+                  <pre style="margin: 0; padding: 10px 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.75; overflow: hidden;"><code><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">41</span><span style="color: #953800;">@Get</span><span style="color: #24292F;">(</span><span style="color: #0A3069;">':id'</span><span style="color: #24292F;">)</span></span><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">42</span><span style="color: #953800;">@UseGuards</span><span style="color: #24292F;">(</span><span style="color: #0550AE;">JwtAuthGuard</span><span style="color: #24292F;">)</span></span><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">43</span><span style="color: #8250DF;">async</span> <span style="color: #8250DF;">findOne</span><span style="color: #24292F;">(</span><span style="color: #953800;">@Param</span><span style="color: #24292F;">(</span><span style="color: #0A3069;">'id'</span><span style="color: #24292F;">) id: </span><span style="color: #0550AE;">string</span><span style="color: #24292F;">) {</span></span><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">44</span><span style="color: #24292F;">  </span><span style="color: #8250DF;">const</span><span style="color: #24292F;"> order = </span><span style="color: #8250DF;">await</span><span style="color: #24292F;"> </span><span style="color: #8250DF;">this</span><span style="color: #24292F;">.ordersService.</span><span style="color: #8250DF;">findById</span><span style="color: #24292F;">(id);</span></span><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">45</span></span><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">46</span><span style="color: #24292F;">  </span><span style="color: #8250DF;">if</span><span style="color: #24292F;"> (!order) {</span></span><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">47</span><span style="color: #24292F;">    </span><span style="color: #8250DF;">throw</span><span style="color: #24292F;"> </span><span style="color: #8250DF;">new</span><span style="color: #24292F;"> </span><span style="color: #0550AE;">NotFoundException</span><span style="color: #24292F;">();</span></span><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">48</span><span style="color: #24292F;">  }</span></span><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">49</span></span><span style="display: block; padding: 0 12px; background: #FDF1E3; border-left: 3px solid #C46A12; box-sizing: border-box;"><span style="display: inline-block; width: 27px; color: #8A4B0A; text-align: right; margin-right: 14px; user-select: none;">50</span><span style="color: #24292F;">  </span><span style="color: #8250DF;">return</span><span style="color: #24292F;"> order;</span><span style="color: #8A4B0A;">   ← владелец не сверяется</span></span><span style="display: block; padding: 0 12px;"><span style="display: inline-block; width: 30px; color: #B4BAC6; text-align: right; margin-right: 14px; user-select: none;">51</span><span style="color: #24292F;">}</span></span></code></pre>
+                </div>
+                <div style="display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; border-left: 2px solid #C9CED8; background: #F3F4F7; border-radius: 0 8px 8px 0;">
+                  <span style="flex-shrink: 0; margin-top: 1px; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #7A8191;">Рекомендация</span>
+                  <span style="font-size: 12.5px; line-height: 1.6; color: #14161A;">Вынести проверку владельца в guard или политику уровня ресурса и применять её по умолчанию ко всем маршрутам, где в пути есть идентификатор объекта. Исключения перечислить явным списком.</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px; padding: 11px 16px; border: 1px solid #E4E6EB; border-radius: 12px; background: #FFFFFF;">
+              <span style="display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; flex-shrink: 0; border: 1px solid #E2DFC7; border-radius: 6px; background: #F2F1E5; color: #63591A; font-size: 11px; font-weight: 500;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"></circle></svg>Незначительная</span>
+              <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+                <span style="font-size: 13px;">Идентификаторы заказов последовательные и предсказуемые</span>
+                <span style="display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #565C6B;"><span style="font-family: 'Geist Mono', ui-monospace, monospace;">src/orders/order.entity.ts : 12–14</span><span style="display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border: 1px dashed #C9CED8; border-radius: 5px; color: #7A8191; font-size: 11px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="m2 2 20 20"></path><path d="M10 6.5 12.5 4a4 4 0 0 1 5.7 5.7L15.5 12"></path><path d="M8.5 12 6 14.5a4 4 0 0 0 5.7 5.7L14 17.5"></path></svg>ссылку не удалось проверить</span></span>
+              </div>
+              <span style="font-size: 11.5px; color: #7A8191; max-width: 300px; text-align: right;">Фрагмент кода не показывается: по этой ссылке файл не открылся на указанном коммите</span>
+              <button type="button" aria-expanded="false" style="display: flex; align-items: center; gap: 5px; flex-shrink: 0; height: 28px; padding: 0 10px; border: 1px solid #C9CED8; border-radius: 7px; background: #FFFFFF; color: #14161A; font-family: inherit; font-size: 12px; cursor: pointer;">Подробнее<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px; padding: 11px 16px; border: 1px solid #E4E6EB; border-radius: 12px; background: #FFFFFF;">
+              <span style="display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; flex-shrink: 0; border: 1px solid #C8E1D2; border-radius: 6px; background: #E8F3EC; color: #245C3A; font-size: 11px; font-weight: 500;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4 10-10"></path></svg>Сильная сторона</span>
+              <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+                <span style="font-size: 13px;">Счета и отчёты сверяют владельца перед выдачей</span>
+                <span style="font-size: 11.5px; color: #565C6B; font-family: 'Geist Mono', ui-monospace, monospace;">src/invoices/invoices.controller.ts : 63–79</span>
+              </div>
+              <span style="font-size: 11.5px; color: #7A8191;">код свёрнут</span>
+              <button type="button" aria-expanded="false" style="display: flex; align-items: center; gap: 5px; flex-shrink: 0; height: 28px; padding: 0 10px; border: 1px solid #C9CED8; border-radius: 7px; background: #FFFFFF; color: #14161A; font-family: inherit; font-size: 12px; cursor: pointer;">Показать код<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
+            </div>
+
+            <div style="padding: 2px 4px; font-size: 11.5px; color: #7A8191;">По умолчанию развёрнута только первая находка и только самая серьёзная. Остальные — одна строка каждая; код открывается по запросу. Так метрика с семью находками остаётся высотой в экран, а не в простыню.</div>
+
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px; padding: 9px 16px 9px 68px; border-top: 1px solid #E4E6EB; background: #FFFFFF;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7A8191" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+        <span style="width: 44px; flex-shrink: 0; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: #7A8191;">2 ур.</span>
+        <span style="width: 236px; flex-shrink: 0; font-size: 13.5px;">Обработка входных данных и секреты</span>
+        <span style="width: 200px; flex-shrink: 0; font-size: 11.5px; color: #565C6B; font-variant-numeric: tabular-nums;">вес 0.40 в категории</span>
+        <span style="display: flex; align-items: center; gap: 10px; width: 170px; flex-shrink: 0;"><span aria-hidden="true" style="display: block; width: 100px; height: 8px; border-radius: 4px; background: #E9EBEF; overflow: hidden;"><span style="display: block; width: 74%; height: 8px; border-radius: 4px; background: #215269;"></span></span><span style="font-size: 13.5px; font-weight: 500; font-variant-numeric: tabular-nums;">7.4</span></span>
+        <span style="font-size: 11.5px; color: #565C6B; font-variant-numeric: tabular-nums;">вклад в категорию <span style="color: #14161A;">2.96</span> из 6.20 · 4 метрики</span>
+      </div>
+
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 18px; padding: 12px 16px; border: 1px solid #E4E6EB; border-radius: 10px; background: #F3F4F7; font-size: 11.5px; color: #565C6B;">
+      <span>Путь до метрики: <span style="color: #14161A;">рейтинг → команда → категория → подкатегория → метрика</span></span>
+      <span style="width: 1px; height: 14px; background: #C9CED8;"></span>
+      <span>Два клика от страницы команды, три от рейтинга</span>
+      <span style="width: 1px; height: 14px; background: #C9CED8;"></span>
+      <span>Одновременно раскрыта одна подкатегория; соседние уровни остаются строками</span>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

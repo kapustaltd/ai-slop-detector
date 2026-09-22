@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
+@import './app/styles/globals.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -127,4 +128,31 @@
   html {
     @apply font-sans;
   }
+}
+
+/**
+ * Семантические переменные shadcn переназначены на дизайн-токены (--ds-*).
+ * Блок стоит последним намеренно: выше лежит набор пресета radix-nova, который
+ * перезаписывает CLI при `shadcn add`, и наши значения должны побеждать.
+ * Сами значения править здесь нельзя — только в src/app/styles/globals.css.
+ */
+:root {
+  --background: var(--ds-bg);
+  --foreground: var(--ds-fg);
+  --card: var(--ds-surface);
+  --card-foreground: var(--ds-fg);
+  --popover: var(--ds-surface);
+  --popover-foreground: var(--ds-fg);
+  --primary: var(--ds-primary);
+  --primary-foreground: var(--ds-on-accent);
+  --secondary: var(--ds-muted);
+  --secondary-foreground: var(--ds-fg);
+  --muted: var(--ds-muted);
+  --muted-foreground: var(--ds-fg-muted);
+  --accent: var(--ds-primary-soft);
+  --accent-foreground: var(--ds-primary);
+  --destructive: var(--ds-sev-critical-fg);
+  --border: var(--ds-border);
+  --input: var(--ds-border-strong);
+  --ring: var(--ds-primary);
 }

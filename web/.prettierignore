@@ -1,6 +1,6 @@
 dist
 coverage
 public/data
-src/shared/ui
+src/shared/ui/shadcn
 src/shared/api/generated
 data/rubrics
