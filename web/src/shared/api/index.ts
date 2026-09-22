@@ -11,8 +11,11 @@ export {
   type LeaderboardIndexStub,
   type LeaderboardTeam,
   type RubricBundle,
+  type RubricMetric,
   type StatsBundle,
   type TeamArea,
   type TeamBundle,
+  type TeamCategory,
   type TeamMetric,
+  type TeamSubcategory,
 } from './bundle'

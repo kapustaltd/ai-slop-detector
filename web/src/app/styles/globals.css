@@ -229,24 +229,31 @@
   --text-score-metric: 26px;
   --text-score-metric--font-weight: 300;
   --text-score-metric--letter-spacing: -0.02em;
-  --text-h1: 26px;
+  /*
+   * h1/h2/count/lead/strong/body/prose/meta/overline подняты примерно на 2px против
+   * design/reference/tokens.json — контейнеры страниц выросли (005/006 «сделать шире»,
+   * max-w 1200→1600px), а исходные значения были откалиброваны под макет 1440px. Продуктовое
+   * решение 2026-09-22: мелкий текст не должен читаться мельче крупных карточек/дорожек рядом
+   * с ним. score-hero/large/metric не трогаем — крупные числа и так читаются пропорционально.
+   */
+  --text-h1: 30px;
   --text-h1--font-weight: 500;
   --text-h1--letter-spacing: -0.02em;
-  --text-h2: 22px;
+  --text-h2: 26px;
   --text-h2--font-weight: 500;
   --text-h2--letter-spacing: -0.02em;
-  --text-count: 20px;
+  --text-count: 22px;
   --text-count--font-weight: 300;
-  --text-lead: 15px;
+  --text-lead: 17px;
   --text-lead--line-height: 1.55;
-  --text-strong: 14px;
+  --text-strong: 16px;
   --text-strong--font-weight: 500;
-  --text-body: 13px;
-  --text-prose: 12.5px;
+  --text-body: 15px;
+  --text-prose: 14.5px;
   --text-prose--line-height: 1.7;
-  --text-meta: 11.5px;
+  --text-meta: 13.5px;
   --text-meta--font-weight: 500;
-  --text-overline: 11px;
+  --text-overline: 12.5px;
   --text-overline--font-weight: 500;
   --text-overline--letter-spacing: 0.05em;
 

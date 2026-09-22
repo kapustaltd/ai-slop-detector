@@ -64,7 +64,7 @@ export function LeaderboardPage() {
 
   if (loadFailed && !index) {
     return (
-      <main className="mx-auto max-w-[1200px] p-6">
+      <main className="mx-auto max-w-[1600px] p-6">
         <EmptyState
           icon={CloudOff}
           title="Не удалось загрузить дата-бандл"
@@ -80,7 +80,7 @@ export function LeaderboardPage() {
   const builtAt = index.meta?.built_at ?? index.built_at
 
   return (
-    <main className="mx-auto max-w-[1200px] space-y-[18px] p-4 sm:p-6">
+    <main className="mx-auto max-w-[1600px] space-y-[18px] p-4 sm:p-6">
       {/* pr-* резервирует место под фиксированную кнопку темы (ThemeProvider) — иначе на
           некоторых ширинах она перекрывает текст справа (найдено визуальной проверкой FR-015). */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line pr-[52px] pb-4 md:pr-[46px]">
@@ -89,18 +89,18 @@ export function LeaderboardPage() {
             <ChartSpline aria-hidden="true" size={17} strokeWidth={1.9} />
           </div>
           <div className="flex flex-col gap-0.5">
-            <h1 className="text-[14.5px] font-semibold tracking-[-0.01em]">
+            <h1 className="text-[17px] font-semibold tracking-[-0.01em]">
               Автооценка качества кода
             </h1>
-            <p className="text-[11.5px] text-fg-subtle">
+            <p className="text-[13.5px] text-fg-subtle">
               {total} {total === 1 ? 'команда' : 'команд'}
             </p>
           </div>
-          <span className="ml-1 hidden rounded-badge border border-line bg-muted-surface px-2 py-[3px] text-[10.5px] tracking-[0.03em] text-fg-muted uppercase sm:inline-flex">
+          <span className="ml-1 hidden rounded-badge border border-line bg-muted-surface px-2 py-[3px] text-[12.5px] tracking-[0.03em] text-fg-muted uppercase sm:inline-flex">
             внутренний инструмент жюри
           </span>
         </div>
-        <p className="text-[12px] text-fg-muted">
+        <p className="text-[14px] text-fg-muted">
           Данные собраны {new Date(builtAt).toLocaleString('ru-RU')}
         </p>
       </header>
@@ -146,7 +146,7 @@ export function LeaderboardPage() {
       )}
 
       {teams.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 text-[11.5px] text-fg-subtle">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-[13.5px] text-fg-subtle">
           <ScoreScaleLegend />
           <span>
             Ранг присваивается по итоговому баллу; одинаковые баллы делят одно место (знак{' '}

@@ -29,14 +29,14 @@ export function LeaderboardToolbar({
 }: LeaderboardToolbarProps) {
   return (
     <section aria-label="Фильтры рейтинга" className="flex flex-wrap items-center gap-3">
-      <label className="flex h-9 items-center gap-2 text-[13px]">
+      <label className="flex h-9 items-center gap-2 text-[15px]">
         <span className="sr-only">Статус оценки</span>
         <select
           value={filters.status}
           onChange={(event) =>
             onFiltersChange({ status: event.target.value as EvaluationStatus | 'all' })
           }
-          className="h-9 rounded-control border border-line-strong bg-surface px-3 text-[13px] text-fg"
+          className="h-9 rounded-control border border-line-strong bg-surface px-3 text-[15px] text-fg"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -46,7 +46,7 @@ export function LeaderboardToolbar({
         </select>
       </label>
 
-      <label className="flex h-9 items-center gap-2 text-[13px] text-fg">
+      <label className="flex h-9 items-center gap-2 text-[15px] text-fg">
         <input
           type="checkbox"
           checked={filters.warningsOnly}
@@ -55,12 +55,12 @@ export function LeaderboardToolbar({
         Только с предупреждениями
       </label>
 
-      <label className="flex h-9 items-center gap-2 text-[13px] md:hidden">
+      <label className="flex h-9 items-center gap-2 text-[15px] md:hidden">
         <span className="sr-only">Сортировка</span>
         <select
           value={sort.key}
           onChange={(event) => onSort(event.target.value as SortKey)}
-          className="h-9 rounded-control border border-line-strong bg-surface px-3 text-[13px] text-fg"
+          className="h-9 rounded-control border border-line-strong bg-surface px-3 text-[15px] text-fg"
         >
           {MOBILE_SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -70,7 +70,7 @@ export function LeaderboardToolbar({
         </select>
       </label>
 
-      <span className="ml-auto text-[12.5px] text-fg-subtle" aria-live="polite">
+      <span className="ml-auto text-[14.5px] text-fg-subtle" aria-live="polite">
         Показано: {shown} из {total}
       </span>
     </section>

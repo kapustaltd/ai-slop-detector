@@ -23,10 +23,10 @@ export function LeaderboardRowCard({ team }: LeaderboardRowCardProps) {
       className="flex flex-col gap-[9px] rounded-card border border-line bg-surface px-[13px] py-3 no-underline"
     >
       <div className="flex items-center gap-2.5">
-        <span className="w-5 shrink-0 text-[13px] text-fg-muted">
+        <span className="w-5 shrink-0 text-[15px] text-fg-muted">
           {team.rank ?? <span className="text-fg-subtle">—</span>}
         </span>
-        <span className="flex-grow text-[14.5px] font-medium text-fg">{team.name}</span>
+        <span className="flex-grow text-[17px] font-medium text-fg">{team.name}</span>
         <ScoreGauge
           value={team.total}
           size="row"
@@ -35,7 +35,7 @@ export function LeaderboardRowCard({ team }: LeaderboardRowCardProps) {
           partial={team.partial}
         />
       </div>
-      <div className="flex items-center gap-3.5 text-[11.5px] text-fg-muted">
+      <div className="flex items-center gap-3.5 text-[13.5px] text-fg-muted">
         <span className="flex items-center gap-1.5">
           backend
           <ScoreGauge

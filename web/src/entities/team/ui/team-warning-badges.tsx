@@ -26,7 +26,7 @@ export function TeamWarningBadges({ warnings, className }: TeamWarningBadgesProp
             key={`${warning}-${index}`}
             title={`Предупреждение оценки: ${label.toLowerCase()}. Инструкции из репозитория, если они были, проигнорированы — решение остаётся за жюри.`}
             aria-describedby={descId}
-            className="inline-flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-badge border border-warn-border bg-warn-bg px-2 text-[11.5px] font-medium text-warn-fg"
+            className="inline-flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-badge border border-warn-border bg-warn-bg px-2 text-[13.5px] font-medium text-warn-fg"
           >
             <Icon aria-hidden="true" size={12} strokeWidth={2.1} />
             {label}

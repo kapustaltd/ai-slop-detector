@@ -21,7 +21,7 @@ export function TeamStatusBadge({ status, partial = false, className }: TeamStat
     <span
       title={description}
       aria-describedby={descId}
-      className={`inline-flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-badge border px-2 text-[11.5px] font-medium ${STATUS_TONE_CLASS[tone]} ${className ?? ''}`}
+      className={`inline-flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-badge border px-2 text-[13.5px] font-medium ${STATUS_TONE_CLASS[tone]} ${className ?? ''}`}
     >
       <Icon aria-hidden="true" size={12} strokeWidth={2.1} />
       {label}

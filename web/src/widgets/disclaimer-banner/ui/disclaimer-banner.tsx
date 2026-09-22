@@ -20,8 +20,8 @@ export function DisclaimerBanner({ rubricHref }: DisclaimerBannerProps) {
         <CircleAlert aria-hidden="true" size={14} strokeWidth={2} />
       </div>
       <div className="flex flex-col gap-[3px]">
-        <div className="text-[13.5px] font-medium">Это вспомогательная метрика, а не вердикт</div>
-        <div className="max-w-[980px] text-[12.5px] leading-[1.55] text-fg-muted">
+        <div className="text-[16px] font-medium">Это вспомогательная метрика, а не вердикт</div>
+        <div className="max-w-[980px] text-[14.5px] leading-[1.55] text-fg-muted">
           Баллы выставлены моделью по фиксированной рубрике и описывают только то, что видно в коде
           репозитория. Идея, продуктовая ценность, демо и защита сюда не входят. Решение о
           победителях принимает жюри.
@@ -30,7 +30,7 @@ export function DisclaimerBanner({ rubricHref }: DisclaimerBannerProps) {
       {rubricHref ? (
         <a
           href={rubricHref}
-          className="ml-auto flex shrink-0 items-center gap-[5px] text-[12.5px] font-medium no-underline"
+          className="ml-auto flex shrink-0 items-center gap-[5px] text-[14.5px] font-medium no-underline"
         >
           Как считается оценка
           <ChevronRight aria-hidden="true" size={13} strokeWidth={2} />

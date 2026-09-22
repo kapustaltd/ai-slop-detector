@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest'
 
 import { TeamPage } from './team-page'
 
-function renderTeam() {
+function renderTeam(initialEntry = '/team/team-01') {
   return render(
-    <MemoryRouter initialEntries={['/team/team-01']}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/team/:teamId" element={<TeamPage />} />
       </Routes>
@@ -15,25 +15,31 @@ function renderTeam() {
 }
 
 describe('TeamPage', () => {
-  it('показывает итог, метаданные и таксономию команды', async () => {
+  it('показывает заголовок, дисклеймер, итог и метаданные', async () => {
     renderTeam()
 
     await waitFor(
       () => expect(screen.getByRole('heading', { name: 'Команда 01' })).toBeInTheDocument(),
       { timeout: 10_000 },
     )
-    expect(screen.getByText('Метаданные оценки')).toBeInTheDocument()
-    expect(screen.getByText('Детализация backend')).toBeInTheDocument()
-    expect(screen.getByText('Детализация frontend')).toBeInTheDocument()
+    expect(screen.getByText('Это вспомогательная метрика, а не вердикт')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Метаданные оценки' })).toBeInTheDocument()
   })
 
-  it('помечает недостаток данных для сравнительных графиков', async () => {
+  it('показывает разбор по рубрике для каждой оценённой области', async () => {
     renderTeam()
 
     await waitFor(
-      () =>
-        expect(screen.getAllByText('Недостаточно оценённых команд для сравнения.')).toHaveLength(2),
+      () => expect(screen.getByText('Разбор по рубрике · backend')).toBeInTheDocument(),
       { timeout: 10_000 },
     )
+  })
+
+  it('показывает «команда не найдена» для отсутствующего id', async () => {
+    renderTeam('/team/does-not-exist')
+
+    await waitFor(() => expect(screen.getByText('Команда не найдена')).toBeInTheDocument(), {
+      timeout: 10_000,
+    })
   })
 })

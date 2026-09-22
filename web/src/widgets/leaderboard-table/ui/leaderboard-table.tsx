@@ -93,9 +93,9 @@ export function LeaderboardTable({ teams, sort, onSort }: LeaderboardTableProps)
             const tied = team.rank != null && team.rank === teams[index - 1]?.rank
             return (
               <tr key={team.team_id} className="border-t border-line">
-                <td className="px-4 py-2.5 text-[13px] text-fg-muted">
+                <td className="px-4 py-2.5 text-[15px] text-fg-muted">
                   {team.rank ?? <span className="text-fg-subtle">—</span>}
-                  {tied ? <span className="ml-1 text-[10.5px] text-fg-subtle">=</span> : null}
+                  {tied ? <span className="ml-1 text-[12.5px] text-fg-subtle">=</span> : null}
                 </td>
                 <td className="px-4 py-2.5">
                   <Link to={`/team/${team.team_id}`} className="text-strong no-underline">

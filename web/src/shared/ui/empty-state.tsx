@@ -36,14 +36,14 @@ export function EmptyState({
       >
         <Icon aria-hidden="true" size={15} strokeWidth={2} className="shrink-0 text-fg-subtle" />
         <div className="flex flex-grow flex-col gap-0.5">
-          <span className="text-[12.5px]">{title}</span>
-          <span className="text-[11.5px] text-fg-subtle">{description}</span>
+          <span className="text-[14.5px]">{title}</span>
+          <span className="text-[13.5px] text-fg-subtle">{description}</span>
         </div>
         {action ? (
           <button
             type="button"
             onClick={action.onClick}
-            className="h-[30px] shrink-0 rounded-[7px] border border-line-strong bg-surface px-2.5 text-[12px] font-medium text-fg"
+            className="h-[30px] shrink-0 rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] font-medium text-fg"
           >
             {action.label}
           </button>
@@ -58,12 +58,12 @@ export function EmptyState({
     >
       <Icon aria-hidden="true" size={30} strokeWidth={1.5} className="text-fg-faint" />
       <div className="text-strong">{title}</div>
-      <div className="max-w-[420px] text-[12px] leading-[1.6] text-fg-muted">{description}</div>
+      <div className="max-w-[420px] text-[14px] leading-[1.6] text-fg-muted">{description}</div>
       {action ? (
         <button
           type="button"
           onClick={action.onClick}
-          className="h-[30px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[12px] font-medium text-fg"
+          className="h-[30px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] font-medium text-fg"
         >
           {action.label}
         </button>
