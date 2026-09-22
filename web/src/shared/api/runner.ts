@@ -37,10 +37,8 @@ type ApiErrorPayload = {
 
 const apiBase = (import.meta.env.VITE_RUNNER_API_BASE as string | undefined) ?? '/api/v1'
 
-function headers(token: string) {
-  const result: Record<string, string> = { Accept: 'application/json' }
-  if (token.trim()) result.Authorization = `Bearer ${token.trim()}`
-  return result
+function headers() {
+  return { Accept: 'application/json' }
 }
 
 async function readResponse<T>(response: Response): Promise<T> {
@@ -60,19 +58,19 @@ async function readResponse<T>(response: Response): Promise<T> {
   )
 }
 
-export async function createRun(input: RunRequest, token: string): Promise<RunJob> {
+export async function createRun(input: RunRequest): Promise<RunJob> {
   const response = await fetch(`${apiBase}/runs`, {
     method: 'POST',
-    headers: { ...headers(token), 'Content-Type': 'application/json' },
+    headers: { ...headers(), 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   })
   const payload = await readResponse<{ data: RunJob }>(response)
   return payload.data
 }
 
-export async function getRun(id: string, token: string): Promise<RunJob> {
+export async function getRun(id: string): Promise<RunJob> {
   const response = await fetch(`${apiBase}/runs/${encodeURIComponent(id)}`, {
-    headers: headers(token),
+    headers: headers(),
   })
   const payload = await readResponse<{ data: RunJob }>(response)
   return payload.data

@@ -40,10 +40,10 @@ go run ./cmd/web-runner \
   --data-dir /tmp/ai-slop-detector-web-runner
 ```
 
-Set `WEB_RUNNER_TOKEN` outside the repository before exposing the service beyond
-local development. The React page at `/#/run` sends the operator token as a
-Bearer credential and polls the run status. A successful run is merged into the
-persistent public bundle and becomes visible in the leaderboard automatically.
+The web runner is intentionally exposed without an operator token: requests from
+`/#/run` are anonymous and the page polls the run status without credentials. A
+successful run is merged into the persistent public bundle and becomes visible in
+the leaderboard automatically.
 
 ## Tests
 

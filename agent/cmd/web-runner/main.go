@@ -59,7 +59,7 @@ func main() {
 		log.Fatal(err)
 	}
 	if *token == "" {
-		log.Print("warning: WEB_RUNNER_TOKEN is empty; API authentication is disabled for local development")
+		log.Print("WEB_RUNNER_TOKEN is empty; API authentication is disabled")
 	}
 
 	server := &http.Server{Addr: *addr, Handler: webapi.NewHandler(manager, *token, publisher), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}

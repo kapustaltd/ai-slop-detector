@@ -120,7 +120,6 @@ function RunStatusCard({ job }: { job: RunJob }) {
 
 export function RunnerPage() {
   const [form, setForm] = useState<RunRequest>(initialForm)
-  const [token, setToken] = useState('')
   const [job, setJob] = useState<RunJob | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -128,14 +127,14 @@ export function RunnerPage() {
   useEffect(() => {
     if (!job || isTerminal(job.status)) return
     const timer = window.setInterval(() => {
-      void getRun(job.id, token)
+      void getRun(job.id)
         .then(setJob)
         .catch((reason: unknown) =>
           setError(reason instanceof Error ? reason.message : 'Не удалось обновить статус'),
         )
     }, 2000)
     return () => window.clearInterval(timer)
-  }, [job, token])
+  }, [job])
 
   const update = (field: keyof RunRequest, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -147,7 +146,7 @@ export function RunnerPage() {
     setJob(null)
     setIsSubmitting(true)
     try {
-      setJob(await createRun(form, token))
+      setJob(await createRun(form))
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : 'Не удалось создать прогон')
     } finally {
@@ -225,20 +224,6 @@ export function RunnerPage() {
               <option value="backend">Только backend</option>
               <option value="frontend">Только frontend</option>
             </select>
-          </label>
-          <label className="grid gap-1.5 text-sm">
-            <span className="font-medium">Токен оператора</span>
-            <input
-              type="password"
-              autoComplete="off"
-              className="h-10 rounded-md border bg-background px-3"
-              placeholder="Нужен в production"
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-            />
-            <span className="text-xs text-muted-foreground">
-              Не сохраняется и не передаётся провайдеру оценки.
-            </span>
           </label>
           {error && (
             <p

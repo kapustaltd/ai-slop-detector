@@ -30,7 +30,7 @@ chown -R ai-slop-detector:ai-slop-detector /opt/ai-slop-detector /var/lib/ai-slo
 
 install -d -m 0750 /etc/ai-slop-detector
 cat >/etc/ai-slop-detector/web-runner.env <<'EOF'
-WEB_RUNNER_TOKEN=replace-with-a-long-random-token
+WEB_RUNNER_TOKEN=
 WEB_RUNNER_ADDR=127.0.0.1:8081
 WEB_RUNNER_MAX_ACTIVE=1
 AGENT_MODEL=gpt-5.6-luna
@@ -50,7 +50,6 @@ For an OpenAI-compatible HTTP provider, set `AGENT_API_KEY`, `AGENT_BASE_URL`,
 service environment file. With `AGENT_API_KEY` set, the web runner uses the HTTP client
 and does not require `claude`. Without an API key, it retains the CLI provider selected
 by `WEB_RUNNER_PROVIDER_BIN` (default `claude`). Configure CLI credentials separately. Never put the token or provider credentials into git, frontend code or logs.
-The browser operator enters `WEB_RUNNER_TOKEN` on the `/run` page; it is kept only in memory.
 Successful runs are merged into `/var/lib/ai-slop-detector/public` and served from
 `/api/v1/bundle/`. `WEB_RUNNER_SEED_BUNDLE_DIR` is read only when the persistent public bundle is
 still empty, so a static deployment cannot erase previously evaluated teams.
@@ -67,7 +66,7 @@ recreating the container. The host Nginx example instead uses `127.0.0.1:8081`.
 
 After starting the service and reloading Nginx, verify `/healthz` returns JSON with
 `data.status=ok` through the public site. An unauthenticated POST to `/api/v1/runs`
-must return JSON with HTTP 401, rather than a static-server 404.
+is expected to reach the runner and return `202 Accepted` for a valid request.
 
 The first deploy creates the release directory. To prepare it explicitly:
 
@@ -87,7 +86,7 @@ Optional Environment variable:
 - `DEPLOY_HEALTHCHECK_URL`: public HTTP(S) URL for the site. If it is set and the check fails,
   the workflow automatically runs the rollback script and fails the deploy job.
 - `DEPLOY_WEB_RUNNER`: set to `true` only after installing the systemd unit, configuring
-  `WEB_RUNNER_TOKEN` and wiring the reverse proxy. When unset or not `true`, CI still builds the
+  wiring the reverse proxy. When unset or not `true`, CI still builds the
   runner but deploys only the static frontend.
 
 The private key must never be committed or pasted into an issue, pull request or chat. Verify the

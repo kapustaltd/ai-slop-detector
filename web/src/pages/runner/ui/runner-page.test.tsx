@@ -52,6 +52,7 @@ describe('RunnerPage', () => {
     const user = userEvent.setup()
 
     renderRunner()
+    expect(screen.queryByLabelText('Токен оператора')).not.toBeInTheDocument()
     await user.type(screen.getByLabelText('HTTPS URL репозитория'), completedJob.repository_url)
     await user.type(screen.getByLabelText('ID команды'), completedJob.repository_id)
     await user.click(screen.getByRole('button', { name: 'Запустить оценку' }))
@@ -64,6 +65,10 @@ describe('RunnerPage', () => {
       repository_id: completedJob.repository_id,
       branch: 'main',
       area: 'both',
+    })
+    expect(options?.headers).toEqual({
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
     })
   })
 
