@@ -55,7 +55,7 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if summary.TeamsDone != 1 || summary.AreasDone != 1 {
+	if summary.TeamsDone != 1 || summary.AreasDone != 1 || summary.AreasFailed != 0 {
 		t.Fatalf("unexpected summary: %#v", summary)
 	}
 	if _, err := os.Stat(filepath.Join(output, "raw", summary.RunID, "team-1", "backend", "attempt-01.json")); err != nil {
@@ -77,7 +77,7 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if secondSummary.TeamsDone != 1 || second.Index != 0 {
+	if secondSummary.TeamsDone != 1 || secondSummary.AreasFailed != 0 || second.Index != 0 {
 		t.Fatalf("completed state was not resumed: %#v calls=%d", secondSummary, second.Index)
 	}
 }

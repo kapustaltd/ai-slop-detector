@@ -6,7 +6,7 @@ The GitHub Actions workflow builds `web/dist`, then deploys it over SSH to
 Docker bind-mounted document root `/opt/hackathon/dist`.
 
 The controlled web runner is a separate Go service. It accepts only validated repository metadata
-through `/api/v1`, never arbitrary shell commands, and listens on `127.0.0.1:8080`. Nginx proxies
+through `/api/v1`, never arbitrary shell commands, and listens on port `8081`. Nginx proxies
 `/api/` to it while serving the static frontend from `current`.
 
 ## One-time server setup
@@ -31,6 +31,7 @@ chown -R ai-slop-detector:ai-slop-detector /opt/ai-slop-detector /var/lib/ai-slo
 install -d -m 0750 /etc/ai-slop-detector
 cat >/etc/ai-slop-detector/web-runner.env <<'EOF'
 WEB_RUNNER_TOKEN=replace-with-a-long-random-token
+WEB_RUNNER_ADDR=127.0.0.1:8081
 WEB_RUNNER_MAX_ACTIVE=1
 AGENT_MODEL=gpt-5.6-luna
 AGENT_EFFORT=none
@@ -41,9 +42,26 @@ systemctl daemon-reload
 systemctl enable --now ai-slop-detector-web-runner.service
 ```
 
-The provider credentials and the `claude` executable must be configured for the service account
-outside the repository. Never put the token or provider credentials into git, frontend code or logs.
+For an OpenAI-compatible HTTP provider, set `AGENT_API_KEY`, `AGENT_BASE_URL`,
+`AGENT_MODEL` and optionally `AGENT_TIMEOUT_SECONDS` (up to 600) in the protected
+service environment file. With `AGENT_API_KEY` set, the web runner uses the HTTP client
+and does not require `claude`. Without an API key, it retains the CLI provider selected
+by `WEB_RUNNER_PROVIDER_BIN` (default `claude`). Configure CLI credentials separately. Never put the token or provider credentials into git, frontend code or logs.
 The browser operator enters `WEB_RUNNER_TOKEN` on the `/run` page; it is kept only in memory.
+
+### Current Docker deployment
+
+Port `127.0.0.1:8080` is already used by `hackathon-web` and Cloudflare Tunnel.
+Do not bind the runner to that port. For the current default Docker bridge, set
+`WEB_RUNNER_ADDR=172.17.0.1:8081` in the service environment and use
+`nginx.docker.conf.example` inside the container. Verify the container's bridge gateway
+with `docker inspect` before applying this address. Keep the configuration on the host at
+`/opt/hackathon/nginx.conf` and mount it at `/etc/nginx/conf.d/default.conf:ro` whenever
+recreating the container. The host Nginx example instead uses `127.0.0.1:8081`.
+
+After starting the service and reloading Nginx, verify `/healthz` returns JSON with
+`data.status=ok` through the public site. An unauthenticated POST to `/api/v1/runs`
+must return JSON with HTTP 401, rather than a static-server 404.
 
 The first deploy creates the release directory. To prepare it explicitly:
 

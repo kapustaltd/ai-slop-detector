@@ -51,6 +51,10 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
+      - name: Test backend
+        working-directory: ${{ github.workspace }}/agent
+        run: go test ./...
+
       - name: Build web runner
         working-directory: ${{ github.workspace }}/agent
         run: go build -trimpath -o "$RUNNER_TEMP/web-runner" ./cmd/web-runner

@@ -1,0 +1,22 @@
+# For hackathon-web on the default Docker bridge. Verify the gateway before use.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location /api/ {
+        proxy_pass http://172.17.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location = /healthz {
+        proxy_pass http://172.17.0.1:8081;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
