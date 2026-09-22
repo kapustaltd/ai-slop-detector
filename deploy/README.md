@@ -2,7 +2,8 @@
 
 The GitHub Actions workflow builds `web/dist`, then deploys it over SSH to
 `root@13.143.132.116`. The server keeps releases under
-`/var/www/ai-slop-detector/releases/<commit-sha>` and serves the `current` symlink.
+`/var/www/ai-slop-detector/releases/<commit-sha>` and mirrors the active release into the
+Docker bind-mounted document root `/opt/hackathon/dist`.
 
 The controlled web runner is a separate Go service. It accepts only validated repository metadata
 through `/api/v1`, never arbitrary shell commands, and listens on `127.0.0.1:8080`. Nginx proxies
@@ -10,9 +11,11 @@ through `/api/v1`, never arbitrary shell commands, and listens on `127.0.0.1:808
 
 ## One-time server setup
 
-The target must have `bash`, `tar`, `readlink`, `ln`, `mv`, `ls` and `tail`. A static web server must be
-configured to use this document root. For Nginx, adapt `nginx.conf.example`, install it as a site,
-and reload Nginx. The workflow does not change server configuration, DNS, TLS or firewall rules.
+The target must have `bash`, `tar`, `readlink`, `ln`, `mv`, `ls` and `tail`. The current production
+Docker container serves `/opt/hackathon/dist`; the workflow updates that directory in place after
+validating the release symlink. If the server is migrated to host Nginx, point its document root at
+`/var/www/ai-slop-detector/current` and remove the `SERVE_ROOT` mirror from the workflow. The workflow
+does not change server configuration, DNS, TLS or firewall rules.
 
 ## One-time web runner setup
 
@@ -73,7 +76,7 @@ From a checkout containing this directory, run:
 
 ```bash
 ssh root@13.143.132.116 \
-  "DEPLOY_ROOT='/var/www/ai-slop-detector' bash -s" \
+  "DEPLOY_ROOT='/var/www/ai-slop-detector' SERVE_ROOT='/opt/hackathon/dist' bash -s" \
   < deploy/rollback-static.sh
 ```
 

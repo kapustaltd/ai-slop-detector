@@ -4,6 +4,8 @@ set -Eeuo pipefail
 
 : "${DEPLOY_ROOT:?DEPLOY_ROOT is required}"
 
+SERVE_ROOT="${SERVE_ROOT:-}"
+
 die() {
   echo "rollback failed: $*" >&2
   exit 1
@@ -30,6 +32,13 @@ case "$DEPLOY_ROOT" in
   *) die 'DEPLOY_ROOT must be absolute' ;;
 esac
 
+if [[ -n "$SERVE_ROOT" ]]; then
+  case "$SERVE_ROOT" in
+    /*) ;;
+    *) die 'SERVE_ROOT must be absolute' ;;
+  esac
+fi
+
 current_link="$DEPLOY_ROOT/current"
 previous_link="$DEPLOY_ROOT/previous"
 current_tmp="$DEPLOY_ROOT/.current-rollback-$$"
@@ -50,5 +59,18 @@ replace_symlink "$current_tmp" "$current_link"
 
 ln -sfn "$current_target" "$previous_tmp"
 replace_symlink "$previous_tmp" "$previous_link"
+
+if [[ -n "$SERVE_ROOT" ]]; then
+  [[ -d "$SERVE_ROOT" ]] || die "SERVE_ROOT is not an existing directory: $SERVE_ROOT"
+  stage_dir="$(mktemp -d "$(dirname "$SERVE_ROOT")/.$(basename "$SERVE_ROOT").rollback-XXXXXX")"
+  trap 'rm -rf -- "$stage_dir" "$current_tmp" "$previous_tmp"' EXIT
+
+  tar --create --file - --directory "$current_link" . \
+    | tar --extract --file - --directory "$stage_dir" --no-same-owner --no-same-permissions
+  find "$SERVE_ROOT" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+  tar --create --file - --directory "$stage_dir" . \
+    | tar --extract --file - --directory "$SERVE_ROOT" --no-same-owner --no-same-permissions
+  [[ -s "$SERVE_ROOT/index.html" ]] || die 'served root rollback verification failed'
+fi
 
 echo "rolled back: current=$previous_target previous=$current_target"

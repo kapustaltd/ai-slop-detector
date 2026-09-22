@@ -182,7 +182,7 @@ jobs:
             -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
           )
           ssh "${ssh_opts[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
-            "ARTIFACT_PATH='/tmp/ai-slop-detector-${GITHUB_SHA}.tar.gz' DEPLOY_ROOT='$DEPLOY_ROOT' RELEASE_ID='$GITHUB_SHA' KEEP_RELEASES='$RELEASES_TO_KEEP' bash -s" \
+            "ARTIFACT_PATH='/tmp/ai-slop-detector-${GITHUB_SHA}.tar.gz' DEPLOY_ROOT='$DEPLOY_ROOT' SERVE_ROOT='/opt/hackathon/dist' RELEASE_ID='$GITHUB_SHA' KEEP_RELEASES='$RELEASES_TO_KEEP' bash -s" \
             < deploy/deploy-static.sh
 
       - name: Install web runner atomically
@@ -219,7 +219,7 @@ jobs:
             -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
           )
           ssh "${ssh_opts[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
-            "DEPLOY_ROOT='$DEPLOY_ROOT' bash -s" < deploy/rollback-static.sh
+            "DEPLOY_ROOT='$DEPLOY_ROOT' SERVE_ROOT='/opt/hackathon/dist' bash -s" < deploy/rollback-static.sh
           exit 1
 
       - name: Remove local SSH material
