@@ -16,6 +16,22 @@ import (
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/rubric"
 )
 
+// skillsFixture кладёт на диск скилл ревью: пайплайн читает из него skill_version,
+// поэтому без файла прогон невозможен (спека 003 FR-013e).
+func skillsFixture(t *testing.T, area, version string) string {
+	t.Helper()
+	dir := t.TempDir()
+	skillDir := filepath.Join(dir, "review-"+area)
+	if err := os.MkdirAll(skillDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	body := "---\nname: review-" + area + "\nmetadata:\n  skill_version: \"" + version + "\"\n---\n\n# Review\n"
+	if err := os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
 func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	repo := t.TempDir()
 	if err := os.WriteFile(filepath.Join(repo, "main.go"), []byte("package main\n\nfunc main() {}\n"), 0600); err != nil {
@@ -50,7 +66,7 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	}
 	fake := &provider.JSONProvider{Responses: [][]byte{[]byte("not-json"), valid}}
 	output := t.TempDir()
-	config := Config{OutputDir: output, WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team 1", Repo: repo, Branch: "main", Active: true, Paths: map[string]string{"backend": "."}}}}, Rubrics: map[string]rubric.Rubric{"backend.v1": r}, Provider: fake, MaxParallel: 1, Templates: enrichmentTemplate(), Now: fixedNow}
+	config := Config{OutputDir: output, WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team 1", Repo: repo, Branch: "main", Active: true, Paths: map[string]string{"backend": "."}}}}, Rubrics: map[string]rubric.Rubric{"backend.v1": r}, Provider: fake, MaxParallel: 1, Templates: enrichmentTemplate(), Now: fixedNow, SkillsDir: skillsFixture(t, "backend", "1.0.0"), RubricPaths: map[string]string{"backend.v1": "../../../rubrics/backend.v1.yaml"}}
 	summary, err := (Pipeline{}).Run(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
