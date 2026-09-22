@@ -46,6 +46,32 @@ function score(value: number | null | undefined) {
 
 type HighlightToken = { content: string; color?: string }
 
+const chartTooltipStyles = {
+  contentStyle: {
+    backgroundColor: 'var(--ds-surface)',
+    border: '1px solid var(--ds-border-strong)',
+    borderRadius: 'var(--radius-control)',
+    color: 'var(--ds-fg)',
+  },
+  labelStyle: {
+    color: 'var(--ds-fg)',
+    fontWeight: 500,
+  },
+  itemStyle: {
+    color: 'var(--ds-fg)',
+  },
+}
+
+const chartTickStyle = {
+  fill: 'var(--ds-fg-muted)',
+  fontSize: 10,
+}
+
+const chartRadiusTickStyle = {
+  fill: 'var(--ds-fg-subtle)',
+  fontSize: 10,
+}
+
 const languageLoaders = {
   css: () => import('shiki/langs/css.mjs'),
   go: () => import('shiki/langs/go.mjs'),
@@ -325,9 +351,9 @@ function AreaCharts({
           <div className="h-64" aria-label={`Радар баллов ${areaName}`}>
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={data}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="name" tick={{ fontSize: 10 }} />
-                <PolarRadiusAxis domain={[0, 10]} />
+                <PolarGrid stroke="var(--ds-chart-grid)" />
+                <PolarAngleAxis dataKey="name" tick={chartTickStyle} />
+                <PolarRadiusAxis domain={[0, 10]} tick={chartRadiusTickStyle} />
                 <Radar
                   name="Команда"
                   dataKey="score"
@@ -335,7 +361,7 @@ function AreaCharts({
                   fill="var(--chart-2)"
                   fillOpacity={0.35}
                 />
-                <Tooltip />
+                <Tooltip {...chartTooltipStyles} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -350,11 +376,11 @@ function AreaCharts({
             <div className="h-64" aria-label={`Сравнение со средним ${areaName}`}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data} layout="vertical" margin={{ left: 20, right: 12 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" domain={[0, 10]} />
-                  <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Legend />
+                  <CartesianGrid stroke="var(--ds-chart-grid)" strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 10]} tick={chartRadiusTickStyle} />
+                  <YAxis type="category" dataKey="name" width={110} tick={chartTickStyle} />
+                  <Tooltip {...chartTooltipStyles} />
+                  <Legend wrapperStyle={{ color: 'var(--ds-fg-muted)' }} />
                   <Bar dataKey="score" name="Команда" fill="var(--chart-2)" />
                   <Bar dataKey="mean" name="Среднее" fill="var(--chart-4)" />
                 </BarChart>
