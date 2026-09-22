@@ -40,6 +40,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: agent/go.mod
+          cache-dependency-path: agent/go.sum
 
       - name: Install dependencies
         run: npm ci
@@ -51,8 +52,8 @@ jobs:
         run: npm run build
 
       - name: Build web runner
-        working-directory: ${{ github.workspace }}
-        run: go build -trimpath -o "$RUNNER_TEMP/web-runner" ./agent/cmd/web-runner
+        working-directory: ${{ github.workspace }}/agent
+        run: go build -trimpath -o "$RUNNER_TEMP/web-runner" ./cmd/web-runner
 
       - name: Package web runner
         working-directory: ${{ github.workspace }}
