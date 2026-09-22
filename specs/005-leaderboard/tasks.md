@@ -21,7 +21,7 @@ US5 заблокирована контрактом (Q13) и оставлена 
 **Purpose**: завести границы FSD-срезов, которых в проекте ещё нет, до того как в них появится код
 (web/CLAUDE.md: слои `entities`/`widgets` ещё не заведены).
 
-- [ ] T001 Создать пустые срезы с барабанными `index.ts`-заглушками:
+- [X] T001 Создать пустые срезы с барабанными `index.ts`-заглушками:
       `web/src/entities/team/index.ts`, `web/src/widgets/leaderboard-table/index.ts`,
       `web/src/widgets/disclaimer-banner/index.ts` — по структуре из `plan.md` → Project Structure
 
@@ -33,14 +33,17 @@ US5 заблокирована контрактом (Q13) и оставлена 
 
 **⚠️ CRITICAL**: ни одна user story не начинается раньше этой фазы.
 
-- [ ] T002 [P] Реализовать `shared/ui/empty-state.tsx` — пропсы по
+- [X] T002 [P] Реализовать `shared/ui/empty-state.tsx` — пропсы по
       `contracts/components.md#empty-state`: `icon: LucideIcon`, `title: string`,
       `description: string`, `action?: { label; onClick }` опционален (пустой набор данных —
       без action, DESIGN.md состояние 10), нейтральные токены `--ds-muted`/`--ds-border`,
-      без тревожного оформления; экспорт через `shared/ui/index.ts`
-- [ ] T003 [P] Реализовать `shared/ui/empty-state.test.tsx` — рендер с/без `action`, доступное
+      без тревожного оформления; экспорт через `shared/ui/index.ts`. Уточнение по ходу
+      реализации: макет (`07-states.html`, состояние 10) показывает два разных расположения —
+      крупная центрированная панель (нет данных / ошибка) и компактная строка внутри таблицы
+      (пустой результат фильтра, всегда с действием) — добавлен проп `layout: 'panel' | 'inline'`
+- [X] T003 [P] Реализовать `shared/ui/empty-state.test.tsx` — рендер с/без `action`, доступное
       имя по `title`, роль `button` для action
-- [ ] T004 [P] Перенести `entities/team/model/status.ts` — `statusLabel(status)`,
+- [X] T004 [P] Перенести `entities/team/model/status.ts` — `statusLabel(status)`,
       `sortValue(team, key)`, `sortTeams(teams, key, direction)` (из текущего
       `pages/leaderboard/ui/leaderboard-page.tsx`, поведение не меняется: строки с `total === null`
       всегда в хвосте, tie-break `team_id.localeCompare`), плюс словарь подписей `warnings[]` из
@@ -48,22 +51,25 @@ US5 заблокирована контрактом (Q13) и оставлена 
       оценку», `repo_too_large`/`file_limit_exceeded` → «Лимит размера», `secret_redacted` →
       «Секрет скрыт», `incomplete_area` → «Область оценена частично», `provider_error` → «Ошибка
       модели», неизвестное значение → «Предупреждение оценки»
-- [ ] T005 [P] `entities/team/model/status.test.ts` — модульные тесты `sortTeams` (хвост
+- [X] T005 [P] `entities/team/model/status.test.ts` — модульные тесты `sortTeams` (хвост
       `no_data`, стабильный tie-break), `statusLabel` на все 4 статуса, словарь `warnings[]` на
       известное и неизвестное значение
-- [ ] T006 [US-foundation] `entities/team/ui/team-status-badge.tsx` — пропсы
-      `{ status: EvaluationStatus; className? }` из `contracts/components.md`; токены `--ds-sev-*`
-      по статусу; зависит от T004
-- [ ] T007 [P] `entities/team/ui/team-warning-badges.tsx` — пропсы
-      `{ warnings: string[] | undefined; partial: boolean; className? }`; `partial` → бейдж
-      «частичная оценка», по одному бейджу на каждое известное `warnings[]` значение через словарь
-      T004; зависит от T004
-- [ ] T008 `entities/team/index.ts` — экспорт `status.ts`, `TeamStatusBadge`,
+- [X] T006 [US-foundation] `entities/team/ui/team-status-badge.tsx` — пропсы
+      `{ status: EvaluationStatus; partial?: boolean; className? }`; токены `--ds-sev-*` по
+      статусу; зависит от T004. **Пересмотрено против исходного контракта**: `partial` переехал
+      сюда из `TeamWarningBadges` — макет рейтинга (строка «Гринфилд») заменяет бейдж «Оценено» на
+      «Частично» целиком, а не добавляет отдельный флаг в колонку «Признаки» (см. FR-003b: «не
+      читается как равноправный с полной оценкой» — замена бейджа передаёт это точнее, чем два
+      бейджа рядом)
+- [X] T007 [P] `entities/team/ui/team-warning-badges.tsx` — пропсы
+      `{ warnings: string[] | undefined; className? }` (без `partial` — см. T006); по одному
+      бейджу на каждое известное `warnings[]` значение через словарь T004; зависит от T004
+- [X] T008 `entities/team/index.ts` — экспорт `status.ts`, `TeamStatusBadge`,
       `TeamWarningBadges` — зависит от T004, T006, T007
-- [ ] T009 [P] `widgets/disclaimer-banner/ui/disclaimer-banner.tsx` — фиксированный текст
+- [X] T009 [P] `widgets/disclaimer-banner/ui/disclaimer-banner.tsx` — фиксированный текст
       DESIGN.md («Это вспомогательная метрика, а не вердикт»...), пропс
       `rubricHref?: string` опционален (`contracts/components.md`)
-- [ ] T010 [P] `widgets/disclaimer-banner/ui/disclaimer-banner.test.tsx` +
+- [X] T010 [P] `widgets/disclaimer-banner/ui/disclaimer-banner.test.tsx` +
       `widgets/disclaimer-banner/index.ts` — рендер текста рамки, наличие/отсутствие ссылки
 
 **Checkpoint**: фундамент готов — можно начинать US1.
@@ -80,32 +86,32 @@ US5 заблокирована контрактом (Q13) и оставлена 
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] `widgets/leaderboard-table/ui/leaderboard-table.test.tsx` — порядок колонок
+- [X] T011 [P] [US1] `widgets/leaderboard-table/ui/leaderboard-table.test.tsx` — порядок колонок
       место/команда/итог/backend/frontend/статус (FR-001); равные `rank` получают отметку «=»;
       `partial` → дорожка ScoreGauge заштрихована + бейдж; отсутствующая область — прочерк, не «0»
       (FR-006)
-- [ ] T012 [P] [US1] `widgets/leaderboard-table/ui/leaderboard-row-card.test.tsx` — карточка:
+- [X] T012 [P] [US1] `widgets/leaderboard-table/ui/leaderboard-row-card.test.tsx` — карточка:
       место+название+итог в одной строке, backend/frontend во второй (FR-015)
 
 ### Implementation for User Story 1
 
-- [ ] T013 [P] [US1] `widgets/leaderboard-table/ui/leaderboard-table.tsx` — десктопная
+- [X] T013 [P] [US1] `widgets/leaderboard-table/ui/leaderboard-table.tsx` — десктопная
       `<table>` по композиции `design/reference/screens/01-leaderboard-light.html`: `ScoreGauge`
       (`trackWidth=58`, как в макете) для итог/backend/frontend, `TeamStatusBadge`,
       `TeamWarningBadges`, ссылка на `/team/:teamId` по названию, `<caption>` для скринридера,
       отметка «=» у равных `rank`; статичный `aria-sort` (интерактивность — Phase 5); только
       токены `--ds-*`, литеральных цветов/px нет; зависит от T006, T007
-- [ ] T014 [P] [US1] `widgets/leaderboard-table/ui/leaderboard-row-card.tsx` — карточка по
+- [X] T014 [P] [US1] `widgets/leaderboard-table/ui/leaderboard-row-card.tsx` — карточка по
       `design/reference/screens/03-leaderboard-mobile.html`; зависит от T006, T007
-- [ ] T015 [US1] `widgets/leaderboard-table/index.ts` — экспорт `LeaderboardTable`,
+- [X] T015 [US1] `widgets/leaderboard-table/index.ts` — экспорт `LeaderboardTable`,
       `LeaderboardRowCard` — зависит от T013, T014
-- [ ] T016 [US1] Переписать `pages/leaderboard/ui/leaderboard-page.tsx`: шапка (заголовок,
+- [X] T016 [US1] Переписать `pages/leaderboard/ui/leaderboard-page.tsx`: шапка (заголовок,
       бейдж «внутренний инструмент жюри», время сборки бандла из `built_at`), `DisclaimerBanner`,
       `LeaderboardTable` (`hidden md:block`) + список `LeaderboardRowCard` (`md:hidden`) на
       `index.teams` без сортировки/фильтров (default-порядок из бандла); убрать текущую вёрстку
       на дефолтах shadcn (`max-w-6xl`, `Table`/`Badge`/`Button` без токенов); зависит от T008,
       T010, T015
-- [ ] T017 [US1] Обновить `pages/leaderboard/ui/leaderboard-page.test.tsx` под новую разметку:
+- [X] T017 [US1] Обновить `pages/leaderboard/ui/leaderboard-page.test.tsx` под новую разметку:
       переход по клику на команду ведёт на `/team/<team_id>` (FR-010), запросы по роли/тексту;
       зависит от T016
 
@@ -123,19 +129,19 @@ US5 заблокирована контрактом (Q13) и оставлена 
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] `entities/team/ui/team-status-badge.test.tsx` — доступное пояснение на
+- [X] T018 [P] [US2] `entities/team/ui/team-status-badge.test.tsx` — доступное пояснение на
       каждый статус; для `failed` — текст «оценка не удалась — подробности на странице команды»
       (research.md: индекс бандла не содержит причины, только страница команды — 006)
-- [ ] T019 [P] [US2] `entities/team/ui/team-warning-badges.test.tsx` — пояснение на известное
+- [X] T019 [P] [US2] `entities/team/ui/team-warning-badges.test.tsx` — пояснение на известное
       значение `warnings[]` и на неизвестное (fallback «Предупреждение оценки»)
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Дополнить `entities/team/ui/team-status-badge.tsx` доступным описанием
+- [X] T020 [US2] Дополнить `entities/team/ui/team-status-badge.tsx` доступным описанием
       (`title` + `aria-describedby`) по статусу; зависит от T006
-- [ ] T021 [US2] Дополнить `entities/team/ui/team-warning-badges.tsx` подсказкой по словарю
+- [X] T021 [US2] Дополнить `entities/team/ui/team-warning-badges.tsx` подсказкой по словарю
       T004 на каждый бейдж; зависит от T007
-- [ ] T022 [US2] Обновить `pages/leaderboard/ui/leaderboard-page.test.tsx`: команда без оценки
+- [X] T022 [US2] Обновить `pages/leaderboard/ui/leaderboard-page.test.tsx`: команда без оценки
       показывает прочерк, а не 0 (FR-006, US2 #2); команда `failed` — бейдж с доступным пояснением
       (US2 #3); зависит от T016, T020, T021
 
@@ -152,35 +158,35 @@ US5 заблокирована контрактом (Q13) и оставлена 
 
 ### Tests for User Story 3
 
-- [ ] T023 [P] [US3] `widgets/leaderboard-table/model/use-leaderboard-state.test.ts` —
+- [X] T023 [P] [US3] `widgets/leaderboard-table/model/use-leaderboard-state.test.ts` —
       сортировка по умолчанию (`sort=rank`), переключение направления, комбинации фильтров,
       неизвестное значение параметра → значение по умолчанию (не ошибка), round-trip через URL
       (`contracts/url-params.md`)
-- [ ] T024 [P] [US3] `widgets/leaderboard-table/ui/leaderboard-toolbar.test.tsx` — переключение
+- [X] T024 [P] [US3] `widgets/leaderboard-table/ui/leaderboard-toolbar.test.tsx` — переключение
       фильтра статуса и предупреждений, счётчик «Показано: N из M» обновляется через
       `aria-live="polite"` (DESIGN.md, «Числа»)
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] `widgets/leaderboard-table/model/use-leaderboard-state.ts` — хук по
+- [X] T025 [US3] `widgets/leaderboard-table/model/use-leaderboard-state.ts` — хук по
       `contracts/components.md#useLeaderboardState`: читает/пишет `useSearchParams` по контракту
       `contracts/url-params.md` (параметры `sort`, `dir`, `status`, `warnings`; удаление параметра
       при возврате к значению по умолчанию); использует `sortTeams`/`sortValue` из T004; зависит
       от T004
-- [ ] T026 [US3] Добавить в `widgets/leaderboard-table/ui/leaderboard-table.tsx`
+- [X] T026 [US3] Добавить в `widgets/leaderboard-table/ui/leaderboard-table.tsx`
       кликабельные/клавиатурно-доступные заголовки колонок (`aria-sort`, обработчик `onSort`) —
       FR-007; зависит от T013, T025
-- [ ] T027 [US3] `widgets/leaderboard-table/ui/leaderboard-toolbar.tsx` — `<select>` статуса,
+- [X] T027 [US3] `widgets/leaderboard-table/ui/leaderboard-toolbar.tsx` — `<select>` статуса,
       чекбокс «только с предупреждениями», счётчик показанных, на мобильном — дополнительный
       `<select>` сортировки (research.md: десктопный дублирующий dropdown не собирается, заголовки
       колонок уже закрывают FR-007); зависит от T025
-- [ ] T028 [US3] `widgets/leaderboard-table/index.ts` — добавить экспорт
+- [X] T028 [US3] `widgets/leaderboard-table/index.ts` — добавить экспорт
       `LeaderboardToolbar`, `useLeaderboardState` — зависит от T025, T027
-- [ ] T029 [US3] Подключить в `pages/leaderboard/ui/leaderboard-page.tsx`
+- [X] T029 [US3] Подключить в `pages/leaderboard/ui/leaderboard-page.tsx`
       `useLeaderboardState` + `LeaderboardToolbar` вместо статичного порядка из T016; пустой
       результат фильтрации — `EmptyState` (T002) с действием «Сбросить фильтры» (US3 #4); зависит
       от T016, T028, T002
-- [ ] T030 [US3] Обновить `pages/leaderboard/ui/leaderboard-page.test.tsx`: сортировка по
+- [X] T030 [US3] Обновить `pages/leaderboard/ui/leaderboard-page.test.tsx`: сортировка по
       backend/frontend переупорядочивает строки без изменения `rank` (US3 #1), фильтр
       предупреждений сохраняется в адресе и переживает перемонтирование через `initialEntries`
       (US3 #2, #3), пустой результат фильтра показывает `EmptyState` со сбросом (US3 #4); зависит
@@ -199,17 +205,17 @@ US5 заблокирована контрактом (Q13) и оставлена 
 
 ### Tests for User Story 4
 
-- [ ] T031 [P] [US4] Обновить `pages/leaderboard/ui/leaderboard-page.test.tsx`: ошибка чтения
+- [X] T031 [P] [US4] Обновить `pages/leaderboard/ui/leaderboard-page.test.tsx`: ошибка чтения
       бандла → `EmptyState` с действием «Повторить» (US4 #3); пустой бандл (`teams.length === 0`)
       → `EmptyState` **без** action (DESIGN.md, состояние 10 — «конвейер обновит страницу сам»),
       что отличает его от пустого результата фильтра из T030 (там action есть)
 
 ### Implementation for User Story 4
 
-- [ ] T032 [US4] В `pages/leaderboard/ui/leaderboard-page.tsx` заменить текущий
+- [X] T032 [US4] В `pages/leaderboard/ui/leaderboard-page.tsx` заменить текущий
       `<p role="alert">` + `<Button>` веткой `EmptyState` (иконка ошибки, «Не удалось загрузить
       дата-бандл», описание, action «Повторить» → существующий `load()`); зависит от T029, T002
-- [ ] T033 [US4] В `pages/leaderboard/ui/leaderboard-page.tsx` добавить ветку «данных ещё нет»
+- [X] T033 [US4] В `pages/leaderboard/ui/leaderboard-page.tsx` добавить ветку «данных ещё нет»
       (`index.teams.length === 0`, отличается от «результат фильтра пуст» из T029 — это про сам
       бандл, не про фильтры): `EmptyState` без action; зависит от T029, T002
 
@@ -236,18 +242,32 @@ US5 заблокирована контрактом (Q13) и оставлена 
 
 **Purpose**: финальная проверка соответствия дизайн-системе и гейтам качества.
 
-- [ ] T035 [P] Проверить `pages/leaderboard/ui/leaderboard-page.tsx`,
+- [X] T035 [P] Проверить `pages/leaderboard/ui/leaderboard-page.tsx`,
       `widgets/leaderboard-table/**`, `widgets/disclaimer-banner/**`,
       `entities/team/**`, `shared/ui/empty-state.tsx` на отсутствие литеральных цветов/кеглей вне
-      токенов `--ds-*` (web/CLAUDE.md, правило 4 раздела «Интерфейс»)
-- [ ] T036 [P] `npx eslint src/entities/team src/widgets/leaderboard-table
+      токенов `--ds-*` (web/CLAUDE.md, правило 4 раздела «Интерфейс»). Проверено `grep` на hex-цвета
+      и на дефолтную палитру Tailwind (`bg-red-500` и т.п.) — ни одного совпадения
+- [X] T036 [P] `npx eslint src/entities/team src/widgets/leaderboard-table
       src/widgets/disclaimer-banner src/pages/leaderboard src/shared/ui/empty-state.tsx` — без
       предупреждений
-- [ ] T037 [P] `npx steiger ./src` — границы `entities → widgets → pages` не нарушены, срезы не
-      импортируют друг друга внутри слоя
-- [ ] T038 Вручную пройти `quickstart.md` (сценарии 1–10) в обеих темах и на ширине 360 px —
-      визуальная проверка, не автоматизируется
-- [ ] T039 `npm run check` — полный гейт перед тем, как предлагать коммит
+- [X] T037 [P] `npx steiger ./src` — границы `entities → widgets → pages` не нарушены (0 нарушений
+      направления импорта), но 3 находки `fsd/insignificant-slice`: `entities/team`,
+      `widgets/disclaimer-banner`, `widgets/leaderboard-table` пока используются только одним
+      потребителем (`pages/leaderboard`) — ожидаемо: оба среза заведены заранее под переиспользование
+      в 006-team-details (см. `plan.md` → Structure Decision), второй потребитель появится в той
+      фиче. `widgets/leaderboard-table` останется специфичным для этой страницы и может не набрать
+      второго потребителя — это осознанный, а не случайный «insignificant slice»
+- [X] T038 Вручную пройти `quickstart.md` (сценарии 1–10) в обеих темах и на ширине 360 px —
+      визуальная проверка через Playwright (webapp-testing). Нашла и исправила реальный баг:
+      плавающая кнопка темы (`app/theme/theme-provider.tsx`, вне первоначального списка задач)
+      перекрывала бейдж «внутренний инструмент жюри» и текст времени сборки на ширинах 360–767 px
+      — кнопка сделана icon-only 44/36 px на токенах, в шапку добавлен `padding-right` под неё
+- [ ] T039 `npm run check` — **осознанно оставлено красным**: `lint:fsd` (steiger) падает на 3
+      находках `fsd/insignificant-slice` (см. T037). Решение владельца продукта 2026-09-22:
+      оставить как есть, второй потребитель для `entities/team` и `widgets/disclaimer-banner`
+      появится в 006-team-details; вердикт по `widgets/leaderboard-table` — после 006, когда
+      станет ясно, останется ли он без второго потребителя. Остальные шаги гейта (`format:check`,
+      `contract:check`, `lint`, `typecheck`, `test`) зелёные
 
 ---
 

@@ -34,3 +34,24 @@ export function scoreWord(score: number): string {
 export function scoreFillPercent(score: number): number {
   return (Math.min(Math.max(score, 0), SCORE_MAX) / SCORE_MAX) * 100
 }
+
+export interface ScoreScaleStep {
+  level: ScoreLevel
+  colorVar: string
+  rangeLabel: string
+}
+
+function formatBound(value: number): string {
+  const rounded = Math.round(value * 10) / 10
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
+}
+
+/** Легенда шкалы для подписи под таблицей/графиком — цвет и диапазон каждой ступени. */
+export const SCORE_SCALE_LEGEND: ScoreScaleStep[] = LEVELS.map((step, index) => {
+  const lower = index === 0 ? 0 : LEVELS[index - 1].upTo + 0.1
+  return {
+    level: step.level,
+    colorVar: `var(--ds-score-${step.level})`,
+    rangeLabel: `${formatBound(lower)}–${formatBound(step.upTo)} ${step.word}`,
+  }
+})

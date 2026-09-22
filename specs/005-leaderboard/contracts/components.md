@@ -28,26 +28,28 @@ interface EmptyStateProps {
 ```ts
 interface TeamStatusBadgeProps {
   status: EvaluationStatus // 'done' | 'failed' | 'no_data' | 'running'
+  partial?: boolean
   className?: string
 }
 ```
 
-Инкапсулирует связку иконка + текст + токены `--ds-sev-*`/`--ds-warn-*` по статусу. Чистое
-отображение, без бизнес-логики.
+Инкапсулирует связку иконка + текст + токены `--ds-sev-*` по статусу. **Пересмотрено при
+реализации**: `partial` живёт здесь, а не в `TeamWarningBadges` — на макете рейтинга
+(`01-leaderboard-light.html`, строка «Гринфилд») частичная оценка заменяет бейдж «Оценено» на
+«Частично» целиком, а не добавляет отдельный флаг в колонку «Признаки». Чистое отображение, без
+бизнес-логики.
 
 ## `entities/team/ui/team-warning-badges.tsx` — `TeamWarningBadges`
 
 ```ts
 interface TeamWarningBadgesProps {
   warnings: string[] | undefined
-  partial: boolean
   className?: string
 }
 ```
 
-Рендерит 0..N бейджей: «частичная оценка» (если `partial`) + по одному на каждое известное
-`warnings[]` значение (текст берётся по словарю причин, неизвестное значение — общий текст
-«Предупреждение оценки», не падает и не скрывается).
+Рендерит по одному бейджу на каждое известное `warnings[]` значение (текст берётся по словарю
+причин, неизвестное значение — общий текст «Предупреждение оценки», не падает и не скрывается).
 
 ## `entities/team/model/status.ts`
 
