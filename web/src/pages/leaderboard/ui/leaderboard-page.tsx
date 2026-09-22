@@ -236,12 +236,17 @@ export function LeaderboardPage() {
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-      <header className="space-y-2">
-        <p className="text-sm font-medium text-muted-foreground">Внутренний обзор качества</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Рейтинг команд</h1>
-        <p className="text-sm text-muted-foreground">
-          Бандл собран {new Date(builtAt).toLocaleString('ru-RU')}
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">Внутренний обзор качества</p>
+          <h1 className="text-3xl font-semibold tracking-tight">Рейтинг команд</h1>
+          <p className="text-sm text-muted-foreground">
+            Бандл собран {new Date(builtAt).toLocaleString('ru-RU')}
+          </p>
+        </div>
+        <Button asChild variant="outline">
+          <Link to="/run">Новый прогон</Link>
+        </Button>
       </header>
 
       <p className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
