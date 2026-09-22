@@ -134,13 +134,23 @@ func (m *Manager) loadPersisted() error {
 		if err := json.Unmarshal(data, &job); err != nil || job.ID == "" {
 			continue
 		}
+		changed := false
 		if job.Status == StatusQueued || job.Status == StatusRunning {
 			job.Status = StatusFailed
 			job.Error = "сервис был перезапущен до завершения прогона"
 			job.Progress = progressFor(job.Area, StatusFailed)
 			job.FinishedAt = m.config.Now().UTC().Format(time.RFC3339)
+			changed = true
+		} else if job.Status == StatusSucceeded && summaryHasFailures(job.Summary) {
+			job.Status = StatusFailed
+			job.Error = summaryFailureMessage(*job.Summary)
+			job.Progress = progressFor(job.Area, StatusFailed)
+			changed = true
 		}
 		m.jobs[job.ID] = &job
+		if changed {
+			_ = m.persistLocked(&job)
+		}
 	}
 	m.pruneLocked()
 	return nil
@@ -203,9 +213,9 @@ func (m *Manager) execute(parent context.Context, request Request) {
 		job.Status = StatusFailed
 		job.Error = sanitizeMessage(err.Error())
 		job.Progress = progressFor(request.Area, StatusFailed)
-	} else if summary.TeamsFailed > 0 || summary.AreasFailed > 0 {
+	} else if summaryHasFailures(&summary) {
 		job.Status = StatusFailed
-		job.Error = fmt.Sprintf("прогон завершён с ошибками: областей с ошибками — %d, команд с ошибками — %d", summary.AreasFailed, summary.TeamsFailed)
+		job.Error = summaryFailureMessage(summary)
 		job.Progress = progressFor(request.Area, StatusFailed)
 	} else {
 		job.Status = StatusSucceeded
@@ -300,6 +310,14 @@ func progressFor(area, status string) map[string]string {
 		return map[string]string{"backend": status, "frontend": status}
 	}
 	return map[string]string{area: status}
+}
+
+func summaryHasFailures(summary *Summary) bool {
+	return summary != nil && (summary.TeamsFailed > 0 || summary.AreasFailed > 0)
+}
+
+func summaryFailureMessage(summary Summary) string {
+	return fmt.Sprintf("прогон завершён с ошибками: областей с ошибками — %d, команд с ошибками — %d", summary.AreasFailed, summary.TeamsFailed)
 }
 
 func defaultID(now time.Time, sequence uint64) string {

@@ -133,3 +133,36 @@ func TestHTTPMarksSummaryFailuresAsFailed(t *testing.T) {
 	}
 	t.Fatal("run did not finish as failed")
 }
+
+func TestNewManagerNormalizesPersistedSummaryFailures(t *testing.T) {
+	dataDir := t.TempDir()
+	manager, err := NewManager(Config{DataDir: dataDir, Execute: func(context.Context, Request, io.Writer) (Summary, error) {
+		return Summary{}, nil
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	job := &Job{
+		ID: "persisted-run", Status: StatusSucceeded, Area: "both",
+		Progress: progressFor("both", StatusSucceeded),
+		Summary:  &Summary{TeamsTotal: 1, TeamsFailed: 1, AreasFailed: 2},
+	}
+	if err := manager.persistLocked(job); err != nil {
+		t.Fatal(err)
+	}
+
+	reloaded, err := NewManager(Config{DataDir: dataDir, Execute: func(context.Context, Request, io.Writer) (Summary, error) {
+		return Summary{}, nil
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := reloaded.Get("persisted-run")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Status != StatusFailed || got.Error == "" || got.Progress["backend"] != StatusFailed {
+		t.Fatalf("persisted failure was not normalized: %#v", got)
+	}
+}
