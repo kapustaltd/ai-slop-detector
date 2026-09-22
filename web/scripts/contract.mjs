@@ -161,7 +161,7 @@ function reportTemplate(rubric, scores = {}) {
     score: scores[metric.id] ?? Number((6 + (index % 4) * 0.5).toFixed(1)),
     max: rubric.scale.max,
     confidence: 'medium',
-    summary: 'Показан участок кода по критерию.',
+    summary: 'Фрагмент кода.',
     rationale: metric.description,
     findings: [
       {
@@ -170,8 +170,8 @@ function reportTemplate(rubric, scores = {}) {
         file: 'src/main.go',
         line_start: index + 1,
         line_end: index + 1,
-        title: 'Участок кода',
-        explanation: 'Участок приведён для проверки критерия.',
+        title: 'Фрагмент',
+        explanation: 'Фрагмент привязан к указанным строкам.',
       },
     ],
   }))

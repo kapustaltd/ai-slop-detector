@@ -38,7 +38,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Разделение транспорта бизнес-логики и доступа к данным",
                   "findings": [
                     {
@@ -47,9 +47,9 @@
                       "file": "src/main.go",
                       "line_start": 1,
                       "line_end": 3,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "Run возвращает nil.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L1-L3"
@@ -63,7 +63,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Связность модулей и зацепление между ними",
                   "findings": [
                     {
@@ -72,8 +72,8 @@
                       "file": "src/main.go",
                       "line_start": 2,
                       "line_end": 4,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L2-L4"
@@ -95,7 +95,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Предсказуемость структуры каталогов и именования",
                   "findings": [
                     {
@@ -104,8 +104,8 @@
                       "file": "src/main.go",
                       "line_start": 3,
                       "line_end": 5,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L3-L5"
@@ -119,7 +119,7 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Направление зависимостей и отсутствие циклов",
                   "findings": [
                     {
@@ -128,8 +128,8 @@
                       "file": "src/main.go",
                       "line_start": 4,
                       "line_end": 6,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L4-L6"
@@ -159,7 +159,7 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Имена сущностей функций и переменных",
                   "findings": [
                     {
@@ -168,8 +168,8 @@
                       "file": "src/main.go",
                       "line_start": 5,
                       "line_end": 7,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L5-L7"
@@ -183,7 +183,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Размер и цикломатическая сложность функций",
                   "findings": [
                     {
@@ -192,9 +192,9 @@
                       "file": "src/main.go",
                       "line_start": 6,
                       "line_end": 8,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "Run возвращает nil.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L6-L8"
@@ -216,7 +216,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Дублирование логики и копипаста",
                   "findings": [
                     {
@@ -225,8 +225,8 @@
                       "file": "src/main.go",
                       "line_start": 7,
                       "line_end": 9,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L7-L9"
@@ -256,7 +256,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Распространение обёртывание и отсутствие проглоченных ошибок",
                   "findings": [
                     {
@@ -265,8 +265,8 @@
                       "file": "src/main.go",
                       "line_start": 8,
                       "line_end": 10,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L8-L10"
@@ -280,7 +280,7 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Информативность ошибок без утечки внутренних деталей",
                   "findings": [
                     {
@@ -289,8 +289,8 @@
                       "file": "src/main.go",
                       "line_start": 9,
                       "line_end": 11,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L9-L11"
@@ -312,7 +312,7 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Логирование ключевых событий и отказов",
                   "findings": [
                     {
@@ -321,8 +321,8 @@
                       "file": "src/main.go",
                       "line_start": 10,
                       "line_end": 12,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L10-L12"
@@ -352,7 +352,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Консистентность ресурсов методов и кодов ответов",
                   "findings": [
                     {
@@ -361,9 +361,9 @@
                       "file": "src/main.go",
                       "line_start": 11,
                       "line_end": 13,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "Run возвращает nil.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L11-L13"
@@ -377,7 +377,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Описанность контракта схемой или документацией",
                   "findings": [
                     {
@@ -386,8 +386,8 @@
                       "file": "src/main.go",
                       "line_start": 12,
                       "line_end": 14,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L12-L14"
@@ -409,7 +409,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Валидация и санитизация входных данных",
                   "findings": [
                     {
@@ -418,8 +418,8 @@
                       "file": "src/main.go",
                       "line_start": 13,
                       "line_end": 15,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L13-L15"
@@ -449,7 +449,7 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Схема ключи и ограничения целостности",
                   "findings": [
                     {
@@ -458,8 +458,8 @@
                       "file": "src/main.go",
                       "line_start": 14,
                       "line_end": 16,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L14-L16"
@@ -473,7 +473,7 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Миграции и воспроизводимость схемы",
                   "findings": [
                     {
@@ -482,8 +482,8 @@
                       "file": "src/main.go",
                       "line_start": 15,
                       "line_end": 17,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L15-L17"
@@ -505,7 +505,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Транзакции консистентность и корректность запросов",
                   "findings": [
                     {
@@ -514,9 +514,9 @@
                       "file": "src/main.go",
                       "line_start": 16,
                       "line_end": 18,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "Run возвращает nil.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L16-L18"
@@ -530,7 +530,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "N+1 индексы и объём выборок",
                   "findings": [
                     {
@@ -539,8 +539,8 @@
                       "file": "src/main.go",
                       "line_start": 17,
                       "line_end": 19,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L17-L19"
@@ -570,7 +570,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Проверка личности и прав доступа",
                   "findings": [
                     {
@@ -579,8 +579,8 @@
                       "file": "src/main.go",
                       "line_start": 18,
                       "line_end": 20,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L18-L20"
@@ -602,7 +602,7 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Обращение с секретами и конфигурацией доступа",
                   "findings": [
                     {
@@ -611,8 +611,8 @@
                       "file": "src/main.go",
                       "line_start": 19,
                       "line_end": 21,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L19-L21"
@@ -626,7 +626,7 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Защита от инъекций и небезопасной десериализации",
                   "findings": [
                     {
@@ -635,8 +635,8 @@
                       "file": "src/main.go",
                       "line_start": 20,
                       "line_end": 22,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L20-L22"
@@ -666,7 +666,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Покрыты ли тестами критичные пути",
                   "findings": [
                     {
@@ -675,9 +675,9 @@
                       "file": "src/main.go",
                       "line_start": 21,
                       "line_end": 23,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "Run возвращает nil.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L21-L23"
@@ -691,7 +691,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Изоляция детерминизм и читаемость тестов",
                   "findings": [
                     {
@@ -700,8 +700,8 @@
                       "file": "src/main.go",
                       "line_start": 22,
                       "line_end": 24,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L22-L24"
@@ -723,7 +723,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Воспроизводимость запуска тестов по файлам репозитория",
                   "findings": [
                     {
@@ -732,8 +732,8 @@
                       "file": "src/main.go",
                       "line_start": 23,
                       "line_end": 25,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L23-L25"
@@ -763,7 +763,7 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Запуск с нуля по файлам репозитория",
                   "findings": [
                     {
@@ -772,8 +772,8 @@
                       "file": "src/main.go",
                       "line_start": 24,
                       "line_end": 26,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L24-L26"
@@ -787,7 +787,7 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "README как рабочая инструкция",
                   "findings": [
                     {
@@ -796,8 +796,8 @@
                       "file": "src/main.go",
                       "line_start": 25,
                       "line_end": 27,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L25-L27"
@@ -819,7 +819,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Конфигурация через окружение без захардкоженного доступа",
                   "findings": [
                     {
@@ -828,9 +828,9 @@
                       "file": "src/main.go",
                       "line_start": 26,
                       "line_end": 28,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "Run возвращает nil.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L26-L28"
@@ -844,7 +844,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Наличие и содержание конфигурации CI в репозитории",
                   "findings": [
                     {
@@ -853,8 +853,8 @@
                       "file": "src/main.go",
                       "line_start": 27,
                       "line_end": 29,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "Run возвращает nil.",
                       "link_status": "verified",
                       "snippet": "func Run() error {\n\treturn nil\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.go#L27-L29"
@@ -891,7 +891,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Размер и ответственность компонентов",
                   "findings": [
                     {
@@ -900,9 +900,9 @@
                       "file": "src/main.tsx",
                       "line_start": 1,
                       "line_end": 3,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "renderApp возвращает компонент App.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L1-L3"
@@ -916,7 +916,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Переиспользование вместо копирования",
                   "findings": [
                     {
@@ -925,8 +925,8 @@
                       "file": "src/main.tsx",
                       "line_start": 2,
                       "line_end": 4,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L2-L4"
@@ -948,7 +948,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Предсказуемость структуры и именования",
                   "findings": [
                     {
@@ -957,8 +957,8 @@
                       "file": "src/main.tsx",
                       "line_start": 3,
                       "line_end": 5,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L3-L5"
@@ -972,7 +972,7 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Разделение представления логики и доступа к данным",
                   "findings": [
                     {
@@ -981,8 +981,8 @@
                       "file": "src/main.tsx",
                       "line_start": 4,
                       "line_end": 6,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L4-L6"
@@ -1012,7 +1012,7 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Локальное против глобального и уровень подъёма состояния",
                   "findings": [
                     {
@@ -1021,8 +1021,8 @@
                       "file": "src/main.tsx",
                       "line_start": 5,
                       "line_end": 7,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L5-L7"
@@ -1036,7 +1036,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Единственный источник истины и отсутствие рассинхрона",
                   "findings": [
                     {
@@ -1045,9 +1045,9 @@
                       "file": "src/main.tsx",
                       "line_start": 6,
                       "line_end": 8,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "renderApp возвращает компонент App.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L6-L8"
@@ -1069,7 +1069,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Организация запросов кеширование и инвалидация",
                   "findings": [
                     {
@@ -1078,8 +1078,8 @@
                       "file": "src/main.tsx",
                       "line_start": 7,
                       "line_end": 9,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L7-L9"
@@ -1093,7 +1093,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Состояния загрузки ошибок и пустых данных",
                   "findings": [
                     {
@@ -1102,8 +1102,8 @@
                       "file": "src/main.tsx",
                       "line_start": 8,
                       "line_end": 10,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L8-L10"
@@ -1133,7 +1133,7 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Strict-режим и отсутствие немотивированных any",
                   "findings": [
                     {
@@ -1142,8 +1142,8 @@
                       "file": "src/main.tsx",
                       "line_start": 9,
                       "line_end": 11,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L9-L11"
@@ -1157,7 +1157,7 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Типы данных API происходят из контракта",
                   "findings": [
                     {
@@ -1166,8 +1166,8 @@
                       "file": "src/main.tsx",
                       "line_start": 10,
                       "line_end": 12,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L10-L12"
@@ -1189,7 +1189,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Типизация props и публичных интерфейсов модулей",
                   "findings": [
                     {
@@ -1198,9 +1198,9 @@
                       "file": "src/main.tsx",
                       "line_start": 11,
                       "line_end": 13,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "renderApp возвращает компонент App.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L11-L13"
@@ -1230,7 +1230,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Лишние перерисовки и оправданная мемоизация",
                   "findings": [
                     {
@@ -1239,8 +1239,8 @@
                       "file": "src/main.tsx",
                       "line_start": 12,
                       "line_end": 14,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L12-L14"
@@ -1262,7 +1262,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Размер бандла код-сплиттинг и работа с изображениями",
                   "findings": [
                     {
@@ -1271,8 +1271,8 @@
                       "file": "src/main.tsx",
                       "line_start": 13,
                       "line_end": 15,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L13-L15"
@@ -1302,7 +1302,7 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Семантические элементы вместо div-супа",
                   "findings": [
                     {
@@ -1311,8 +1311,8 @@
                       "file": "src/main.tsx",
                       "line_start": 14,
                       "line_end": 16,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L14-L16"
@@ -1326,7 +1326,7 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "ARIA там где семантики не хватает и без вреда",
                   "findings": [
                     {
@@ -1335,8 +1335,8 @@
                       "file": "src/main.tsx",
                       "line_start": 15,
                       "line_end": 17,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L15-L17"
@@ -1358,7 +1358,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Доступность с клавиатуры и порядок фокуса",
                   "findings": [
                     {
@@ -1367,9 +1367,9 @@
                       "file": "src/main.tsx",
                       "line_start": 16,
                       "line_end": 18,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "renderApp возвращает компонент App.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L16-L18"
@@ -1383,7 +1383,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Контраст и видимость фокуса",
                   "findings": [
                     {
@@ -1392,8 +1392,8 @@
                       "file": "src/main.tsx",
                       "line_start": 17,
                       "line_end": 19,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L17-L19"
@@ -1423,7 +1423,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Единый подход к стилям и токены вместо магических значений",
                   "findings": [
                     {
@@ -1432,8 +1432,8 @@
                       "file": "src/main.tsx",
                       "line_start": 18,
                       "line_end": 20,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L18-L20"
@@ -1447,7 +1447,7 @@
                   "score": 7.7,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Единообразие однотипных элементов",
                   "findings": [
                     {
@@ -1456,8 +1456,8 @@
                       "file": "src/main.tsx",
                       "line_start": 19,
                       "line_end": 21,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L19-L21"
@@ -1479,7 +1479,7 @@
                   "score": 8.1,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Поведение на разных размерах экрана",
                   "findings": [
                     {
@@ -1488,8 +1488,8 @@
                       "file": "src/main.tsx",
                       "line_start": 20,
                       "line_end": 22,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L20-L22"
@@ -1519,7 +1519,7 @@
                   "score": 6.5,
                   "max": 10,
                   "confidence": "medium",
-                  "summary": "Нужна доработка.",
+                  "summary": "Критерий выполнен не полностью.",
                   "rationale": "Покрыты ли тестами ключевые сценарии интерфейса",
                   "findings": [
                     {
@@ -1528,9 +1528,9 @@
                       "file": "src/main.tsx",
                       "line_start": 21,
                       "line_end": 23,
-                      "title": "Точка для доработки",
-                      "explanation": "Участок можно сделать явнее и устойчивее.",
-                      "suggestion": "Вынесите ответственность в отдельный модуль и проверьте сценарий.",
+                      "title": "Неполное соответствие",
+                      "explanation": "renderApp возвращает компонент App.",
+                      "suggestion": "Вынесите ответственность в отдельный модуль; проверьте сценарий.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L21-L23"
@@ -1544,7 +1544,7 @@
                   "score": 6.9,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Устойчивость тестов и отсутствие завязки на случайную разметку",
                   "findings": [
                     {
@@ -1553,8 +1553,8 @@
                       "file": "src/main.tsx",
                       "line_start": 22,
                       "line_end": 24,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L22-L24"
@@ -1576,7 +1576,7 @@
                   "score": 7.3,
                   "max": 10,
                   "confidence": "high",
-                  "summary": "Сценарий работает последовательно.",
+                  "summary": "Критерий подтверждён фрагментом.",
                   "rationale": "Воспроизводимость запуска тестов",
                   "findings": [
                     {
@@ -1585,8 +1585,8 @@
                       "file": "src/main.tsx",
                       "line_start": 23,
                       "line_end": 25,
-                      "title": "Подтверждённое свойство",
-                      "explanation": "Участок показывает это свойство кода.",
+                      "title": "Подтверждение критерия",
+                      "explanation": "renderApp возвращает компонент App.",
                       "link_status": "verified",
                       "snippet": "export function renderApp() {\n  return <App />\n}",
                       "permalink": "https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/src/main.tsx#L23-L25"
