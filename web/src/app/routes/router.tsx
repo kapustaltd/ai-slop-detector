@@ -2,7 +2,6 @@ import { createHashRouter } from 'react-router-dom'
 
 import { LeaderboardPage } from '@/pages/leaderboard'
 import { NotFoundPage } from '@/pages/not-found'
-import { RunnerPage } from '@/pages/runner'
 import { TeamPage } from '@/pages/team'
 
 /**
@@ -11,7 +10,6 @@ import { TeamPage } from '@/pages/team'
  */
 export const router = createHashRouter([
   { path: '/', element: <LeaderboardPage /> },
-  { path: '/run', element: <RunnerPage /> },
   { path: '/team/:teamId', element: <TeamPage /> },
   { path: '*', element: <NotFoundPage /> },
 ])

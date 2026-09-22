@@ -17,7 +17,7 @@ import (
 
 // Publisher merges a successful single-team run into the public bundle.
 // The persistent bundle is preferred over the seed so subsequent deploys do
-// not discard teams that were evaluated through the web runner.
+// not discard teams that were evaluated in an earlier pipeline run.
 type Publisher struct {
 	mu      sync.RWMutex
 	root    string

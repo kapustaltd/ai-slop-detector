@@ -18,7 +18,6 @@ npm run dev
 
 ```bash
 cd agent
-go run ./cmd/web-runner --addr 127.0.0.1:8080 --rubrics-dir ../rubrics
 ```
 
 Vite проксирует `/api` и `/healthz` на `127.0.0.1:8080`. Страница `/run` запускает

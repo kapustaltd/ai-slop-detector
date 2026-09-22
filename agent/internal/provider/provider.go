@@ -36,26 +36,6 @@ type Provider interface {
 	Evaluate(context.Context, Request) (Response, error)
 }
 
-// OpenAIAdapter keeps provider credentials in the runner process. The model
-// receives only the bounded request prompt and never inherits the API key.
-type OpenAIAdapter struct {
-	Client interface {
-		Complete(context.Context, string, string) (string, error)
-	}
-	SystemPrompt string
-}
-
-func (p OpenAIAdapter) Evaluate(ctx context.Context, request Request) (Response, error) {
-	if p.Client == nil {
-		return Response{}, fmt.Errorf("openai client is required")
-	}
-	raw, err := p.Client.Complete(ctx, p.SystemPrompt, request.Prompt)
-	if err != nil {
-		return Response{}, err
-	}
-	return Response{Raw: []byte(raw), Usage: DecodeUsage([]byte(raw))}, nil
-}
-
 // CommandProvider invokes a headless CLI without a shell. Only explicitly
 // supplied environment variables plus PATH are passed to the child process.
 // In particular, platform credentials from the parent process are not

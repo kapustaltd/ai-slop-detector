@@ -1,8 +1,9 @@
 /**
  * Единственная точка доступа к дата-бандлу (спека 008, FR-006).
  *
- * Статический бандл остаётся мгновенным fallback, а production web runner
- * публикует свежие результаты через тот же JSON-контракт в /api/v1/bundle.
+ * Данные подключаются импортом на этапе сборки: рантайм-загрузки нет вовсе
+ * (спека 004 FR-001, 008 FR-005). Пайплайн кладёт свежий бандл в `web/data/`,
+ * после чего приложение пересобирается.
  *
  * Типы дата-бандла генерируются из JSON Schema 004 скриптом contract:generate.
  */
@@ -48,9 +49,6 @@ const teamModules = import.meta.glob<{ default: TeamBundle }>('/data/teams/*.jso
 const rubricModules = import.meta.glob<{ default: RubricBundle }>('/data/rubrics/*.json')
 const statsModules = import.meta.glob<{ default: StatsBundle }>('/data/stats.json', { eager: true })
 
-const runnerApiBase = (import.meta.env.VITE_RUNNER_API_BASE as string | undefined) ?? '/api/v1'
-const runtimeBundleBase = `${runnerApiBase.replace(/\/$/, '')}/bundle`
-
 export class BundleError extends Error {}
 
 /** Индекс рейтинга. Доступен синхронно: он всегда в основном чанке. */
@@ -68,35 +66,13 @@ export function getLeaderboardIndex(): LeaderboardIndexStub {
   return index
 }
 
-async function loadRuntimeAsset<T>(asset: string): Promise<T> {
-  const response = await fetch(`${runtimeBundleBase}/${asset}`, {
-    headers: { Accept: 'application/json' },
-    cache: 'no-store',
-  })
-  if (!response.ok) throw new BundleError(`Динамический дата-бандл недоступен (${response.status})`)
-  return (await response.json()) as T
-}
-
-/** Свежий индекс web runner с безопасным fallback на статический бандл. */
+/** Асинхронная форма доступа к индексу: данные уже в основном чанке. */
 export async function loadLeaderboardIndex(): Promise<LeaderboardIndexStub> {
-  try {
-    const index = await loadRuntimeAsset<LeaderboardIndexStub>('index.json')
-    if (index.bundle_schema !== SUPPORTED_BUNDLE_SCHEMA) {
-      throw new BundleError(`Версия схемы бандла ${index.bundle_schema} не поддерживается`)
-    }
-    return index
-  } catch {
-    return getLeaderboardIndex()
-  }
+  return getLeaderboardIndex()
 }
 
 /** Данные одной команды. Отдельный чанк, поэтому загрузка асинхронная. */
 export async function loadTeam(teamId: string): Promise<TeamBundle> {
-  try {
-    return await loadRuntimeAsset<TeamBundle>(`teams/${encodeURIComponent(teamId)}.json`)
-  } catch {
-    // A team from the shipped bundle remains available before the first live run.
-  }
   const loader = teamModules[`/data/teams/${teamId}.json`]
   if (!loader) {
     throw new BundleError(`В бандле нет файла команды ${teamId}`)
@@ -105,11 +81,6 @@ export async function loadTeam(teamId: string): Promise<TeamBundle> {
 }
 
 export async function loadRubric(rubricVersion: string): Promise<RubricBundle> {
-  try {
-    return await loadRuntimeAsset<RubricBundle>(`rubrics/${encodeURIComponent(rubricVersion)}.json`)
-  } catch {
-    // Fall back to the rubric embedded at build time.
-  }
   const loader = rubricModules[`/data/rubrics/${rubricVersion}.json`]
   if (!loader) throw new BundleError(`В бандле нет рубрики ${rubricVersion}`)
   return (await loader()).default
