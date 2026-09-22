@@ -28,8 +28,9 @@ the runtime deliberately does not hard-code metric names.
 
 ## Web runner
 
-The controlled web runner exposes `GET /healthz`, `POST /api/v1/runs` and
-`GET /api/v1/runs/<id>`. It accepts repository metadata only; it never accepts
+The controlled web runner exposes `GET /healthz`, `POST /api/v1/runs`,
+`GET /api/v1/runs/<id>` and the public read-only bundle under `GET /api/v1/bundle/`.
+It accepts repository metadata only; it never accepts
 or executes arbitrary shell text from HTTP requests.
 
 ```sh
@@ -41,7 +42,8 @@ go run ./cmd/web-runner \
 
 Set `WEB_RUNNER_TOKEN` outside the repository before exposing the service beyond
 local development. The React page at `/#/run` sends the operator token as a
-Bearer credential and polls the run status.
+Bearer credential and polls the run status. A successful run is merged into the
+persistent public bundle and becomes visible in the leaderboard automatically.
 
 ## Tests
 

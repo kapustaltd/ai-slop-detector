@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kapustaltd/ai-slop-detector/agent/internal/bundle"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/enrichment"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/pipeline"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/provider"
@@ -31,7 +32,12 @@ func main() {
 	token := flags.String("token", os.Getenv("WEB_RUNNER_TOKEN"), "Bearer token; empty is allowed for local development")
 	maxActive := flags.Int("max-active", envInt("WEB_RUNNER_MAX_ACTIVE", 1), "maximum active runs")
 	maxStored := flags.Int("max-stored", envInt("WEB_RUNNER_MAX_STORED", 50), "maximum retained job records")
+	publicBundleDir := flags.String("public-bundle-dir", os.Getenv("WEB_RUNNER_PUBLIC_BUNDLE_DIR"), "persistent public data bundle directory")
+	seedBundleDir := flags.String("seed-bundle-dir", os.Getenv("WEB_RUNNER_SEED_BUNDLE_DIR"), "initial static data bundle directory")
 	_ = flags.Parse(os.Args[1:])
+	if strings.TrimSpace(*publicBundleDir) == "" {
+		*publicBundleDir = filepath.Join(*dataDir, "public")
+	}
 
 	rubrics, err := loadRubrics(*rubricsDir)
 	if err != nil {
@@ -41,9 +47,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	publisher, err := bundle.NewPublisher(*publicBundleDir, *seedBundleDir, rubrics)
+	if err != nil {
+		log.Fatal(err)
+	}
 	manager, err := webapi.NewManager(webapi.Config{
 		DataDir: *dataDir, MaxActive: *maxActive, MaxStored: *maxStored,
-		Execute: pipelineExecutor(*dataDir, *workspaceDir, evaluationProvider, rubrics),
+		Execute: pipelineExecutor(*dataDir, *workspaceDir, evaluationProvider, rubrics, publisher),
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -52,16 +62,23 @@ func main() {
 		log.Print("warning: WEB_RUNNER_TOKEN is empty; API authentication is disabled for local development")
 	}
 
-	server := &http.Server{Addr: *addr, Handler: webapi.NewHandler(manager, *token), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
+	server := &http.Server{Addr: *addr, Handler: webapi.NewHandler(manager, *token, publisher), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second}
 	log.Printf("web runner listening on %s", *addr)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 }
 
-func pipelineExecutor(dataDir, workspaceDir string, evaluationProvider provider.Provider, rubrics map[string]rubric.Rubric) webapi.Execute {
+func pipelineExecutor(dataDir, workspaceDir string, evaluationProvider provider.Provider, rubrics map[string]rubric.Rubric, publisher *bundle.Publisher) webapi.Execute {
 	return func(ctx context.Context, request webapi.Request, logger io.Writer) (webapi.Summary, error) {
-		return runPipeline(ctx, request, dataDir, workspaceDir, evaluationProvider, rubrics, logger)
+		summary, err := runPipeline(ctx, request, dataDir, workspaceDir, evaluationProvider, rubrics, logger)
+		if err == nil && summary.TeamsFailed == 0 && summary.AreasFailed == 0 {
+			runDirectory := filepath.Join(dataDir, "runs", request.ID)
+			if publishErr := publisher.Publish(runDirectory, time.Now()); publishErr != nil {
+				return summary, fmt.Errorf("publish leaderboard bundle: %w", publishErr)
+			}
+		}
+		return summary, err
 	}
 }
 

@@ -34,7 +34,10 @@ WEB_RUNNER_TOKEN=replace-with-a-long-random-token
 WEB_RUNNER_ADDR=127.0.0.1:8081
 WEB_RUNNER_MAX_ACTIVE=1
 AGENT_MODEL=gpt-5.6-luna
-AGENT_EFFORT=none
+AGENT_EFFORT=low
+AGENT_BASE_URL=https://ru.cheapvibecode.ru/v1
+AGENT_API_KEY=replace-with-the-provider-key
+WEB_RUNNER_SEED_BUNDLE_DIR=/opt/ai-slop-detector/current/seed-data
 EOF
 chmod 0600 /etc/ai-slop-detector/web-runner.env
 
@@ -48,6 +51,9 @@ service environment file. With `AGENT_API_KEY` set, the web runner uses the HTTP
 and does not require `claude`. Without an API key, it retains the CLI provider selected
 by `WEB_RUNNER_PROVIDER_BIN` (default `claude`). Configure CLI credentials separately. Never put the token or provider credentials into git, frontend code or logs.
 The browser operator enters `WEB_RUNNER_TOKEN` on the `/run` page; it is kept only in memory.
+Successful runs are merged into `/var/lib/ai-slop-detector/public` and served from
+`/api/v1/bundle/`. `WEB_RUNNER_SEED_BUNDLE_DIR` is read only when the persistent public bundle is
+still empty, so a static deployment cannot erase previously evaluated teams.
 
 ### Current Docker deployment
 

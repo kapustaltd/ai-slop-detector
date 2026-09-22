@@ -101,6 +101,11 @@ function RunStatusCard({ job }: { job: RunJob }) {
           </div>
         </div>
       )}
+      {job.status === 'succeeded' && (
+        <Button asChild variant="outline">
+          <Link to="/">Открыть обновлённый рейтинг</Link>
+        </Button>
+      )}
       {(job.logs?.length ?? 0) > 0 && (
         <details>
           <summary className="cursor-pointer text-sm font-medium">Последние сообщения</summary>
@@ -269,8 +274,8 @@ export function RunnerPage() {
             </li>
           </ol>
           <p className="border-t pt-4 text-xs text-muted-foreground">
-            Запуск не изменяет рейтинг автоматически. Публикация нового дата-бандла остаётся
-            отдельной операторской операцией.
+            После успешной проверки команда автоматически появится в рейтинге. Повторный прогон с
+            тем же ID обновит её результат.
           </p>
           <div className="rounded-lg border bg-background p-3">
             <p className="text-xs font-medium text-muted-foreground">Разрешённая операция</p>

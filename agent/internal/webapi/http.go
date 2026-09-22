@@ -5,15 +5,53 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"regexp"
 	"strings"
 )
 
-func NewHandler(manager *Manager, token string) http.Handler {
+type BundleReader interface {
+	Read(relativePath string) ([]byte, error)
+}
+
+var bundleAssetPattern = regexp.MustCompile(`^(index|stats)\.json$|^(teams|rubrics)/[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.json$`)
+
+func NewHandler(manager *Manager, token string, bundles ...BundleReader) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthHandler)
 	mux.HandleFunc("/api/v1/runs", runsHandler(manager, token))
 	mux.HandleFunc("/api/v1/runs/", runHandler(manager, token))
+	if len(bundles) > 0 && bundles[0] != nil {
+		mux.HandleFunc("/api/v1/bundle/", bundleHandler(bundles[0]))
+	}
 	return mux
+}
+
+func bundleHandler(reader BundleReader) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodGet {
+			writeError(writer, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed", nil)
+			return
+		}
+		asset := strings.TrimPrefix(request.URL.Path, "/api/v1/bundle/")
+		if !bundleAssetPattern.MatchString(asset) {
+			writeError(writer, http.StatusNotFound, "not_found", "bundle asset not found", nil)
+			return
+		}
+		data, err := reader.Read(asset)
+		if errors.Is(err, os.ErrNotExist) {
+			writeError(writer, http.StatusNotFound, "not_found", "bundle asset not found", nil)
+			return
+		}
+		if err != nil {
+			writeError(writer, http.StatusInternalServerError, "internal_error", "could not load bundle asset", nil)
+			return
+		}
+		writer.Header().Set("Content-Type", "application/json")
+		writer.Header().Set("Cache-Control", "no-store")
+		writer.WriteHeader(http.StatusOK)
+		_, _ = writer.Write(data)
+	}
 }
 
 func healthHandler(writer http.ResponseWriter, request *http.Request) {

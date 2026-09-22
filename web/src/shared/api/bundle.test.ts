@@ -1,8 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { BundleError, getLeaderboardIndex, loadTeam } from './bundle'
+import { BundleError, getLeaderboardIndex, loadLeaderboardIndex, loadTeam } from './bundle'
 
 describe('доступ к дата-бандлу', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
   it('отдаёт индекс рейтинга из бандла', () => {
     const index = getLeaderboardIndex()
     expect(index.teams).toHaveLength(4)
@@ -13,6 +15,16 @@ describe('доступ к дата-бандлу', () => {
   })
 
   it('сообщает об отсутствии команды в бандле', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
     await expect(loadTeam('team-42')).rejects.toBeInstanceOf(BundleError)
+  })
+
+  it('предпочитает свежий индекс web runner', async () => {
+    const live = { ...getLeaderboardIndex(), teams: [] }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => live } as Response),
+    )
+    await expect(loadLeaderboardIndex()).resolves.toEqual(live)
   })
 })

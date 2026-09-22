@@ -64,9 +64,10 @@ jobs:
         run: |
           set -euo pipefail
           package_dir="$RUNNER_TEMP/web-runner-package"
-          install -d "$package_dir/rubrics"
+          install -d "$package_dir/rubrics" "$package_dir/seed-data"
           install -m 0755 "$RUNNER_TEMP/web-runner" "$package_dir/web-runner"
           install -m 0644 rubrics/backend.v1.yaml rubrics/frontend.v1.yaml "$package_dir/rubrics/"
+          cp -R web/data/. "$package_dir/seed-data/"
           tar -C "$package_dir" -czf "$RUNNER_TEMP/ai-slop-detector-web-runner.tar.gz" .
 
       - name: Test release scripts

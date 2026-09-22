@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import {
   getLeaderboardIndex,
+  loadLeaderboardIndex,
   type EvaluationStatus,
   type LeaderboardIndexStub,
   type LeaderboardTeam,
@@ -179,10 +180,20 @@ export function LeaderboardPage() {
   const statusFilter = searchParams.get('status') ?? 'all'
   const warningsOnly = searchParams.get('warnings') === '1'
 
-  const load = useCallback(() => {
+  useEffect(() => {
+    let cancelled = false
+    void loadLeaderboardIndex().then((freshIndex) => {
+      if (!cancelled) setIndex(freshIndex)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      setIndex(getLeaderboardIndex())
+      setIndex(await loadLeaderboardIndex())
     } catch {
       setIndex(null)
     } finally {

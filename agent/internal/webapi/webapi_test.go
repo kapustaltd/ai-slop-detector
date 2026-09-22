@@ -5,10 +5,21 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
 )
+
+type testBundleReader map[string][]byte
+
+func (reader testBundleReader) Read(path string) ([]byte, error) {
+	value, ok := reader[path]
+	if !ok {
+		return nil, os.ErrNotExist
+	}
+	return value, nil
+}
 
 func testManager(t *testing.T, execute Execute) *Manager {
 	t.Helper()
@@ -99,6 +110,23 @@ func TestHTTPRejectsUnknownJSONField(t *testing.T) {
 	NewHandler(manager, "").ServeHTTP(recorder, request)
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want 400", recorder.Code)
+	}
+}
+
+func TestHTTPServesPublicBundleWithoutOperatorToken(t *testing.T) {
+	manager := testManager(t, func(context.Context, Request, io.Writer) (Summary, error) { return Summary{}, nil })
+	handler := NewHandler(manager, "operator-token", testBundleReader{"index.json": []byte(`{"teams":[]}`)})
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/bundle/index.json", nil)
+	handler.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusOK || recorder.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("unexpected public bundle response: status=%d headers=%v", recorder.Code, recorder.Header())
+	}
+
+	invalid := httptest.NewRecorder()
+	handler.ServeHTTP(invalid, httptest.NewRequest(http.MethodGet, "/api/v1/bundle/teams/private/file.json", nil))
+	if invalid.Code != http.StatusNotFound {
+		t.Fatalf("nested asset status = %d, want 404", invalid.Code)
 	}
 }
 

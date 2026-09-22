@@ -3,6 +3,7 @@ export {
   SUPPORTED_BUNDLE_SCHEMA,
   getStats,
   getLeaderboardIndex,
+  loadLeaderboardIndex,
   loadRubric,
   loadTeam,
   type EvaluationStatus,
