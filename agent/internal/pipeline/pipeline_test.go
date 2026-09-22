@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kapustaltd/ai-slop-detector/agent/internal/bundle"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/enrichment"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/provider"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/registry"
@@ -33,7 +34,7 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 	sha := strings.TrimSpace(string(shaBytes))
-	r := rubric.Rubric{ID: "backend.v1", Version: "backend.v1", Area: "backend", Scale: rubric.Scale{Min: 0, Max: 10, Anchors: []int{2, 5, 8, 10}}, Categories: []rubric.Category{{
+	r := rubric.Rubric{SchemaVersion: "rubric.v1", RubricVersion: "backend.v1", AreaWeights: map[string]float64{"backend": .5, "frontend": .5}, ID: "backend.v1", Version: "backend.v1", Area: "backend", Scale: rubric.Scale{Min: 0, Max: 10, Anchors: []int{2, 5, 8, 10}}, Categories: []rubric.Category{{
 		ID: "cat", Name: "Category", Weight: 1,
 		Subcategories: []rubric.Subcategory{{
 			ID: "sub", Name: "Sub", Weight: 1,
@@ -51,6 +52,8 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	fake := &provider.JSONProvider{Responses: [][]byte{[]byte("not-json"), valid}}
 	output := t.TempDir()
 	config := Config{OutputDir: output, WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team 1", Repo: repo, Branch: "main", Active: true, Paths: map[string]string{"backend": "."}}}}, Rubrics: map[string]rubric.Rubric{"backend.v1": r}, Provider: fake, MaxParallel: 1, Templates: enrichmentTemplate(), Now: fixedNow}
+	config.Model = "test-model"
+	config.SkillVersion = "1.0.0"
 	summary, err := (Pipeline{}).Run(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
@@ -80,6 +83,108 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	if secondSummary.TeamsDone != 1 || secondSummary.AreasFailed != 0 || second.Index != 0 {
 		t.Fatalf("completed state was not resumed: %#v calls=%d", secondSummary, second.Index)
 	}
+
+	// Every case starts from the same valid cached state and keeps the repo SHA.
+	statePath := filepath.Join(output, "state", "team-1", "backend.json")
+	baseline, err := os.ReadFile(statePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name   string
+		change func(*Config, *savedEvaluation)
+	}{
+		{"skill", func(c *Config, _ *savedEvaluation) { c.SkillVersion = "1.1.0" }},
+		{"model", func(c *Config, _ *savedEvaluation) { c.Model = "another-model" }},
+		{"rubric content", func(c *Config, _ *savedEvaluation) {
+			var copy rubric.Rubric
+			raw, _ := json.Marshal(r)
+			if err := json.Unmarshal(raw, &copy); err != nil {
+				t.Fatal(err)
+			}
+			copy.Version = r.Version
+			copy.Categories[0].Subcategories[0].Metrics[0].Description = "changed anchor interpretation"
+			c.Rubrics = map[string]rubric.Rubric{"backend.v1": copy}
+		}},
+		{"scanner limits", func(c *Config, _ *savedEvaluation) { c.ScannerConfig.MaxFiles = 5 }},
+		{"legacy cache", func(_ *Config, s *savedEvaluation) { s.InputDigest = "" }},
+		{"corrupt score", func(_ *Config, s *savedEvaluation) { s.Report.Metrics[0].Score = 11 }},
+		{"corrupt skill metadata", func(_ *Config, s *savedEvaluation) { s.Report.Meta.SkillVersion = "9.0.0" }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := config
+			var saved savedEvaluation
+			if err := json.Unmarshal(baseline, &saved); err != nil {
+				t.Fatal(err)
+			}
+			tc.change(&c, &saved)
+			if err := writeJSON(statePath, saved); err != nil {
+				t.Fatal(err)
+			}
+			p := &provider.JSONProvider{Responses: [][]byte{valid}}
+			c.Provider = p
+			if _, err := (Pipeline{}).Run(context.Background(), c); err != nil {
+				t.Fatal(err)
+			}
+			if p.Index == 0 {
+				t.Fatal("stale cache bypassed provider")
+			}
+		})
+	}
+	if err := os.WriteFile(statePath, baseline, 0600); err != nil {
+		t.Fatal(err)
+	}
+	config.Recalculate = true
+	config.Provider = nil
+	if _, err := (Pipeline{}).Run(context.Background(), config); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.ReadFile(filepath.Join(output, "index.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, kind := range []string{"skill", "model", "rubric", "missing score"} {
+		t.Run("recalculate/"+kind, func(t *testing.T) {
+			c := config
+			if err := os.WriteFile(statePath, baseline, 0600); err != nil {
+				t.Fatal(err)
+			}
+			switch kind {
+			case "skill":
+				c.SkillVersion = "2.0.0"
+			case "model":
+				c.Model = "changed-model"
+			case "rubric":
+				var saved savedEvaluation
+				if err := json.Unmarshal(baseline, &saved); err != nil {
+					t.Fatal(err)
+				}
+				saved.RubricDigest = "stale"
+				if err := writeJSON(statePath, saved); err != nil {
+					t.Fatal(err)
+				}
+			case "missing score":
+				var saved map[string]any
+				if err := json.Unmarshal(baseline, &saved); err != nil {
+					t.Fatal(err)
+				}
+				delete(saved["report"].(map[string]any)["metrics"].([]any)[0].(map[string]any), "score")
+				if err := writeJSON(statePath, saved); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if _, err := (Pipeline{}).Run(context.Background(), c); err == nil {
+				t.Fatal("recalculate accepted incompatible state")
+			}
+			after, err := os.ReadFile(filepath.Join(output, "index.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(before) != string(after) {
+				t.Fatal("failed recalculate changed published index")
+			}
+		})
+	}
 }
 
 func TestOutputLockPreventsConcurrentRuns(t *testing.T) {
@@ -91,6 +196,56 @@ func TestOutputLockPreventsConcurrentRuns(t *testing.T) {
 	defer release()
 	if _, err := acquireLock(output); err == nil {
 		t.Fatal("expected second pipeline to be rejected")
+	}
+}
+
+func TestConfigRejectsIncompatibleRubricsBeforeProvider(t *testing.T) {
+	for _, kind := range []string{"invalid keys", "mismatched weights", "mismatched version"} {
+		t.Run(kind, func(t *testing.T) {
+			backend, err := rubric.Load("../../../rubrics/backend.v1.yaml")
+			if err != nil {
+				t.Fatal(err)
+			}
+			frontend, err := rubric.Load("../../../rubrics/frontend.v1.yaml")
+			if err != nil {
+				t.Fatal(err)
+			}
+			switch kind {
+			case "invalid keys":
+				backend.AreaWeights = map[string]float64{"wrong_a": .5, "wrong_b": .5}
+			case "mismatched weights":
+				frontend.AreaWeights = map[string]float64{"backend": .6, "frontend": .4}
+			case "mismatched version":
+				backend.Version = "backend.v2"
+			}
+			p := &provider.JSONProvider{Responses: [][]byte{[]byte("unexpected call")}}
+			config := Config{OutputDir: filepath.Join(t.TempDir(), "output"), WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team", Repo: "https://github.com/example/never-clone", Branch: "main", Active: true}}}, Provider: p, Rubrics: map[string]rubric.Rubric{"backend.v1": backend, "frontend.v1": frontend}}
+			if _, err := (Pipeline{}).Run(context.Background(), config); err == nil || !strings.Contains(err.Error(), "rubric") {
+				t.Fatalf("expected rubric preflight error, got %v", err)
+			}
+			if p.Index != 0 {
+				t.Fatal("invalid rubric reached provider")
+			}
+			if _, err := os.Stat(config.OutputDir); !os.IsNotExist(err) {
+				t.Fatalf("preflight created output: %v", err)
+			}
+		})
+	}
+}
+
+func TestTeamTotalUsesRubricWeights(t *testing.T) {
+	backend, frontend := 10.0, 0.0
+	rubrics := map[string]rubric.Rubric{}
+	for _, area := range []string{"backend", "frontend"} {
+		rubrics[area+".v1"] = rubric.Rubric{Scale: rubric.Scale{Max: 10}, AreaWeights: map[string]float64{"backend": .8, "frontend": .2}}
+	}
+	areas := map[string]bundle.Area{"backend": {Status: "done", Score: &backend}, "frontend": {Status: "done", Score: &frontend}}
+	if score, ok := teamTotal(areas, rubrics, registry.Team{}); !ok || score != 8 {
+		t.Fatalf("weighted total = %v, %v", score, ok)
+	}
+	delete(areas, "frontend")
+	if score, ok := teamTotal(areas, rubrics, registry.Team{}); !ok || score != 10 {
+		t.Fatalf("partial total = %v, %v", score, ok)
 	}
 }
 

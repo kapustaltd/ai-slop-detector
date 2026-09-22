@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -65,19 +66,21 @@ type Summary struct {
 type Pipeline struct{}
 
 type savedEvaluation struct {
-	TeamID      string                `json:"team_id"`
-	Area        string                `json:"area"`
-	CommitSHA   string                `json:"commit_sha"`
-	RepoURL     string                `json:"repo_url"`
-	Report      contract.Report       `json:"report"`
-	Enriched    enrichment.Result     `json:"enriched"`
-	Aggregate   aggregation.AreaScore `json:"aggregate"`
-	Warnings    []string              `json:"warnings,omitempty"`
-	DurationMS  int64                 `json:"duration_ms"`
-	CostUSD     float64               `json:"cost_usd"`
-	RawAttempts int                   `json:"raw_attempts"`
-	Status      string                `json:"status"`
-	Error       string                `json:"error,omitempty"`
+	InputDigest  string                `json:"input_digest,omitempty"`
+	RubricDigest string                `json:"rubric_digest,omitempty"`
+	TeamID       string                `json:"team_id"`
+	Area         string                `json:"area"`
+	CommitSHA    string                `json:"commit_sha"`
+	RepoURL      string                `json:"repo_url"`
+	Report       contract.Report       `json:"report"`
+	Enriched     enrichment.Result     `json:"enriched"`
+	Aggregate    aggregation.AreaScore `json:"aggregate"`
+	Warnings     []string              `json:"warnings,omitempty"`
+	DurationMS   int64                 `json:"duration_ms"`
+	CostUSD      float64               `json:"cost_usd"`
+	RawAttempts  int                   `json:"raw_attempts"`
+	Status       string                `json:"status"`
+	Error        string                `json:"error,omitempty"`
 }
 
 type attemptRecord struct {
@@ -100,6 +103,12 @@ type teamRun struct {
 }
 
 func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
+	if config.SkillVersion == "" {
+		config.SkillVersion = "1.0.0"
+	}
+	if config.Model == "" {
+		config.Model = "unspecified"
+	}
 	if err := validateConfig(config); err != nil {
 		return Summary{}, err
 	}
@@ -250,14 +259,21 @@ type areaRunResult struct {
 }
 
 func runArea(ctx context.Context, config Config, team registry.Team, prepared gitrepo.Prepared, area, areaPath, rawRoot string) areaRunResult {
-	if !config.Force {
-		if saved, err := loadState(config.OutputDir, team.ID, area); err == nil && saved.Status == "done" && saved.CommitSHA == prepared.CommitSHA {
-			return areaRunResult{area: toBundleArea(saved), meta: metaFromReport(saved.Report)}
-		}
-	}
 	rubricValue, err := rubricFor(config.Rubrics, area)
 	if err != nil {
 		return failedArea(config, team, area, rawRoot, err)
+	}
+	digest := inputDigest(config, team, prepared.CommitSHA, area, areaPath, rubricValue)
+	if !config.Force {
+		if saved, err := loadState(config.OutputDir, team.ID, area); err == nil && saved.Status == "done" && saved.InputDigest == digest && saved.CommitSHA == prepared.CommitSHA {
+			if err := validateSaved(saved, config, team, area, rubricValue); err == nil {
+				// Recompute from validated leaves, never trust cached aggregates.
+				if aggregate, err := aggregation.Area(rubricValue, saved.Report); err == nil {
+					saved.Aggregate = aggregate
+					return areaRunResult{area: toBundleArea(saved), meta: metaFromReport(saved.Report), warnings: saved.Warnings}
+				}
+			}
+		}
 	}
 	root, err := registry.ResolveAreaPath(prepared.Root, areaPath)
 	if err != nil {
@@ -344,7 +360,7 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 	}
 	warnings := append([]string{}, snapshot.Warnings...)
 	warnings = append(warnings, report.Warnings...)
-	saved := savedEvaluation{TeamID: team.ID, Area: area, CommitSHA: prepared.CommitSHA, RepoURL: prepared.RepoURL, Report: report, Enriched: enriched, Aggregate: aggregate, Warnings: unique(warnings), DurationMS: duration.Milliseconds(), CostUSD: response.Usage.CostUSD, RawAttempts: attempts, Status: "done"}
+	saved := savedEvaluation{InputDigest: digest, RubricDigest: rubricDigest(rubricValue), TeamID: team.ID, Area: area, CommitSHA: prepared.CommitSHA, RepoURL: prepared.RepoURL, Report: report, Enriched: enriched, Aggregate: aggregate, Warnings: unique(warnings), DurationMS: duration.Milliseconds(), CostUSD: response.Usage.CostUSD, RawAttempts: attempts, Status: "done"}
 	if err := writeJSON(filepath.Join(rawDir, "evaluation.json"), saved); err != nil {
 		return areaRunResult{area: bundle.Area{Status: "failed", Error: err.Error()}}
 	}
@@ -377,19 +393,24 @@ func recalculate(ctx context.Context, config Config, runID string, started time.
 		for _, area := range []string{"backend", "frontend"} {
 			saved, loadErr := loadState(config.OutputDir, team.ID, area)
 			if loadErr != nil {
-				continue
+				if os.IsNotExist(loadErr) {
+					continue
+				}
+				return Summary{}, fmt.Errorf("load %s/%s: %w", team.ID, area, loadErr)
 			}
 			if saved.Status == "done" {
 				value, rubricErr := rubricFor(config.Rubrics, area)
 				if rubricErr != nil {
-					continue
+					return Summary{}, rubricErr
+				}
+				if err := validateSaved(saved, config, team, area, value); err != nil {
+					return Summary{}, fmt.Errorf("recalculate %s/%s: %w", team.ID, area, err)
 				}
 				aggregate, aggregateErr := aggregation.Area(value, saved.Report)
 				if aggregateErr != nil {
-					continue
+					return Summary{}, aggregateErr
 				}
 				saved.Aggregate = aggregate
-				_ = writeJSON(filepath.Join(config.OutputDir, "state", team.ID, area+".json"), saved)
 			}
 			if result.Meta == nil && saved.Status == "done" {
 				result.Meta = metaFromReport(saved.Report)
@@ -435,7 +456,7 @@ func recalculate(ctx context.Context, config Config, runID string, started time.
 func teamTotal(areas map[string]bundle.Area, rubrics map[string]rubric.Rubric, team registry.Team) (float64, bool) {
 	areaScores := map[string]aggregation.AreaScore{}
 	statuses := map[string]string{}
-	weights := map[string]float64{"backend": 0.5, "frontend": 0.5}
+	var weights map[string]float64
 	for area, value := range areas {
 		statuses[area] = value.Status
 		if value.Score == nil || value.Status != "done" {
@@ -446,6 +467,7 @@ func teamTotal(areas map[string]bundle.Area, rubrics map[string]rubric.Rubric, t
 		if !ok {
 			continue
 		}
+		weights = rubricValue.AreaWeights
 		areaScores[area] = aggregation.AreaScore{Area: area, Score: *value.Score, Max: rubricValue.Scale.Max}
 	}
 	if len(areaScores) == 0 {
@@ -539,7 +561,48 @@ func loadState(output, team, area string) (savedEvaluation, error) {
 	if err := json.Unmarshal(data, &result); err != nil {
 		return savedEvaluation{}, err
 	}
+	if result.Status == "done" {
+		var raw struct {
+			Report json.RawMessage `json:"report"`
+		}
+		if err := json.Unmarshal(data, &raw); err != nil {
+			return savedEvaluation{}, err
+		}
+		report, err := contract.DecodeReport(raw.Report)
+		if err != nil {
+			return savedEvaluation{}, fmt.Errorf("saved report: %w", err)
+		}
+		result.Report = report
+	}
 	return result, nil
+}
+
+func rubricDigest(value rubric.Rubric) string {
+	data, _ := json.Marshal(value) // Config validation rejects non-finite weights.
+	return fmt.Sprintf("%x", sha256.Sum256(data))
+}
+
+func inputDigest(config Config, team registry.Team, sha, area, areaPath string, value rubric.Rubric) string {
+	data, _ := json.Marshal(struct {
+		Team, Repo, SHA, Area, Path, Skill, Model, Rubric string
+		Scanner                                           scanner.Config
+		Templates                                         enrichment.TemplateConfig
+		SnippetLines, SnippetBytes                        int
+	}{team.ID, team.Repo, sha, area, filepath.Clean(areaPath), config.SkillVersion, config.Model, rubricDigest(value), config.ScannerConfig, config.Templates, config.MaxSnippetLines, config.MaxSnippetBytes})
+	return fmt.Sprintf("%x", sha256.Sum256(data))
+}
+
+func validateSaved(saved savedEvaluation, config Config, team registry.Team, area string, value rubric.Rubric) error {
+	if saved.TeamID != team.ID || saved.Area != area || saved.RepoURL != team.Repo {
+		return errors.New("saved evaluation identity mismatch")
+	}
+	if saved.RubricDigest == "" || saved.RubricDigest != rubricDigest(value) {
+		return errors.New("saved rubric changed or has no fingerprint; rerun evaluation")
+	}
+	if saved.Report.Meta.SkillVersion != config.SkillVersion {
+		return errors.New("saved skill version changed; rerun evaluation")
+	}
+	return contract.Validate(saved.Report, contract.ValidationContext{ExpectedArea: area, ExpectedRepoID: team.ID, ExpectedTeamID: team.ID, ExpectedSHA: saved.CommitSHA, ExpectedRubric: value.Version, ExpectedModel: config.Model, ExpectedMetrics: value.MetricIDs()})
 }
 
 func saveAttempt(dir string, value attemptRecord) error {
@@ -588,6 +651,19 @@ func validateConfig(config Config) error {
 	}
 	if len(config.Rubrics) == 0 {
 		return errors.New("rubrics are required")
+	}
+	var weights map[string]float64
+	for key, value := range config.Rubrics {
+		if err := value.Validate(); err != nil {
+			return fmt.Errorf("rubric %s: %w", key, err)
+		}
+		if key != value.RubricVersion || value.Version != value.RubricVersion {
+			return fmt.Errorf("rubric %s has inconsistent version metadata", key)
+		}
+		if weights != nil && (weights["backend"] != value.AreaWeights["backend"] || weights["frontend"] != value.AreaWeights["frontend"]) {
+			return errors.New("rubrics have inconsistent area_weights")
+		}
+		weights = value.AreaWeights
 	}
 	if !config.Recalculate && config.Provider == nil {
 		return errors.New("provider is required")

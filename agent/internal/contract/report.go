@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -48,12 +49,58 @@ func DecodeReport(raw []byte) (Report, error) {
 	}
 
 	var report Report
+	if err := validateJSONPresence(cleaned[start:end+1], reflect.TypeOf(report), "$", true); err != nil {
+		return Report{}, err
+	}
 	decoder := json.NewDecoder(bytes.NewReader(cleaned[start : end+1]))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&report); err != nil {
 		return Report{}, fmt.Errorf("decode report JSON: %w", err)
 	}
 	return report, nil
+}
+
+// Required fields are derived from the schema-generated JSON tags. Inspect the
+// raw JSON before decoding: absent numbers otherwise become indistinguishable
+// from an explicitly supplied zero, and null is silently accepted by encoding/json.
+func validateJSONPresence(raw json.RawMessage, typ reflect.Type, path string, required bool) error {
+	if len(raw) == 0 {
+		if required {
+			return fmt.Errorf("%s is required", path)
+		}
+		return nil
+	}
+	if bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
+		return fmt.Errorf("%s must not be null", path)
+	}
+	switch typ.Kind() {
+	case reflect.Struct:
+		var object map[string]json.RawMessage
+		if err := json.Unmarshal(raw, &object); err != nil {
+			return fmt.Errorf("%s: %w", path, err)
+		}
+		for i := 0; i < typ.NumField(); i++ {
+			field := typ.Field(i)
+			name, options, _ := strings.Cut(field.Tag.Get("json"), ",")
+			if name == "" || name == "-" {
+				continue
+			}
+			if err := validateJSONPresence(object[name], field.Type, path+"."+name, options != "omitempty"); err != nil {
+				return err
+			}
+		}
+	case reflect.Slice:
+		var items []json.RawMessage
+		if err := json.Unmarshal(raw, &items); err != nil {
+			return fmt.Errorf("%s: %w", path, err)
+		}
+		for i, item := range items {
+			if err := validateJSONPresence(item, typ.Elem(), fmt.Sprintf("%s[%d]", path, i), true); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func EncodeReport(report Report) ([]byte, error) {
