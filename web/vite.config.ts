@@ -17,10 +17,4 @@ export default defineConfig({
     setupFiles: ['./src/shared/config/test-setup.ts'],
     css: true,
   },
-  server: {
-    proxy: {
-      '/api': 'http://127.0.0.1:8080',
-      '/healthz': 'http://127.0.0.1:8080',
-    },
-  },
 })

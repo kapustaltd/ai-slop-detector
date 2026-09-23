@@ -12,7 +12,7 @@
     "fixture:bundle": "node scripts/generate-fixture-bundle.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
-    "lint:fsd": "steiger ./src",
+    "lint:fsd": "CHOKIDAR_USEPOLLING=1 steiger ./src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -b --noEmit",

@@ -3,3 +3,5 @@ dist/
 coverage/
 .DS_Store
 *.log
+web/data/.pipeline.lock
+web/data/raw/
