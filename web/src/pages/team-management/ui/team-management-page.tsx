@@ -84,7 +84,7 @@ export function TeamManagementPage() {
     try {
       await createRegistryTeam(draft)
       setDraft(null)
-      setNotice('Команда добавлена')
+      setNotice('Команда добавлена. В рейтинге она появится без балла до следующей оценки.')
       await loadTeams()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Не удалось сохранить команду')

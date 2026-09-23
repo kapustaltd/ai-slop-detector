@@ -23,6 +23,7 @@ export {
   checkRegistryApi,
   createRegistryTeam,
   getRegistryTeams,
+  mergeRegistryTeams,
   RegistryApiError,
   type RegistryTeam,
 } from './registry'

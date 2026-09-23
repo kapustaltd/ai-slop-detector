@@ -2,7 +2,15 @@ import { CloudOff, FileQuestion } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
-import { getStats, loadRubric, loadTeam, type RubricBundle, type TeamBundle } from '@/shared/api'
+import {
+  getRegistryTeams,
+  getStats,
+  loadRubric,
+  loadTeam,
+  type RegistryTeam,
+  type RubricBundle,
+  type TeamBundle,
+} from '@/shared/api'
 import { EmptyState } from '@/shared/ui'
 import { DisclaimerBanner } from '@/widgets/disclaimer-banner'
 import { AreaProfile } from '@/widgets/area-profile'
@@ -24,12 +32,13 @@ import { TeamHeader, teamRankContext } from '@/widgets/team-header'
  * (команды нет в бандле), `error` (сбой чтения бандла).
  */
 
-type PageState = 'loading' | 'ready' | 'missing' | 'error'
+type PageState = 'loading' | 'ready' | 'registered' | 'missing' | 'error'
 
 export function TeamPage() {
   const { teamId } = useParams()
   const [state, setState] = useState<PageState>('loading')
   const [team, setTeam] = useState<TeamBundle | null>(null)
+  const [registeredTeam, setRegisteredTeam] = useState<RegistryTeam | null>(null)
   const [rubrics, setRubrics] = useState<Record<string, RubricBundle>>({})
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -41,6 +50,7 @@ export function TeamPage() {
     setRenderedForTeamId(teamId)
     setState('loading')
     setTeam(null)
+    setRegisteredTeam(null)
   }
 
   useEffect(() => {
@@ -53,8 +63,13 @@ export function TeamPage() {
         setRubrics({ backend, frontend })
         setState('ready')
       })
-      .catch(() => {
-        if (!cancelled) setState('missing')
+      .catch(async () => {
+        const entry = await getRegistryTeams()
+          .then((teams) => teams.find((item) => item.id === teamId) ?? null)
+          .catch(() => null)
+        if (cancelled) return
+        setRegisteredTeam(entry)
+        setState(entry ? 'registered' : 'missing')
       })
     return () => {
       cancelled = true
@@ -89,6 +104,18 @@ export function TeamPage() {
     return (
       <main className="mx-auto max-w-[1600px] p-6" aria-busy="true">
         <p className="text-[15px] text-fg-muted">Загрузка команды…</p>
+      </main>
+    )
+  }
+
+  if (state === 'registered' && registeredTeam) {
+    return (
+      <main className="mx-auto max-w-[1600px] p-6">
+        <EmptyState
+          icon={FileQuestion}
+          title={registeredTeam.name}
+          description="Команда добавлена в реестр. Оценка её репозитория ещё не проводилась."
+        />
       </main>
     )
   }

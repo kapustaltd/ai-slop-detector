@@ -1,7 +1,14 @@
 import { BarChart3, ChartSpline, CloudOff, SearchX } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { getLeaderboardIndex, loadLeaderboardIndex, type LeaderboardIndexStub } from '@/shared/api'
+import {
+  getLeaderboardIndex,
+  getRegistryTeams,
+  loadLeaderboardIndex,
+  mergeRegistryTeams,
+  type LeaderboardIndexStub,
+  type RegistryTeam,
+} from '@/shared/api'
 import { formatTeamCount, SCORE_SCALE_LEGEND } from '@/shared/lib'
 import { EmptyState } from '@/shared/ui'
 import { DisclaimerBanner } from '@/widgets/disclaimer-banner'
@@ -31,6 +38,7 @@ export function LeaderboardPage() {
   const [index, setIndex] = useState<LeaderboardIndexStub | null>(readIndex)
   const [loadFailed, setLoadFailed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [registeredTeams, setRegisteredTeams] = useState<RegistryTeam[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -46,6 +54,25 @@ export function LeaderboardPage() {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    const refresh = () => {
+      void getRegistryTeams()
+        .then((teams) => {
+          if (!cancelled) setRegisteredTeams(teams)
+        })
+        .catch(() => {
+          // The static evaluation bundle remains readable if the registry API is unavailable.
+        })
+    }
+    refresh()
+    const timer = window.setInterval(refresh, 15_000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [])
+
   const retry = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -58,7 +85,11 @@ export function LeaderboardPage() {
     }
   }, [])
 
-  const { teams, total, sort, filters, onSort, onFiltersChange } = useLeaderboardState(index)
+  const visibleIndex = useMemo(
+    () => (index ? mergeRegistryTeams(index, registeredTeams) : null),
+    [index, registeredTeams],
+  )
+  const { teams, total, sort, filters, onSort, onFiltersChange } = useLeaderboardState(visibleIndex)
 
   const resetFilters = () => onFiltersChange({ status: 'all', warningsOnly: false })
 

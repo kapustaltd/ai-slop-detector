@@ -7,6 +7,35 @@ export interface RegistryTeam {
   paths?: Record<string, string>
 }
 
+import type { LeaderboardIndexStub } from './bundle'
+
+/** Newly registered teams have no evaluation until the next pipeline run. */
+export function mergeRegistryTeams(
+  index: LeaderboardIndexStub,
+  registered: RegistryTeam[],
+): LeaderboardIndexStub {
+  const byId = new Map(registered.map((team) => [team.id, team]))
+  const evaluatedIds = new Set(index.teams.map((team) => team.team_id))
+  return {
+    ...index,
+    teams: [
+      ...index.teams.map((team) => ({ ...team, name: byId.get(team.team_id)?.name ?? team.name })),
+      ...registered
+        .filter((team) => !evaluatedIds.has(team.id))
+        .map((team) => ({
+          team_id: team.id,
+          name: team.name,
+          rank: null,
+          total: null,
+          areas: {},
+          status: 'no_data' as const,
+          warnings: [],
+          partial: false,
+        })),
+    ],
+  }
+}
+
 export class RegistryApiError extends Error {
   readonly status: number
 
