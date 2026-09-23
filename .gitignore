@@ -5,3 +5,4 @@ coverage/
 *.log
 web/data/.pipeline.lock
 web/data/raw/
+web/data/state/

@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/aggregation"
@@ -26,7 +27,7 @@ import (
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/skill"
 )
 
-const defaultMaxRetries = 2
+const defaultMaxRetries = 0
 
 type Config struct {
 	OutputDir       string
@@ -45,55 +46,54 @@ type Config struct {
 	// SkillsDir — каталог скиллов; версия читается из SKILL.md (спека 003 FR-013e).
 	SkillsDir string
 	// RubricPaths — путь к файлу рубрики по версии; передаётся скиллу как координата.
-	RubricPaths map[string]string
-	Model       string
-	TeamID      string
-	Area        string
-	Force       bool
-	Recalculate bool
-	Logger      io.Writer
-	Now         func() time.Time
+	RubricPaths     map[string]string
+	Model           string
+	ReasoningEffort string
+	TeamID          string
+	Area            string
+	Force           bool
+	Recalculate     bool
+	Logger          io.Writer
+	Now             func() time.Time
 }
 
 type Summary struct {
-	RunID        string  `json:"run_id"`
-	StartedAt    string  `json:"started_at"`
-	FinishedAt   string  `json:"finished_at"`
-	TeamsTotal   int     `json:"teams_total"`
-	TeamsDone    int     `json:"teams_done"`
-	TeamsFailed  int     `json:"teams_failed"`
-	AreasDone    int     `json:"areas_done"`
-	AreasFailed  int     `json:"areas_failed"`
-	DurationMS   int64   `json:"duration_ms"`
-	CostUSD      float64 `json:"cost_usd"`
-	Recalculated bool    `json:"recalculated"`
+	RunID             string  `json:"run_id"`
+	StartedAt         string  `json:"started_at"`
+	FinishedAt        string  `json:"finished_at"`
+	TeamsTotal        int     `json:"teams_total"`
+	TeamsDone         int     `json:"teams_done"`
+	TeamsFailed       int     `json:"teams_failed"`
+	AreasDone         int     `json:"areas_done"`
+	AreasFailed       int     `json:"areas_failed"`
+	DurationMS        int64   `json:"duration_ms"`
+	CostUSD           float64 `json:"cost_usd"`
+	InputTokens       int     `json:"input_tokens"`
+	CachedInputTokens int     `json:"cached_input_tokens"`
+	OutputTokens      int     `json:"output_tokens"`
+	Recalculated      bool    `json:"recalculated"`
 }
 
 type Pipeline struct{}
 
 type savedEvaluation struct {
-	InputDigest  string                `json:"input_digest,omitempty"`
-	RubricDigest string                `json:"rubric_digest,omitempty"`
-	TeamID       string                `json:"team_id"`
-	Area         string                `json:"area"`
-	CommitSHA    string                `json:"commit_sha"`
-	RepoURL      string                `json:"repo_url"`
-	Report       contract.Report       `json:"report"`
-	Enriched     enrichment.Result     `json:"enriched"`
-	Aggregate    aggregation.AreaScore `json:"aggregate"`
-	Warnings     []string              `json:"warnings,omitempty"`
-	DurationMS   int64                 `json:"duration_ms"`
-	CostUSD      float64               `json:"cost_usd"`
-	RawAttempts  int                   `json:"raw_attempts"`
-	Status       string                `json:"status"`
-	Error        string                `json:"error,omitempty"`
-}
-
-type attemptRecord struct {
-	Attempt   int    `json:"attempt"`
-	StartedAt string `json:"started_at"`
-	Raw       string `json:"raw,omitempty"`
-	Error     string `json:"error,omitempty"`
+	InputDigest     string                `json:"input_digest,omitempty"`
+	RubricDigest    string                `json:"rubric_digest,omitempty"`
+	TeamID          string                `json:"team_id"`
+	Area            string                `json:"area"`
+	CommitSHA       string                `json:"commit_sha"`
+	RepoURL         string                `json:"repo_url"`
+	Report          contract.Report       `json:"report"`
+	Enriched        enrichment.Result     `json:"enriched"`
+	Aggregate       aggregation.AreaScore `json:"aggregate"`
+	Warnings        []string              `json:"warnings,omitempty"`
+	DurationMS      int64                 `json:"duration_ms"`
+	CostUSD         float64               `json:"cost_usd"`
+	Usage           provider.Usage        `json:"usage"`
+	ReasoningEffort string                `json:"reasoning_effort,omitempty"`
+	Attempts        int                   `json:"attempts"`
+	Status          string                `json:"status"`
+	Error           string                `json:"error,omitempty"`
 }
 
 type teamRun struct {
@@ -105,6 +105,7 @@ type teamRun struct {
 	Areas     map[string]bundle.Area
 	Warnings  []string
 	CostUSD   float64
+	Usage     provider.Usage
 	Meta      *bundle.TeamMeta
 }
 
@@ -121,7 +122,7 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 	if config.MaxParallel <= 0 {
 		config.MaxParallel = 1
 	}
-	if config.MaxRetries <= 0 {
+	if config.MaxRetries < 0 {
 		config.MaxRetries = defaultMaxRetries
 	}
 	if config.MaxRetries > 2 {
@@ -140,12 +141,6 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 	if err := os.MkdirAll(config.WorkspaceDir, 0o700); err != nil {
 		return Summary{}, fmt.Errorf("create workspace: %w", err)
 	}
-	runID = uniqueRunID(config.OutputDir, runID)
-	rawRoot := filepath.Join(config.OutputDir, "raw", runID)
-	if err := os.MkdirAll(rawRoot, 0o750); err != nil {
-		return Summary{}, fmt.Errorf("create raw output: %w", err)
-	}
-
 	teams := make([]teamRun, 0)
 	for _, team := range config.Registry.Teams {
 		if !team.Active || (config.TeamID != "" && config.TeamID != team.ID) {
@@ -199,10 +194,13 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 				defer wait.Done()
 				semaphore <- struct{}{}
 				defer func() { <-semaphore }()
-				item := runArea(ctx, config, team, prepared, area, areaPath, rawRoot)
+				item := runArea(ctx, config, team, prepared, area, areaPath)
 				mu.Lock()
 				result.Areas[area] = item.area
 				result.CostUSD += item.costUSD
+				result.Usage.InputTokens += item.usage.InputTokens
+				result.Usage.CachedInputTokens += item.usage.CachedInputTokens
+				result.Usage.OutputTokens += item.usage.OutputTokens
 				if item.meta != nil && result.Meta == nil {
 					result.Meta = item.meta
 				}
@@ -252,6 +250,9 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 		}
 		input = append(input, bundle.InputTeam{Registry: team.Registry, Status: team.Status, CommitSHA: team.CommitSHA, Total: team.Total, Partial: team.Partial, Areas: team.Areas, Warnings: unique(team.Warnings), Meta: team.Meta})
 		summary.CostUSD += team.CostUSD
+		summary.InputTokens += team.Usage.InputTokens
+		summary.CachedInputTokens += team.Usage.CachedInputTokens
+		summary.OutputTokens += team.Usage.OutputTokens
 	}
 	if err := bundle.Write(config.OutputDir, config.Now(), input, config.Rubrics); err != nil {
 		return Summary{}, err
@@ -268,18 +269,23 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 type areaRunResult struct {
 	area     bundle.Area
 	costUSD  float64
+	usage    provider.Usage
 	warnings []string
 	meta     *bundle.TeamMeta
 }
 
-func runArea(ctx context.Context, config Config, team registry.Team, prepared gitrepo.Prepared, area, areaPath, rawRoot string) areaRunResult {
+func runArea(ctx context.Context, config Config, team registry.Team, prepared gitrepo.Prepared, area, areaPath string) areaRunResult {
 	rubricValue, err := rubricFor(config.Rubrics, area)
 	if err != nil {
-		return failedArea(config, team, area, rawRoot, err)
+		return failedArea(err)
 	}
-	reviewSkill, err := skill.Load(config.SkillsDir, area)
+	skillsDir := config.SkillsDir
+	if !filepath.IsAbs(skillsDir) && config.ProjectDir != "" {
+		skillsDir = filepath.Join(config.ProjectDir, skillsDir)
+	}
+	reviewSkill, err := skill.Load(skillsDir, area)
 	if err != nil {
-		return failedArea(config, team, area, rawRoot, err)
+		return failedArea(err)
 	}
 	digest := inputDigest(config, team, prepared.CommitSHA, area, areaPath, reviewSkill.Version, rubricValue)
 	if !config.Force {
@@ -295,24 +301,29 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 	}
 	root, err := registry.ResolveAreaPath(prepared.Root, areaPath)
 	if err != nil {
-		return failedArea(config, team, area, rawRoot, err)
+		return failedArea(err)
 	}
 	snapshot, err := scanner.Scan(root, config.ScannerConfig)
 	if err != nil {
-		return failedArea(config, team, area, rawRoot, err)
+		return failedArea(err)
 	}
 	instruction := buildInstruction(team, area, prepared.CommitSHA, config.RubricPaths[rubricValue.Version], root, reviewSkill)
+	evaluatedAt := config.Now().UTC().Format(time.RFC3339)
 	started := time.Now()
 	maxAttempts := config.MaxRetries + 1
 	if maxAttempts < 1 {
 		maxAttempts = 1
 	}
+	modelLabel := config.Model
+	if modelLabel == "" {
+		modelLabel = "(Codex CLI default)"
+	}
+	logf(config.Logger, "team=%s area=%s: старт, %d leaf-метрик, model=%s, попыток до %d", team.ID, area, len(rubricValue.MetricIDs()), modelLabel, maxAttempts)
 	var lastErr error
 	var report contract.Report
 	var response provider.Response
+	var totalUsage provider.Usage
 	attempts := 0
-	rawDir := filepath.Join(rawRoot, team.ID, area)
-	_ = os.MkdirAll(rawDir, 0o750)
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		attempts = attempt
 		request := provider.Request{TeamID: team.ID, Area: area, RepoID: team.ID, RepoPath: root, CommitSHA: prepared.CommitSHA, RubricVersion: rubricValue.Version, RubricPath: config.RubricPaths[rubricValue.Version], Prompt: instruction}
@@ -322,75 +333,81 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 		attemptStarted := time.Now().UTC()
 		if config.Provider == nil {
 			lastErr = errors.New("provider is not configured")
-			_ = saveAttempt(rawDir, attemptRecord{Attempt: attempt, StartedAt: attemptStarted.Format(time.RFC3339), Error: lastErr.Error()})
+			logf(config.Logger, "team=%s area=%s attempt=%d/%d: провайдер не настроен", team.ID, area, attempt, maxAttempts)
 			continue
 		}
 		response, err = config.Provider.Evaluate(ctx, request)
-		record := attemptRecord{Attempt: attempt, StartedAt: attemptStarted.Format(time.RFC3339)}
+		attemptElapsed := time.Since(attemptStarted).Round(time.Second)
+		totalUsage.InputTokens += response.Usage.InputTokens
+		totalUsage.CachedInputTokens += response.Usage.CachedInputTokens
+		totalUsage.OutputTokens += response.Usage.OutputTokens
+		totalUsage.CostUSD += response.Usage.CostUSD
 		if err != nil {
 			lastErr = err
-			record.Error = sanitizeError(err)
-		} else {
-			record.Raw = string(response.Raw)
-		}
-		if saveErr := saveAttempt(rawDir, record); saveErr != nil && err == nil {
-			lastErr = saveErr
 		}
 		if err != nil {
+			logf(config.Logger, "team=%s area=%s attempt=%d/%d: провайдер вернул ошибку за %s — %s", team.ID, area, attempt, maxAttempts, attemptElapsed, sanitizeError(err))
 			continue
 		}
-		decoded, decodeErr := contract.DecodeReport(response.Raw)
+		compact, decodeErr := contract.DecodeReviewOutput(response.Raw)
 		if decodeErr != nil {
 			lastErr = decodeErr
+			logf(config.Logger, "team=%s area=%s attempt=%d/%d: невалидный JSON за %s — %s", team.ID, area, attempt, maxAttempts, attemptElapsed, sanitizeError(decodeErr))
 			continue
 		}
-		if decoded.Meta.RubricVersion != rubricValue.Version {
-			lastErr = fmt.Errorf("meta.rubric_version must be %q, got %q", rubricValue.Version, decoded.Meta.RubricVersion)
+		if anchorErr := contract.ValidateReviewAnchors(compact); anchorErr != nil {
+			lastErr = anchorErr
 			continue
 		}
-		if decoded.Meta.SkillVersion != reviewSkill.Version {
-			lastErr = fmt.Errorf("meta.skill_version must be %q as declared in %s, got %q", reviewSkill.Version, reviewSkill.Path, decoded.Meta.SkillVersion)
-			continue
+		// meta и max метрик — не то, что решает модель: пайплайн знает эти значения точно
+		// (team/repo/SHA из реестра, версии из своих файлов, evaluated_at из своих часов,
+		// max из шкалы рубрики) и подставляет их сам, а не проверяет пересказ модели. Это
+		// убирает целый класс отказов валидатора (устаревшая версия скилла/рубрики в ответе,
+		// опечатка в 40-символьном SHA) и лишние токены на повтор известных полей.
+		meta := contract.Meta{
+			// Meta.Repo — стабильный идентификатор репозитория для отчёта, а не URL (тот
+			// же, что RepoID в provider.Request); URL для постоянных ссылок несёт
+			// отдельно prepared.RepoURL через enrichment, сюда не подставляется.
+			SchemaVersion: "evaluation.v1", TeamID: team.ID, Area: area, Repo: team.ID,
+			CommitSHA: prepared.CommitSHA, SkillVersion: reviewSkill.Version,
+			RubricVersion: rubricValue.Version, Model: config.Model, EvaluatedAt: evaluatedAt,
 		}
-		if config.Model != "" && decoded.Meta.Model != config.Model {
-			lastErr = fmt.Errorf("meta.model must be %q, got %q", config.Model, decoded.Meta.Model)
-			continue
-		}
-		validationErr := contract.Validate(decoded, contract.ValidationContext{ExpectedArea: area, ExpectedRepoID: team.ID, ExpectedTeamID: team.ID, ExpectedSHA: prepared.CommitSHA, ExpectedRubric: rubricValue.Version, ExpectedMetrics: rubricValue.MetricIDs()})
+		decoded := contract.ExpandReviewOutput(compact, meta, rubricValue.Scale.Max)
+		validationErr := contract.Validate(decoded, contract.ValidationContext{ExpectedArea: area, ExpectedRepoID: team.ID, ExpectedTeamID: team.ID, ExpectedSHA: prepared.CommitSHA, ExpectedRubric: rubricValue.Version, ExpectedMetrics: rubricValue.MetricIDs(), LineCounts: snapshot.LineCounts})
 		if validationErr != nil {
 			lastErr = validationErr
+			logf(config.Logger, "team=%s area=%s attempt=%d/%d: не прошёл валидацию контракта за %s — %s", team.ID, area, attempt, maxAttempts, attemptElapsed, sanitizeError(validationErr))
 			continue
 		}
 		report = decoded
 		lastErr = nil
+		logf(config.Logger, "team=%s area=%s attempt=%d/%d: принят за %s, tokens=%d/%d cached=%d", team.ID, area, attempt, maxAttempts, attemptElapsed, response.Usage.InputTokens, response.Usage.OutputTokens, response.Usage.CachedInputTokens)
 		break
 	}
 	duration := time.Since(started)
 	if lastErr != nil {
-		saved := savedEvaluation{TeamID: team.ID, Area: area, CommitSHA: prepared.CommitSHA, RepoURL: prepared.RepoURL, Status: "failed", Error: sanitizeError(lastErr), RawAttempts: attempts, DurationMS: duration.Milliseconds()}
-		_ = writeJSON(filepath.Join(rawDir, "evaluation.json"), saved)
-		return areaRunResult{area: bundle.Area{Status: "failed", Error: sanitizeError(lastErr), DurationMS: duration.Milliseconds(), RawAttempts: attempts}}
+		saved := savedEvaluation{TeamID: team.ID, Area: area, CommitSHA: prepared.CommitSHA, RepoURL: prepared.RepoURL, Status: "failed", Error: sanitizeError(lastErr), Attempts: attempts, DurationMS: duration.Milliseconds(), Usage: totalUsage, CostUSD: totalUsage.CostUSD}
+		_ = writeJSON(filepath.Join(config.OutputDir, "state", team.ID, area+".json"), saved)
+		logf(config.Logger, "team=%s area=%s: ПРОВАЛ после %d попыток за %s — %s", team.ID, area, attempts, duration.Round(time.Second), sanitizeError(lastErr))
+		return areaRunResult{area: bundle.Area{Status: "failed", Error: sanitizeError(lastErr), DurationMS: duration.Milliseconds(), Attempts: attempts}, costUSD: totalUsage.CostUSD, usage: totalUsage}
 	}
 	enriched := enrichment.Enrich(report, enrichment.Options{RepoRoot: root, RepoURL: prepared.RepoURL, CommitSHA: prepared.CommitSHA, Templates: config.Templates, MaxSnippetLines: config.MaxSnippetLines, MaxSnippetBytes: config.MaxSnippetBytes})
 	aggregate, err := aggregation.Area(rubricValue, report)
 	if err != nil {
-		return failedArea(config, team, area, rawRoot, err)
+		return failedArea(err)
 	}
 	warnings := append([]string{}, snapshot.Warnings...)
 	warnings = append(warnings, report.Warnings...)
-	saved := savedEvaluation{InputDigest: digest, RubricDigest: rubricDigest(rubricValue), TeamID: team.ID, Area: area, CommitSHA: prepared.CommitSHA, RepoURL: prepared.RepoURL, Report: report, Enriched: enriched, Aggregate: aggregate, Warnings: unique(warnings), DurationMS: duration.Milliseconds(), CostUSD: response.Usage.CostUSD, RawAttempts: attempts, Status: "done"}
-	if err := writeJSON(filepath.Join(rawDir, "evaluation.json"), saved); err != nil {
-		return areaRunResult{area: bundle.Area{Status: "failed", Error: err.Error()}}
-	}
+	saved := savedEvaluation{InputDigest: digest, RubricDigest: rubricDigest(rubricValue), TeamID: team.ID, Area: area, CommitSHA: prepared.CommitSHA, RepoURL: prepared.RepoURL, Report: report, Enriched: enriched, Aggregate: aggregate, Warnings: unique(warnings), DurationMS: duration.Milliseconds(), CostUSD: totalUsage.CostUSD, Usage: totalUsage, ReasoningEffort: config.ReasoningEffort, Attempts: attempts, Status: "done"}
 	if err := writeJSON(filepath.Join(config.OutputDir, "state", team.ID, area+".json"), saved); err != nil {
 		return areaRunResult{area: bundle.Area{Status: "failed", Error: err.Error()}}
 	}
-	return areaRunResult{area: toBundleArea(saved), costUSD: response.Usage.CostUSD, warnings: warnings, meta: metaFromReport(report)}
+	logf(config.Logger, "team=%s area=%s: ГОТОВО, score=%.2f/%.0f, %d попыток за %s, tokens=%d/%d cached=%d", team.ID, area, aggregate.Score, aggregate.Max, attempts, duration.Round(time.Second), totalUsage.InputTokens, totalUsage.OutputTokens, totalUsage.CachedInputTokens)
+	return areaRunResult{area: toBundleArea(saved), costUSD: totalUsage.CostUSD, usage: totalUsage, warnings: warnings, meta: metaFromReport(report)}
 }
 
-func failedArea(config Config, team registry.Team, area, rawRoot string, err error) areaRunResult {
+func failedArea(err error) areaRunResult {
 	message := sanitizeError(err)
-	_ = writeJSON(filepath.Join(rawRoot, team.ID, area, "evaluation.json"), savedEvaluation{TeamID: team.ID, Area: area, Status: "failed", Error: message})
 	return areaRunResult{area: bundle.Area{Status: "failed", Error: message}}
 }
 
@@ -403,6 +420,10 @@ func recalculate(ctx context.Context, config Config, runID string, started time.
 	defer release()
 	input := make([]bundle.InputTeam, 0)
 	summary := Summary{RunID: runID, StartedAt: started.Format(time.RFC3339), Recalculated: true}
+	skillsDir := config.SkillsDir
+	if !filepath.IsAbs(skillsDir) && config.ProjectDir != "" {
+		skillsDir = filepath.Join(config.ProjectDir, skillsDir)
+	}
 	for _, team := range config.Registry.Teams {
 		if !team.Active || (config.TeamID != "" && config.TeamID != team.ID) {
 			continue
@@ -421,7 +442,7 @@ func recalculate(ctx context.Context, config Config, runID string, started time.
 				if rubricErr != nil {
 					return Summary{}, rubricErr
 				}
-				reviewSkill, skillErr := skill.Load(config.SkillsDir, area)
+				reviewSkill, skillErr := skill.Load(skillsDir, area)
 				if skillErr != nil {
 					return Summary{}, fmt.Errorf("recalculate %s/%s: %w", team.ID, area, skillErr)
 				}
@@ -511,18 +532,23 @@ func rubricFor(values map[string]rubric.Rubric, area string) (rubric.Rubric, err
 	return value, nil
 }
 
+// buildInstruction несёт только координаты прогона, нужные скиллу для навигации
+// (репозиторий, рубрика). meta-поля отчёта (team_id, repo, commit_sha, версии,
+// evaluated_at) скилл больше не пишет сам — пайплайн знает их точно и подставляет
+// после декодирования (см. runArea), так что модели их незачем ни читать, ни
+// восстанавливать в ответе.
 func buildInstruction(team registry.Team, area, sha, rubricPath, repoPath string, reviewSkill skill.Skill) string {
 	var builder strings.Builder
 	fmt.Fprintf(&builder, "Проведи ревью через скилл %s.\n\n", reviewSkill.Name)
 	builder.WriteString("Координаты прогона:\n")
+	fmt.Fprintf(&builder, "- сначала прочитай и строго выполни протокол: %s\n", reviewSkill.Path)
 	fmt.Fprintf(&builder, "- область: %s\n", area)
 	fmt.Fprintf(&builder, "- team_id: %s\n", team.ID)
 	fmt.Fprintf(&builder, "- repo: %s\n", team.Repo)
 	fmt.Fprintf(&builder, "- commit_sha: %s\n", sha)
 	fmt.Fprintf(&builder, "- рабочая копия репозитория команды: %s\n", repoPath)
 	fmt.Fprintf(&builder, "- файл рубрики: %s\n", rubricPath)
-	fmt.Fprintf(&builder, "- skill_version: %s\n", reviewSkill.Version)
-	builder.WriteString("\nВерни только JSON-отчёт по контракту, без текста вокруг.\n")
+	builder.WriteString("\nВерни только JSON-объект по разделу «Сформируй отчёт» скилла, без текста вокруг.\n")
 	return builder.String()
 }
 
@@ -531,7 +557,7 @@ func toBundleArea(value savedEvaluation) bundle.Area {
 	if maxScore <= 0 {
 		maxScore = 10
 	}
-	result := bundle.Area{Status: value.Status, Max: maxScore, Categories: []bundle.Category{}, DurationMS: value.DurationMS, CostUSD: value.CostUSD, RawAttempts: value.RawAttempts, Error: value.Error}
+	result := bundle.Area{Status: value.Status, Max: maxScore, Categories: []bundle.Category{}, DurationMS: value.DurationMS, CostUSD: value.CostUSD, Attempts: value.Attempts, Error: value.Error}
 	if value.Status == "done" {
 		score := value.Aggregate.Score
 		result.Score = &score
@@ -591,11 +617,11 @@ func rubricDigest(value rubric.Rubric) string {
 
 func inputDigest(config Config, team registry.Team, sha, area, areaPath, skillVersion string, value rubric.Rubric) string {
 	data, _ := json.Marshal(struct {
-		Team, Repo, SHA, Area, Path, Skill, Model, Rubric string
-		Scanner                                           scanner.Config
-		Templates                                         enrichment.TemplateConfig
-		SnippetLines, SnippetBytes                        int
-	}{team.ID, team.Repo, sha, area, filepath.Clean(areaPath), skillVersion, config.Model, rubricDigest(value), config.ScannerConfig, config.Templates, config.MaxSnippetLines, config.MaxSnippetBytes})
+		Team, Repo, SHA, Area, Path, Skill, Model, Effort, Rubric string
+		Scanner                                                   scanner.Config
+		Templates                                                 enrichment.TemplateConfig
+		SnippetLines, SnippetBytes                                int
+	}{team.ID, team.Repo, sha, area, filepath.Clean(areaPath), skillVersion, config.Model, config.ReasoningEffort, rubricDigest(value), config.ScannerConfig, config.Templates, config.MaxSnippetLines, config.MaxSnippetBytes})
 	return fmt.Sprintf("%x", sha256.Sum256(data))
 }
 
@@ -609,11 +635,10 @@ func validateSaved(saved savedEvaluation, config Config, team registry.Team, are
 	if saved.Report.Meta.SkillVersion != skillVersion {
 		return errors.New("saved skill version changed; rerun evaluation")
 	}
+	if saved.ReasoningEffort != config.ReasoningEffort {
+		return errors.New("saved reasoning effort changed; rerun evaluation")
+	}
 	return contract.Validate(saved.Report, contract.ValidationContext{ExpectedArea: area, ExpectedRepoID: team.ID, ExpectedTeamID: team.ID, ExpectedSHA: saved.CommitSHA, ExpectedRubric: value.Version, ExpectedModel: config.Model, ExpectedMetrics: value.MetricIDs()})
-}
-
-func saveAttempt(dir string, value attemptRecord) error {
-	return writeJSON(filepath.Join(dir, fmt.Sprintf("attempt-%02d.json", value.Attempt)), value)
 }
 
 func acquireLock(output string) (func(), error) {
@@ -621,29 +646,28 @@ func acquireLock(output string) (func(), error) {
 		return nil, err
 	}
 	path := filepath.Join(output, ".pipeline.lock")
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
 	if err != nil {
+		return nil, fmt.Errorf("open pipeline lock: %w", err)
+	}
+	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+		_ = file.Close()
 		return nil, fmt.Errorf("output directory is locked by another pipeline: %w", err)
 	}
-	if _, err := file.WriteString(fmt.Sprintf("pid=%d\n", os.Getpid())); err != nil {
+	if err := file.Truncate(0); err != nil {
+		_ = syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
 		_ = file.Close()
-		_ = os.Remove(path)
 		return nil, err
 	}
-	_ = file.Close()
-	return func() { _ = os.Remove(path) }, nil
-}
-
-func uniqueRunID(output, base string) string {
-	for index := 0; ; index++ {
-		candidate := base
-		if index > 0 {
-			candidate = fmt.Sprintf("%s-%02d", base, index)
-		}
-		if _, err := os.Stat(filepath.Join(output, "raw", candidate)); os.IsNotExist(err) {
-			return candidate
-		}
+	if _, err := file.WriteString(fmt.Sprintf("pid=%d\n", os.Getpid())); err != nil {
+		_ = syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+		_ = file.Close()
+		return nil, err
 	}
+	return func() {
+		_ = syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+		_ = file.Close()
+	}, nil
 }
 
 func validateConfig(config Config) error {

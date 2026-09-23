@@ -1,0 +1,12 @@
+# Тестовый реестр для измерения выигрыша по стоимости после урезания рубрики и meta/max.
+# Тот же репозиторий, что и в baseline-прогоне на $1.98, для прямого сравнения.
+version: "1"
+teams:
+  - id: team-fastapi-todo
+    name: FastAPI + Next.js Todo
+    repo: https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14.git
+    branch: main
+    active: true
+    paths:
+      backend: backend
+      frontend: frontend

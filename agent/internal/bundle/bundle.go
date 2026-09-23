@@ -59,15 +59,15 @@ type Team struct {
 }
 
 type Area struct {
-	Status      string     `json:"status"`
-	Score       *float64   `json:"score"`
-	Max         float64    `json:"max"`
-	Categories  []Category `json:"categories"`
-	Metrics     []Metric   `json:"metrics,omitempty"`
-	DurationMS  int64      `json:"-"` // stored in raw/evaluation.json, not the public team schema
-	CostUSD     float64    `json:"-"` // stored in raw/evaluation.json, not the public team schema
-	RawAttempts int        `json:"-"` // stored in raw/evaluation.json, not the public team schema
-	Error       string     `json:"error,omitempty"`
+	Status     string     `json:"status"`
+	Score      *float64   `json:"score"`
+	Max        float64    `json:"max"`
+	Categories []Category `json:"categories"`
+	Metrics    []Metric   `json:"metrics,omitempty"`
+	DurationMS int64      `json:"-"` // internal run metadata, not the public team schema
+	CostUSD    float64    `json:"-"` // internal run metadata, not the public team schema
+	Attempts   int        `json:"-"` // internal run metadata, not the public team schema
+	Error      string     `json:"error,omitempty"`
 }
 
 type Metric struct {

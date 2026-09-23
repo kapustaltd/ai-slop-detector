@@ -192,12 +192,12 @@
       ]
     },
     {
-      "id": "api_consistency",
+      "id": "api_contract_quality",
       "score": 7,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Консистентность ресурсов методов и кодов ответов",
+      "rationale": "Согласованность ресурсов методов и кодов ответов вместе с описанностью контракта",
       "findings": [
         {
           "kind": "strength",
@@ -211,12 +211,12 @@
       ]
     },
     {
-      "id": "api_contract_docs",
+      "id": "input_validation",
       "score": 7.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Описанность контракта схемой или документацией",
+      "rationale": "Валидация и санитизация входных данных",
       "findings": [
         {
           "kind": "strength",
@@ -230,12 +230,12 @@
       ]
     },
     {
-      "id": "input_validation",
+      "id": "data_model_design",
       "score": 6,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Валидация и санитизация входных данных",
+      "rationale": "Схема ключи и ограничения целостности вместе с миграциями и воспроизводимостью схемы",
       "findings": [
         {
           "kind": "strength",
@@ -249,12 +249,12 @@
       ]
     },
     {
-      "id": "schema_design",
+      "id": "query_correctness",
       "score": 6.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Схема ключи и ограничения целостности",
+      "rationale": "Транзакции консистентность и корректность запросов",
       "findings": [
         {
           "kind": "strength",
@@ -268,12 +268,12 @@
       ]
     },
     {
-      "id": "migrations",
+      "id": "data_access_efficiency",
       "score": 7,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Миграции и воспроизводимость схемы",
+      "rationale": "N+1 индексы и объём выборок",
       "findings": [
         {
           "kind": "strength",
@@ -287,12 +287,12 @@
       ]
     },
     {
-      "id": "query_correctness",
+      "id": "authn_authz",
       "score": 7.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Транзакции консистентность и корректность запросов",
+      "rationale": "Проверка личности и прав доступа",
       "findings": [
         {
           "kind": "strength",
@@ -306,12 +306,12 @@
       ]
     },
     {
-      "id": "data_access_efficiency",
+      "id": "secrets_handling",
       "score": 6,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "N+1 индексы и объём выборок",
+      "rationale": "Обращение с секретами и конфигурацией доступа",
       "findings": [
         {
           "kind": "strength",
@@ -325,12 +325,12 @@
       ]
     },
     {
-      "id": "authn_authz",
+      "id": "injection_protection",
       "score": 6.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Проверка личности и прав доступа",
+      "rationale": "Защита от инъекций и небезопасной десериализации",
       "findings": [
         {
           "kind": "strength",
@@ -344,12 +344,12 @@
       ]
     },
     {
-      "id": "secrets_handling",
+      "id": "test_quality_and_coverage",
       "score": 7,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Обращение с секретами и конфигурацией доступа",
+      "rationale": "Покрыты ли тестами критичные пути вместе с изоляцией детерминизмом и читаемостью тестов",
       "findings": [
         {
           "kind": "strength",
@@ -363,65 +363,8 @@
       ]
     },
     {
-      "id": "injection_protection",
-      "score": 7.5,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Защита от инъекций и небезопасной десериализации",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 20,
-          "line_end": 20,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "test_coverage_meaning",
-      "score": 6,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Покрыты ли тестами критичные пути",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 21,
-          "line_end": 21,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "test_quality",
-      "score": 6.5,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Изоляция детерминизм и читаемость тестов",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 22,
-          "line_end": 22,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
       "id": "test_runnability",
-      "score": 7,
+      "score": 7.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
@@ -431,84 +374,8 @@
           "kind": "strength",
           "severity": "info",
           "file": "src/main.go",
-          "line_start": 23,
-          "line_end": 23,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "run_reproducibility",
-      "score": 7.5,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Запуск с нуля по файлам репозитория",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 24,
-          "line_end": 24,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "readme_quality",
-      "score": 6,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "README как рабочая инструкция",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 25,
-          "line_end": 25,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "config_management",
-      "score": 6.5,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Конфигурация через окружение без захардкоженного доступа",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 26,
-          "line_end": 26,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "ci_pipeline",
-      "score": 7,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Наличие и содержание конфигурации CI в репозитории",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 27,
-          "line_end": 27,
+          "line_start": 20,
+          "line_end": 20,
           "title": "Фрагмент",
           "explanation": "Фрагмент привязан к указанным строкам."
         }

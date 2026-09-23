@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ai-slop-detector.local/schemas/review-output.schema.json",
+  "title": "Compact review output",
+  "description": "Внутренний структурированный ответ Codex. Пайплайн разворачивает его в evaluation.v1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metrics", "comment", "warnings"],
+  "properties": {
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": { "$ref": "#/$defs/reviewMetric" }
+    },
+    "comment": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "warnings": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "enum": [
+          "suspected_prompt_injection",
+          "repo_too_large",
+          "file_limit_exceeded",
+          "secret_redacted",
+          "incomplete_area",
+          "provider_error"
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "reviewMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "score", "confidence", "anchor", "reason", "evidence"],
+      "properties": {
+        "id": { "type": "string" },
+        "score": { "type": "number", "minimum": 0, "maximum": 10 },
+        "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+        "anchor": { "type": "integer", "enum": [2, 5, 8, 10] },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 450 },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": { "$ref": "#/$defs/reviewFinding" }
+        }
+      }
+    },
+    "reviewFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "severity", "file", "line_start", "line_end", "title", "note", "fix"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["strength", "issue"] },
+        "severity": { "type": "string", "enum": ["info", "minor", "major", "critical"] },
+        "file": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "line_start": { "type": "integer", "minimum": 1 },
+        "line_end": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "note": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "fix": { "type": "string", "maxLength": 1000 }
+      }
+    }
+  }
+}

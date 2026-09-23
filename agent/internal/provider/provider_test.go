@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestCommandProviderDoesNotInheritSecrets(t *testing.T) {
+func TestCodexProviderDoesNotInheritSecrets(t *testing.T) {
 	dir := t.TempDir()
 	script := filepath.Join(dir, "provider")
 	if err := os.WriteFile(script, []byte("#!/bin/sh\nif [ -n \"$PLATFORM_SECRET\" ] || [ -n \"$API_TOKEN\" ]; then exit 7; fi\nprintf '{}'"), 0700); err != nil {
@@ -16,7 +16,7 @@ func TestCommandProviderDoesNotInheritSecrets(t *testing.T) {
 	}
 	t.Setenv("PLATFORM_SECRET", "must-not-pass")
 	t.Setenv("API_TOKEN", "must-not-pass")
-	result, err := (CommandProvider{Binary: script, Env: map[string]string{"PLATFORM_SECRET": "also-hidden", "SAFE_FLAG": "ok"}}).Evaluate(context.Background(), Request{RepoPath: dir, Prompt: "data"})
+	result, err := (CodexProvider{Binary: script, Args: []string{"noop"}, Env: map[string]string{"PLATFORM_SECRET": "also-hidden", "SAFE_FLAG": "ignored"}}).Evaluate(context.Background(), Request{RepoPath: dir, Prompt: "data"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,16 +37,15 @@ func TestJSONProviderCopiesResponses(t *testing.T) {
 	}
 }
 
-// Вызов скилла: рабочий каталог — проект платформы (иначе скиллы не найдутся),
-// копия репозитория команды открывается через --add-dir, права — только на чтение.
-func TestCommandProviderArgumentsInvokeSkillReadOnly(t *testing.T) {
-	p := CommandProvider{Binary: "claude", ProjectDir: "/platform"}
+func TestCodexProviderArgumentsAreIsolatedAndStructured(t *testing.T) {
+	p := CodexProvider{Binary: "codex", ProjectDir: "/platform", OutputSchema: "/platform/schemas/review-output.schema.json", Model: "gpt-5.6-terra", ReasoningEffort: "medium"}
 	args := p.arguments(Request{Prompt: "инструкция", RepoPath: "/tmp/teams-repos/snapshot-1"})
 
 	joined := strings.Join(args, " ")
 	for _, expected := range []string{
-		"-p инструкция", "--output-format json", "--add-dir /tmp/teams-repos/snapshot-1",
-		"--allowed-tools Read Glob Grep", "--disallowed-tools Write Edit Bash",
+		"exec --json --ephemeral --ignore-user-config --strict-config", "--sandbox read-only",
+		"--cd /platform", "--model gpt-5.6-terra", `model_reasoning_effort="medium"`,
+		"--output-schema /platform/schemas/review-output.schema.json", "инструкция",
 	} {
 		if !strings.Contains(joined, expected) {
 			t.Errorf("аргументы не содержат %q: %v", expected, args)
@@ -54,23 +53,18 @@ func TestCommandProviderArgumentsInvokeSkillReadOnly(t *testing.T) {
 	}
 }
 
-func TestUnwrapEnvelopeTakesReportAndCost(t *testing.T) {
-	envelope := []byte(`{"type":"result","result":"{\"meta\":{}}","total_cost_usd":0.42,"usage":{"input_tokens":11,"output_tokens":22}}`)
-
-	report, usage := unwrapEnvelope(envelope)
-	if string(report) != `{"meta":{}}` {
-		t.Fatalf("отчёт не извлечён из обёртки: %s", report)
+func TestDecodeCodexJSONLReadsFinalMessageAndUsage(t *testing.T) {
+	raw := []byte("{\"type\":\"thread.started\",\"thread_id\":\"thread-1\"}\n" +
+		"{\"type\":\"item.completed\",\"item\":{\"type\":\"agent_message\",\"text\":\"{\\\"metrics\\\":[]}\"}}\n" +
+		"{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":11,\"cached_input_tokens\":7,\"output_tokens\":22}}\n")
+	response, err := decodeCodexJSONL(raw)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if usage.CostUSD != 0.42 || usage.InputTokens != 11 || usage.OutputTokens != 22 {
-		t.Fatalf("расход не прочитан: %+v", usage)
+	if string(response.Raw) != `{"metrics":[]}` || response.SessionID != "thread-1" {
+		t.Fatalf("unexpected response: %+v", response)
 	}
-}
-
-func TestUnwrapEnvelopeAcceptsBareReport(t *testing.T) {
-	bare := []byte(`{"meta":{"team_id":"team-1"}}`)
-
-	report, _ := unwrapEnvelope(bare)
-	if string(report) != string(bare) {
-		t.Fatalf("отчёт без обёртки должен проходить как есть: %s", report)
+	if response.Usage.InputTokens != 11 || response.Usage.CachedInputTokens != 7 || response.Usage.OutputTokens != 22 {
+		t.Fatalf("usage was not decoded: %+v", response.Usage)
 	}
 }

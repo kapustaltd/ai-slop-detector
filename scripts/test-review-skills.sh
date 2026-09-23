@@ -8,14 +8,20 @@ frontend="$repo_root/.claude/skills/review-frontend/SKILL.md"
 for skill in "$backend" "$frontend"; do
   test -f "$skill"
   rg -q '^name: review-(backend|frontend)$' "$skill"
-  rg -q 'skill_version: "1\.0\.0"' "$skill"
-  rg -q 'schema_version' "$skill"
+  rg -q 'skill_version: "2\.0\.0"' "$skill"
   rg -q 'rubrics/(backend|frontend)\.v1\.yaml' "$skill"
   rg -q 'suspected_prompt_injection' "$skill"
-  rg -q 'area_not_found' "$skill"
-  rg -q 'repo_too_large|incomplete_evidence' "$skill"
-  rg -q 'Печатай только один валидный JSON-объект' "$skill"
-  rg -q 'Не вычисляй балл подкатегории, категории, области, команды' "$skill"
+  rg -q 'incomplete_area' "$skill"
+  rg -q 'repo_too_large' "$skill"
+  rg -q 'Печатай только один JSON-объект' "$skill"
+  rg -q 'Do not compute category, area, team, or ranking aggregates' "$skill"
+  rg -q '`anchor`' "$skill"
+  rg -q '`evidence`' "$skill"
+  # meta — задача пайплайна, не модели.
+  if rg -qF '"meta"' "$skill"; then
+    printf 'review skill still asks the model to write meta: %s\n' "$skill" >&2
+    exit 1
+  fi
 done
 
 # The skill may mention the rubric as a source, but must not copy its leaf taxonomy.

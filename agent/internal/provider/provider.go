@@ -1,11 +1,14 @@
 package provider
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 	"time"
 )
@@ -22,73 +25,66 @@ type Request struct {
 }
 
 type Usage struct {
-	InputTokens  int     `json:"input_tokens"`
-	OutputTokens int     `json:"output_tokens"`
-	CostUSD      float64 `json:"cost_usd"`
+	InputTokens       int     `json:"input_tokens"`
+	CachedInputTokens int     `json:"cached_input_tokens,omitempty"`
+	OutputTokens      int     `json:"output_tokens"`
+	CostUSD           float64 `json:"cost_usd"`
 }
 
 type Response struct {
-	Raw   []byte
-	Usage Usage
+	Raw       []byte
+	Usage     Usage
+	SessionID string
 }
 
 type Provider interface {
 	Evaluate(context.Context, Request) (Response, error)
 }
 
-// CommandProvider вызывает скилл ревью headless-командой, без shell.
-//
-// Задачу оценки формулирует скилл (спека 002); сюда приходит только короткая
-// инструкция с координатами прогона. Рабочим каталогом служит корень проекта
-// платформы — иначе Claude Code не найдёт скиллы в `.claude/skills`. Копия
-// репозитория команды открывается отдельно, через --add-dir, и остаётся данными.
-//
-// Дочернему процессу передаются только явно указанные переменные окружения плюс
-// PATH: секреты платформы не наследуются (спека 003 FR-013d).
-type CommandProvider struct {
-	Binary string
-	// ProjectDir — корень проекта платформы, откуда обнаруживаются скиллы.
-	ProjectDir string
-	// Args полностью переопределяет аргументы; пусто — используется набор по умолчанию.
-	Args []string
-	// AllowedTools и DisallowedTools задают права скилла. По умолчанию — только чтение.
-	AllowedTools    []string
-	DisallowedTools []string
+// CodexProvider запускает изолированный codex exec. Репозиторий команды доступен
+// только на чтение, пользовательские MCP/настройки не наследуются, а JSON Schema
+// заставляет модель вернуть синтаксически корректный компактный контракт.
+type CodexProvider struct {
+	Binary          string
+	ProjectDir      string
+	OutputSchema    string
+	Model           string
+	ReasoningEffort string
+	Args            []string
 	Env             map[string]string
 	Timeout         time.Duration
 }
 
-var (
-	defaultAllowedTools    = []string{"Read", "Glob", "Grep"}
-	defaultDisallowedTools = []string{"Write", "Edit", "Bash", "WebFetch", "WebSearch"}
-)
-
-func (p CommandProvider) arguments(request Request) []string {
+func (p CodexProvider) arguments(request Request) []string {
 	if len(p.Args) > 0 {
 		return append([]string(nil), p.Args...)
 	}
-	allowed := p.AllowedTools
-	if len(allowed) == 0 {
-		allowed = defaultAllowedTools
+	args := []string{
+		"exec", "--json", "--ephemeral", "--ignore-user-config", "--strict-config",
+		"--sandbox", "read-only", "--color", "never",
 	}
-	disallowed := p.DisallowedTools
-	if len(disallowed) == 0 {
-		disallowed = defaultDisallowedTools
+	if p.ProjectDir != "" {
+		args = append(args, "--cd", p.ProjectDir)
 	}
-	args := []string{"-p", request.Prompt, "--output-format", "json"}
-	if request.RepoPath != "" {
-		args = append(args, "--add-dir", request.RepoPath)
+	if p.Model != "" {
+		args = append(args, "--model", p.Model)
 	}
-	args = append(args, "--allowed-tools")
-	args = append(args, allowed...)
-	args = append(args, "--disallowed-tools")
-	args = append(args, disallowed...)
-	return args
+	if p.ReasoningEffort != "" {
+		args = append(args, "--config", fmt.Sprintf("model_reasoning_effort=%q", p.ReasoningEffort))
+	}
+	args = append(args, "--config", "tools.web_search=false")
+	if p.OutputSchema != "" {
+		args = append(args, "--output-schema", p.OutputSchema)
+	}
+	return append(args, request.Prompt)
 }
 
-func (p CommandProvider) Evaluate(parent context.Context, request Request) (Response, error) {
+func (p CodexProvider) Evaluate(parent context.Context, request Request) (Response, error) {
 	if strings.TrimSpace(p.Binary) == "" {
 		return Response{}, fmt.Errorf("provider binary is required")
+	}
+	if len(p.Args) == 0 && strings.TrimSpace(p.OutputSchema) == "" {
+		return Response{}, fmt.Errorf("provider output schema is required")
 	}
 	timeout := p.Timeout
 	if timeout <= 0 {
@@ -100,50 +96,76 @@ func (p CommandProvider) Evaluate(parent context.Context, request Request) (Resp
 	cmd := exec.CommandContext(ctx, p.Binary, p.arguments(request)...)
 	cmd.Dir = p.ProjectDir
 	cmd.Env = safeEnv(p.Env)
-	raw, err := cmd.Output()
+	stdout, err := cmd.Output()
 	if err != nil {
 		if ctx.Err() != nil {
 			return Response{}, fmt.Errorf("provider timeout: %w", ctx.Err())
 		}
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			return Response{}, fmt.Errorf("provider exited unsuccessfully: %s", sanitize(string(exitErr.Stderr)))
+			stderr := sanitize(string(exitErr.Stderr))
+			output := sanitize(string(stdout))
+			if stderr != "" && output != "" {
+				return Response{}, fmt.Errorf("provider exited unsuccessfully: %s (stdout: %s)", stderr, output)
+			}
+			if output != "" {
+				return Response{}, fmt.Errorf("provider exited unsuccessfully: %s", output)
+			}
+			return Response{}, fmt.Errorf("provider exited unsuccessfully: %s", stderr)
 		}
 		return Response{}, fmt.Errorf("run provider: %w", err)
 	}
-	if len(raw) == 0 {
+	if len(bytes.TrimSpace(stdout)) == 0 {
 		return Response{}, fmt.Errorf("provider returned an empty response")
 	}
-	report, usage := unwrapEnvelope(raw)
-	return Response{Raw: report, Usage: usage}, nil
+	return decodeCodexJSONL(stdout)
 }
 
-// unwrapEnvelope достаёт отчёт из обёртки `claude -p --output-format json`.
-// Обёртка же несёт стоимость и расход токенов, поэтому прогон становится
-// учитываемым (спека 003 FR-035). Если обёртки нет, вход возвращается как есть:
-// это допустимо, чтобы тот же путь работал с заранее записанным отчётом.
-func unwrapEnvelope(raw []byte) ([]byte, Usage) {
-	var envelope struct {
-		Result       string  `json:"result"`
-		TotalCostUSD float64 `json:"total_cost_usd"`
-		IsError      bool    `json:"is_error"`
-		Usage        struct {
-			InputTokens  int `json:"input_tokens"`
-			OutputTokens int `json:"output_tokens"`
-		} `json:"usage"`
+func decodeCodexJSONL(raw []byte) (Response, error) {
+	var response Response
+	var sawEvent bool
+	scanner := bufio.NewScanner(bytes.NewReader(raw))
+	scanner.Buffer(make([]byte, 64*1024), 4*1024*1024)
+	for scanner.Scan() {
+		line := bytes.TrimSpace(scanner.Bytes())
+		if len(line) == 0 {
+			continue
+		}
+		var event struct {
+			Type     string `json:"type"`
+			ThreadID string `json:"thread_id"`
+			Item     struct {
+				Type string `json:"type"`
+				Text string `json:"text"`
+			} `json:"item"`
+			Usage Usage `json:"usage"`
+		}
+		if err := json.Unmarshal(line, &event); err != nil || event.Type == "" {
+			if !sawEvent && json.Valid(bytes.TrimSpace(raw)) {
+				return Response{Raw: append([]byte(nil), bytes.TrimSpace(raw)...)}, nil
+			}
+			return Response{}, fmt.Errorf("decode codex JSONL event: %w", err)
+		}
+		sawEvent = true
+		switch event.Type {
+		case "thread.started":
+			response.SessionID = event.ThreadID
+		case "item.completed":
+			if event.Item.Type == "agent_message" && strings.TrimSpace(event.Item.Text) != "" {
+				response.Raw = []byte(event.Item.Text)
+			}
+		case "turn.completed":
+			response.Usage = event.Usage
+		}
 	}
-	if err := json.Unmarshal(raw, &envelope); err != nil || strings.TrimSpace(envelope.Result) == "" {
-		return raw, DecodeUsage(raw)
+	if err := scanner.Err(); err != nil {
+		return Response{}, fmt.Errorf("read codex JSONL: %w", err)
 	}
-	usage := Usage{
-		InputTokens:  envelope.Usage.InputTokens,
-		OutputTokens: envelope.Usage.OutputTokens,
-		CostUSD:      envelope.TotalCostUSD,
+	if len(response.Raw) == 0 {
+		return Response{}, fmt.Errorf("codex JSONL contains no final agent message")
 	}
-	return []byte(envelope.Result), usage
+	return response, nil
 }
 
-// JSONProvider is useful for local integration tests and for operators who
-// want to feed precomputed responses through the same ingestion path.
 type JSONProvider struct {
 	Responses [][]byte
 	Index     int
@@ -158,24 +180,47 @@ func (p *JSONProvider) Evaluate(context.Context, Request) (Response, error) {
 	return Response{Raw: raw}, nil
 }
 
+var allowedEnvironment = map[string]bool{
+	"PATH": true, "HOME": true, "CODEX_HOME": true, "LANG": true, "LC_ALL": true,
+	"LC_CTYPE": true, "TMPDIR": true, "TERM": true, "USER": true, "LOGNAME": true,
+	"SHELL": true, "COLORTERM": true,
+}
+
 func safeEnv(values map[string]string) []string {
-	path := os.Getenv("PATH")
-	if path == "" {
-		path = "/usr/bin:/bin"
-	}
-	env := []string{"PATH=" + path, "HOME=/nonexistent", "LANG=C.UTF-8"}
-	for key, value := range values {
-		if key == "PATH" || key == "HOME" || key == "PWD" || key == "OLDPWD" || strings.Contains(strings.ToLower(key), "key") || strings.Contains(strings.ToLower(key), "token") || strings.Contains(strings.ToLower(key), "secret") || strings.Contains(strings.ToLower(key), "password") {
-			continue
+	merged := map[string]string{}
+	for _, kv := range os.Environ() {
+		key, value, found := strings.Cut(kv, "=")
+		if found && allowedEnvironment[key] {
+			merged[key] = value
 		}
-		env = append(env, key+"="+value)
+	}
+	for key, value := range values {
+		if allowedEnvironment[key] {
+			merged[key] = value
+		}
+	}
+	if merged["PATH"] == "" {
+		merged["PATH"] = "/usr/bin:/bin"
+	}
+	if merged["LANG"] == "" {
+		merged["LANG"] = "C.UTF-8"
+	}
+	merged["NO_COLOR"] = "1"
+	keys := make([]string, 0, len(merged))
+	for key := range merged {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	env := make([]string, 0, len(keys))
+	for _, key := range keys {
+		env = append(env, key+"="+merged[key])
 	}
 	return env
 }
 
 func sanitize(value string) string {
-	if len(value) > 512 {
-		value = value[:512]
+	if len(value) > 1024 {
+		value = value[:1024]
 	}
 	return strings.Map(func(r rune) rune {
 		if r == '\n' || r == '\r' || r == '\t' || r >= 0x20 {
@@ -183,18 +228,4 @@ func sanitize(value string) string {
 		}
 		return ' '
 	}, value)
-}
-
-func DecodeUsage(raw []byte) Usage {
-	var envelope struct {
-		Usage Usage   `json:"usage"`
-		Cost  float64 `json:"cost_usd"`
-	}
-	if json.Unmarshal(raw, &envelope) == nil {
-		if envelope.Usage.CostUSD == 0 {
-			envelope.Usage.CostUSD = envelope.Cost
-		}
-		return envelope.Usage
-	}
-	return Usage{}
 }

@@ -1,6 +1,12 @@
+# Compatibility note
+
+Codex and root `AGENTS.md` are the primary agent interface and source of repository instructions.
+This file remains only for legacy Claude clients; when it conflicts with `AGENTS.md`, follow
+`AGENTS.md`.
+
 # Платформа оценки качества кода на хакатоне
 
-Claude через скиллы `review-backend` / `review-frontend` оценивает репозитории команд по рубрике.
+Codex через скиллы `review-backend` / `review-frontend` оценивает репозитории команд по рубрике.
 CLI-пайплайн на Go собирает статический дата-бандл, React-интерфейс его показывает. Контролируемый
 Оценочные данные остаются неизменяемыми из интерфейса.
 

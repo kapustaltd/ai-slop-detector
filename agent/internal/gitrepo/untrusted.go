@@ -11,12 +11,15 @@ import (
 // agentInstructionNames — файлы и каталоги, которые агентские инструменты читают как
 // инструкции или конфигурацию, а не как данные.
 var agentInstructionNames = map[string]bool{
-	"CLAUDE.md":       true,
-	"CLAUDE.local.md": true,
-	"AGENTS.md":       true,
-	".claude":         true,
-	".mcp.json":       true,
-	".cursorrules":    true,
+	"CLAUDE.md":          true,
+	"CLAUDE.local.md":    true,
+	"AGENTS.md":          true,
+	"AGENTS.override.md": true,
+	".claude":            true,
+	".codex":             true,
+	".agents":            true,
+	".mcp.json":          true,
+	".cursorrules":       true,
 }
 
 // UntrustedSuffix добавляется к обезвреженным путям. Содержимое остаётся читаемым:

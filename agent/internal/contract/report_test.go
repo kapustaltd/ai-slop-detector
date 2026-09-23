@@ -1,6 +1,7 @@
 package contract
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -117,9 +118,67 @@ func contextForReport() ValidationContext {
 	}
 }
 
+// Воспроизводит реальную ошибку модели (haiku), пойманную на живом прогоне 2026-09-22:
+// лишняя закрывающая кавычка сразу после числового line_end ("line_end": 23", вместо ...23,).
+// DecodeReport должен тихо починить это конкретное искажение, не тратя платный ретрай.
+func TestDecodeReportRepairsStrayQuoteAfterLineEnd(t *testing.T) {
+	report := validReport()
+	report.Metrics[0].Findings[0].LineEnd = 23
+	raw, err := json.Marshal(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw = bytes.Replace(raw, []byte(`"line_end":23,`), []byte(`"line_end":23",`), 1)
+
+	decoded, err := DecodeReport(raw)
+	if err != nil {
+		t.Fatalf("DecodeReport did not repair the stray quote: %v", err)
+	}
+	if got := decoded.Metrics[0].Findings[0].LineEnd; got != 23 {
+		t.Fatalf("LineEnd = %d, want 23", got)
+	}
+}
+
+// Строковый текст, который случайно содержит `"score": 7"`-подобный фрагмент как прозу, не
+// должен пострадать: якорь на буквальное имя поля перед числом — не голая "цифра+кавычка".
+func TestDecodeReportDoesNotMangleProseResemblingTheField(t *testing.T) {
+	want := `в rationale цитата: "score": 7" встречается как текст`
+	report := validReport()
+	report.Metrics[0].Rationale = want
+	raw, err := json.Marshal(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	decoded, err := DecodeReport(raw)
+	if err != nil {
+		t.Fatalf("DecodeReport unexpectedly failed: %v", err)
+	}
+	if decoded.Metrics[0].Rationale != want {
+		t.Fatalf("rationale corrupted: got %q, want %q", decoded.Metrics[0].Rationale, want)
+	}
+}
+
 func TestValidateAcceptsReport(t *testing.T) {
 	if err := Validate(validReport(), contextForReport()); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestCompactReviewExpandsToCanonicalReport(t *testing.T) {
+	compact, err := DecodeReviewOutput([]byte(`{"metrics":[{"id":"metric_a","score":8,"confidence":"high","anchor":8,"reason":"граница видна в коде","evidence":[{"kind":"strength","severity":"info","file":"main.go","line_start":1,"line_end":1,"title":"Граница","note":"Есть явная точка входа.","fix":""}]}],"comment":"Полезный отчёт.","warnings":[]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := ValidateReviewAnchors(compact); err != nil {
+		t.Fatal(err)
+	}
+	report := ExpandReviewOutput(compact, validReport().Meta, 10)
+	if err := Validate(report, contextForReport()); err != nil {
+		t.Fatal(err)
+	}
+	if report.Metrics[0].Rationale != "Сопоставление с якорем 8: граница видна в коде" {
+		t.Fatalf("unexpected rationale: %q", report.Metrics[0].Rationale)
 	}
 }
 

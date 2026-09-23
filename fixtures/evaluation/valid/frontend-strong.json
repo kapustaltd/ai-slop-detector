@@ -12,12 +12,12 @@
   },
   "metrics": [
     {
-      "id": "component_decomposition",
-      "score": 8.5,
+      "id": "component_design",
+      "score": 6,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Размер и ответственность компонентов",
+      "rationale": "Размер и ответственность компонентов вместе с переиспользованием вместо копирования",
       "findings": [
         {
           "kind": "strength",
@@ -31,12 +31,12 @@
       ]
     },
     {
-      "id": "component_reuse",
+      "id": "code_structure_and_concerns",
       "score": 6.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Переиспользование вместо копирования",
+      "rationale": "Предсказуемость структуры и именования вместе с разделением представления логики и доступа к данным",
       "findings": [
         {
           "kind": "strength",
@@ -50,12 +50,12 @@
       ]
     },
     {
-      "id": "project_structure",
+      "id": "state_management",
       "score": 7,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Предсказуемость структуры и именования",
+      "rationale": "Локальное против глобального и уровень подъёма состояния вместе с единственным источником истины",
       "findings": [
         {
           "kind": "strength",
@@ -69,12 +69,12 @@
       ]
     },
     {
-      "id": "separation_of_concerns",
+      "id": "data_fetching",
       "score": 7.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Разделение представления логики и доступа к данным",
+      "rationale": "Организация запросов кеширование и инвалидация",
       "findings": [
         {
           "kind": "strength",
@@ -88,12 +88,12 @@
       ]
     },
     {
-      "id": "state_placement",
+      "id": "async_states",
       "score": 6,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Локальное против глобального и уровень подъёма состояния",
+      "rationale": "Состояния загрузки ошибок и пустых данных",
       "findings": [
         {
           "kind": "strength",
@@ -107,12 +107,12 @@
       ]
     },
     {
-      "id": "state_predictability",
+      "id": "type_strictness",
       "score": 6.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Единственный источник истины и отсутствие рассинхрона",
+      "rationale": "Strict-режим и отсутствие немотивированных any",
       "findings": [
         {
           "kind": "strength",
@@ -126,12 +126,12 @@
       ]
     },
     {
-      "id": "data_fetching",
+      "id": "api_types",
       "score": 7,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Организация запросов кеширование и инвалидация",
+      "rationale": "Типы данных API происходят из контракта",
       "findings": [
         {
           "kind": "strength",
@@ -145,12 +145,12 @@
       ]
     },
     {
-      "id": "async_states",
+      "id": "props_contracts",
       "score": 7.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Состояния загрузки ошибок и пустых данных",
+      "rationale": "Типизация props и публичных интерфейсов модулей",
       "findings": [
         {
           "kind": "strength",
@@ -164,12 +164,12 @@
       ]
     },
     {
-      "id": "type_strictness",
+      "id": "render_efficiency",
       "score": 6,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Strict-режим и отсутствие немотивированных any",
+      "rationale": "Лишние перерисовки и оправданная мемоизация",
       "findings": [
         {
           "kind": "strength",
@@ -183,12 +183,12 @@
       ]
     },
     {
-      "id": "api_types",
+      "id": "bundle_and_assets",
       "score": 6.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Типы данных API происходят из контракта",
+      "rationale": "Размер бандла код-сплиттинг и работа с изображениями",
       "findings": [
         {
           "kind": "strength",
@@ -202,12 +202,12 @@
       ]
     },
     {
-      "id": "props_contracts",
+      "id": "semantic_accessibility",
       "score": 7,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Типизация props и публичных интерфейсов модулей",
+      "rationale": "Семантические элементы вместо div-супа вместе с ARIA там где семантики не хватает",
       "findings": [
         {
           "kind": "strength",
@@ -215,82 +215,6 @@
           "file": "src/main.go",
           "line_start": 11,
           "line_end": 11,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "render_efficiency",
-      "score": 7.5,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Лишние перерисовки и оправданная мемоизация",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 12,
-          "line_end": 12,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "bundle_and_assets",
-      "score": 6,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Размер бандла код-сплиттинг и работа с изображениями",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 13,
-          "line_end": 13,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "semantic_markup",
-      "score": 6.5,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Семантические элементы вместо div-супа",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 14,
-          "line_end": 14,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "aria_usage",
-      "score": 7,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "ARIA там где семантики не хватает и без вреда",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 15,
-          "line_end": 15,
           "title": "Фрагмент",
           "explanation": "Фрагмент привязан к указанным строкам."
         }
@@ -308,8 +232,8 @@
           "kind": "strength",
           "severity": "info",
           "file": "src/main.go",
-          "line_start": 16,
-          "line_end": 16,
+          "line_start": 12,
+          "line_end": 12,
           "title": "Фрагмент",
           "explanation": "Фрагмент привязан к указанным строкам."
         }
@@ -327,46 +251,27 @@
           "kind": "strength",
           "severity": "info",
           "file": "src/main.go",
-          "line_start": 17,
-          "line_end": 17,
+          "line_start": 13,
+          "line_end": 13,
           "title": "Фрагмент",
           "explanation": "Фрагмент привязан к указанным строкам."
         }
       ]
     },
     {
-      "id": "styling_approach",
+      "id": "styling_consistency",
       "score": 6.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Единый подход к стилям и токены вместо магических значений",
+      "rationale": "Единый подход к стилям и токены вместо магических значений вместе с единообразием однотипных элементов",
       "findings": [
         {
           "kind": "strength",
           "severity": "info",
           "file": "src/main.go",
-          "line_start": 18,
-          "line_end": 18,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "design_consistency",
-      "score": 7,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Единообразие однотипных элементов",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 19,
-          "line_end": 19,
+          "line_start": 14,
+          "line_end": 14,
           "title": "Фрагмент",
           "explanation": "Фрагмент привязан к указанным строкам."
         }
@@ -384,46 +289,27 @@
           "kind": "strength",
           "severity": "info",
           "file": "src/main.go",
-          "line_start": 20,
-          "line_end": 20,
+          "line_start": 15,
+          "line_end": 15,
           "title": "Фрагмент",
           "explanation": "Фрагмент привязан к указанным строкам."
         }
       ]
     },
     {
-      "id": "test_coverage_meaning",
-      "score": 6,
+      "id": "test_quality_and_coverage",
+      "score": 7.5,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
-      "rationale": "Покрыты ли тестами ключевые сценарии интерфейса",
+      "rationale": "Покрыты ли тестами ключевые сценарии интерфейса вместе с устойчивостью тестов и отсутствием завязки на случайную разметку",
       "findings": [
         {
           "kind": "strength",
           "severity": "info",
           "file": "src/main.go",
-          "line_start": 21,
-          "line_end": 21,
-          "title": "Фрагмент",
-          "explanation": "Фрагмент привязан к указанным строкам."
-        }
-      ]
-    },
-    {
-      "id": "test_quality",
-      "score": 6.5,
-      "max": 10,
-      "confidence": "medium",
-      "summary": "Фрагмент кода.",
-      "rationale": "Устойчивость тестов и отсутствие завязки на случайную разметку",
-      "findings": [
-        {
-          "kind": "strength",
-          "severity": "info",
-          "file": "src/main.go",
-          "line_start": 22,
-          "line_end": 22,
+          "line_start": 16,
+          "line_end": 16,
           "title": "Фрагмент",
           "explanation": "Фрагмент привязан к указанным строкам."
         }
@@ -431,7 +317,7 @@
     },
     {
       "id": "test_runnability",
-      "score": 7,
+      "score": 6,
       "max": 10,
       "confidence": "medium",
       "summary": "Фрагмент кода.",
@@ -441,8 +327,8 @@
           "kind": "strength",
           "severity": "info",
           "file": "src/main.go",
-          "line_start": 23,
-          "line_end": 23,
+          "line_start": 17,
+          "line_end": 17,
           "title": "Фрагмент",
           "explanation": "Фрагмент привязан к указанным строкам."
         }

@@ -45,11 +45,6 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 			t.Fatalf("git %v: %v: %s", args, err, output)
 		}
 	}
-	shaBytes, err := exec.Command("git", "-C", repo, "rev-parse", "main").Output()
-	if err != nil {
-		t.Fatal(err)
-	}
-	sha := strings.TrimSpace(string(shaBytes))
 	r := rubric.Rubric{SchemaVersion: "rubric.v1", RubricVersion: "backend.v1", AreaWeights: map[string]float64{"backend": .5, "frontend": .5}, ID: "backend.v1", Version: "backend.v1", Area: "backend", Scale: rubric.Scale{Min: 0, Max: 10, Anchors: []int{2, 5, 8, 10}}, Categories: []rubric.Category{{
 		ID: "cat", Name: "Category", Weight: 1,
 		Subcategories: []rubric.Subcategory{{
@@ -58,9 +53,8 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 		}},
 	}}}
 	valid, err := json.Marshal(map[string]any{
-		"meta":            map[string]any{"schema_version": "evaluation.v1", "team_id": "team-1", "area": "backend", "repo": "team-1", "commit_sha": sha, "skill_version": "1.0.0", "rubric_version": "backend.v1", "model": "test-model", "evaluated_at": "2026-09-22T00:00:00Z"},
-		"metrics":         []any{map[string]any{"id": "metric", "score": 8, "max": 10, "confidence": "high", "summary": "good", "rationale": "good", "findings": []any{map[string]any{"kind": "strength", "severity": "info", "file": "main.go", "line_start": 1, "line_end": 3, "title": "source", "explanation": "source"}}}},
-		"overall_comment": "review", "warnings": []string{},
+		"metrics": []any{map[string]any{"id": "metric", "score": 8, "confidence": "high", "anchor": 8, "reason": "good", "evidence": []any{map[string]any{"kind": "strength", "severity": "info", "file": "main.go", "line_start": 1, "line_end": 3, "title": "source", "note": "source", "fix": ""}}}},
+		"comment": "review", "warnings": []string{},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -68,8 +62,7 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	fake := &provider.JSONProvider{Responses: [][]byte{[]byte("not-json"), valid}}
 	output := t.TempDir()
 	skillsDir := skillsFixture(t, "backend", "1.0.0")
-	config := Config{OutputDir: output, WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team 1", Repo: repo, Branch: "main", Active: true, Paths: map[string]string{"backend": "."}}}}, Rubrics: map[string]rubric.Rubric{"backend.v1": r}, Provider: fake, MaxParallel: 1, Templates: enrichmentTemplate(), Now: fixedNow, SkillsDir: skillsDir, RubricPaths: map[string]string{"backend.v1": "../../../rubrics/backend.v1.yaml"}}
-	config.Model = "test-model"
+	config := Config{OutputDir: output, WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team 1", Repo: repo, Branch: "main", Active: true, Paths: map[string]string{"backend": "."}}}}, Rubrics: map[string]rubric.Rubric{"backend.v1": r}, Provider: fake, MaxParallel: 1, MaxRetries: 2, Model: "test-model", Templates: enrichmentTemplate(), Now: fixedNow, SkillsDir: skillsDir, RubricPaths: map[string]string{"backend.v1": "../../../rubrics/backend.v1.yaml"}}
 	summary, err := (Pipeline{}).Run(context.Background(), config)
 	if err != nil {
 		t.Fatal(err)
@@ -77,11 +70,8 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	if summary.TeamsDone != 1 || summary.AreasDone != 1 || summary.AreasFailed != 0 {
 		t.Fatalf("unexpected summary: %#v", summary)
 	}
-	if _, err := os.Stat(filepath.Join(output, "raw", summary.RunID, "team-1", "backend", "attempt-01.json")); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := os.Stat(filepath.Join(output, "raw", summary.RunID, "team-1", "backend", "attempt-02.json")); err != nil {
-		t.Fatal(err)
+	if _, err := os.Stat(filepath.Join(output, "raw")); !os.IsNotExist(err) {
+		t.Fatalf("raw output must not be created, stat error = %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(output, "index.json")); err != nil {
 		t.Fatal(err)
@@ -281,6 +271,18 @@ func TestTeamTotalUsesRubricWeights(t *testing.T) {
 	if score, ok := teamTotal(areas, rubrics, registry.Team{}); !ok || score != 10 {
 		t.Fatalf("partial total = %v, %v", score, ok)
 	}
+}
+
+func TestStaleLockFileDoesNotBlockRun(t *testing.T) {
+	output := t.TempDir()
+	if err := os.WriteFile(filepath.Join(output, ".pipeline.lock"), []byte("pid=39572\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	release, err := acquireLock(output)
+	if err != nil {
+		t.Fatalf("stale sentinel must not block an OS-level lock: %v", err)
+	}
+	release()
 }
 
 // Kept local to avoid importing the CLI package in pipeline tests.

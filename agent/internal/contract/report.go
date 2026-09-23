@@ -13,16 +13,27 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 var fullSHA = regexp.MustCompile(`^[0-9a-fA-F]{40}$`)
 var semanticVersion = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
 var safeTeamID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`)
 
+// Длины полей ниже — точное отражение schemas/evaluation-report.schema.json (maxLength у
+// каждого поля), а не отдельное, более мягкое ограничение: раньше здесь была одна общая
+// граница в 16 КиБ на любой текст, из-за чего Go-валидатор пропускал то, что схема бы
+// отклонила. Значения совпадают с теми, что теперь явно перечислены в SKILL.md review-*, —
+// скилл не читает схему заново, поэтому расхождение между этими константами и тем, что
+// написано в скилле, стало бы тихой рассинхронизацией контракта.
 const (
-	maxTextLength  = 16 * 1024
-	maxFindings    = 20
-	maxWarningSize = 64
+	maxOverallCommentLength = 5000
+	maxSummaryLength        = 500
+	maxRationaleLength      = 3000
+	maxFindingTitleLength   = 200
+	maxFindingTextLength    = 2000
+	maxFindings             = 20
+	maxWarningSize          = 64
 )
 
 var allowedWarnings = map[string]struct{}{
@@ -40,8 +51,21 @@ type Report = EvaluationReport
 type Meta = ReportMeta
 type Metric = MetricScore
 
+// strayQuoteAfterIntField чинит наблюдавшуюся ошибку модели: лишняя закрывающая кавычка сразу
+// после числового значения известного поля, например `"line_end": 23",` вместо `"line_end": 23,`.
+// Якорится на буквальное имя поля перед числом — это специально уже, чем "цифра плюс кавычка",
+// чтобы не задеть строковый текст, который случайно заканчивается на цифру перед настоящей
+// закрывающей кавычкой (например `"поставь \"line_start\" 23"` в rationale). Поле должно быть
+// известным числовым (line_start/line_end/score), не любым.
+var strayQuoteAfterIntField = regexp.MustCompile(`("(?:line_start|line_end|score)"\s*:\s*-?\d+(?:\.\d+)?)"(\s*[,}\]])`)
+
+func repairStrayNumericQuotes(raw []byte) []byte {
+	return strayQuoteAfterIntField.ReplaceAll(raw, []byte(`$1$2`))
+}
+
 func DecodeReport(raw []byte) (Report, error) {
 	cleaned := stripMarkdownFence(bytes.TrimSpace(raw))
+	cleaned = repairStrayNumericQuotes(cleaned)
 	start := bytes.IndexByte(cleaned, '{')
 	end := bytes.LastIndexByte(cleaned, '}')
 	if start < 0 || end < start {
@@ -97,6 +121,76 @@ func validateJSONPresence(raw json.RawMessage, typ reflect.Type, path string, re
 		for i, item := range items {
 			if err := validateJSONPresence(item, typ.Elem(), fmt.Sprintf("%s[%d]", path, i), true); err != nil {
 				return err
+			}
+		}
+	}
+	return nil
+}
+
+// DecodeReviewOutput читает компактный контракт между Codex и пайплайном. Канонический
+// evaluation.v1 из него строит код: модель не повторяет meta/max и не пишет два почти
+// одинаковых текста summary/rationale.
+func DecodeReviewOutput(raw []byte) (ReviewOutput, error) {
+	cleaned := stripMarkdownFence(bytes.TrimSpace(raw))
+	start := bytes.IndexByte(cleaned, '{')
+	end := bytes.LastIndexByte(cleaned, '}')
+	if start < 0 || end < start {
+		return ReviewOutput{}, errors.New("provider response does not contain a JSON object")
+	}
+	var output ReviewOutput
+	decoder := json.NewDecoder(bytes.NewReader(cleaned[start : end+1]))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&output); err != nil {
+		return ReviewOutput{}, fmt.Errorf("decode compact review JSON: %w", err)
+	}
+	return output, nil
+}
+
+// ExpandReviewOutput deterministically expands the small model response into the public
+// evaluation.v1 contract. Validate remains the final authority for metric coverage, paths,
+// line ranges and all semantic constraints.
+func ExpandReviewOutput(output ReviewOutput, meta Meta, max float64) Report {
+	report := Report{Meta: meta, OverallComment: output.Comment, Warnings: output.Warnings}
+	for _, source := range output.Metrics {
+		metric := Metric{
+			ID: source.ID, Score: source.Score, Max: max, Confidence: source.Confidence,
+			Summary:   source.Reason,
+			Rationale: fmt.Sprintf("Сопоставление с якорем %d: %s", source.Anchor, source.Reason),
+		}
+		for _, evidence := range source.Evidence {
+			metric.Findings = append(metric.Findings, Finding{
+				Kind: evidence.Kind, Severity: evidence.Severity, File: evidence.File,
+				LineStart: evidence.LineStart, LineEnd: evidence.LineEnd, Title: evidence.Title,
+				Explanation: evidence.Note, Suggestion: evidence.Fix,
+			})
+		}
+		report.Metrics = append(report.Metrics, metric)
+	}
+	return report
+}
+
+func ValidateReviewAnchors(output ReviewOutput) error {
+	if len(output.Metrics) == 0 {
+		return errors.New("compact review requires metrics")
+	}
+	if utf8.RuneCountInString(output.Comment) > 1000 {
+		return errors.New("compact review comment is longer than 1000 characters")
+	}
+	for _, metric := range output.Metrics {
+		switch metric.Anchor {
+		case 2, 5, 8, 10:
+		default:
+			return fmt.Errorf("metric %q has unsupported anchor %d", metric.ID, metric.Anchor)
+		}
+		if utf8.RuneCountInString(metric.Reason) > 450 {
+			return fmt.Errorf("metric %q reason is longer than 450 characters", metric.ID)
+		}
+		if len(metric.Evidence) < 1 || len(metric.Evidence) > 3 {
+			return fmt.Errorf("metric %q requires 1-3 evidence items", metric.ID)
+		}
+		for _, evidence := range metric.Evidence {
+			if evidence.Kind == "strength" && evidence.Fix != "" {
+				return fmt.Errorf("metric %q strength evidence must use an empty fix", metric.ID)
 			}
 		}
 	}
@@ -159,6 +253,9 @@ func Validate(report Report, context ValidationContext) error {
 	if strings.TrimSpace(report.OverallComment) == "" {
 		return errors.New("overall_comment is required")
 	}
+	if utf8.RuneCountInString(report.OverallComment) > maxOverallCommentLength {
+		return fmt.Errorf("overall_comment is longer than %d characters", maxOverallCommentLength)
+	}
 	if len(report.Metrics) == 0 {
 		return errors.New("metrics must not be empty")
 	}
@@ -184,8 +281,11 @@ func Validate(report Report, context ValidationContext) error {
 		if strings.TrimSpace(metric.Summary) == "" || strings.TrimSpace(metric.Rationale) == "" {
 			return fmt.Errorf("metric %q requires summary and rationale", metric.ID)
 		}
-		if len(metric.Summary) > maxTextLength || len(metric.Rationale) > maxTextLength {
-			return fmt.Errorf("metric %q contains text longer than %d characters", metric.ID, maxTextLength)
+		if utf8.RuneCountInString(metric.Summary) > maxSummaryLength {
+			return fmt.Errorf("metric %q summary is longer than %d characters", metric.ID, maxSummaryLength)
+		}
+		if utf8.RuneCountInString(metric.Rationale) > maxRationaleLength {
+			return fmt.Errorf("metric %q rationale is longer than %d characters", metric.ID, maxRationaleLength)
 		}
 		if len(metric.Findings) == 0 {
 			return fmt.Errorf("metric %q requires at least one finding", metric.ID)
@@ -209,13 +309,18 @@ func Validate(report Report, context ValidationContext) error {
 		sort.Strings(missing)
 		return fmt.Errorf("report is missing rubric metrics: %s", strings.Join(missing, ", "))
 	}
+	seenWarnings := make(map[string]struct{}, len(report.Warnings))
 	for _, warning := range report.Warnings {
-		if len(warning) > maxWarningSize {
+		if utf8.RuneCountInString(warning) > maxWarningSize {
 			return fmt.Errorf("warning %q is too long", warning)
 		}
 		if _, allowed := allowedWarnings[warning]; !allowed {
 			return fmt.Errorf("unknown warning %q", warning)
 		}
+		if _, duplicate := seenWarnings[warning]; duplicate {
+			return fmt.Errorf("warning %q appears more than once", warning)
+		}
+		seenWarnings[warning] = struct{}{}
 	}
 	return nil
 }
@@ -247,8 +352,11 @@ func validateFinding(metricID string, index int, finding Finding, lineCounts map
 	if strings.TrimSpace(finding.Title) == "" || strings.TrimSpace(finding.Explanation) == "" {
 		return fmt.Errorf("metric %q finding %d requires title and explanation", metricID, index)
 	}
-	if len(finding.Title) > maxTextLength || len(finding.Explanation) > maxTextLength || len(finding.Suggestion) > maxTextLength {
-		return fmt.Errorf("metric %q finding %d contains text longer than %d characters", metricID, index, maxTextLength)
+	if utf8.RuneCountInString(finding.Title) > maxFindingTitleLength {
+		return fmt.Errorf("metric %q finding %d title is longer than %d characters", metricID, index, maxFindingTitleLength)
+	}
+	if utf8.RuneCountInString(finding.Explanation) > maxFindingTextLength || utf8.RuneCountInString(finding.Suggestion) > maxFindingTextLength {
+		return fmt.Errorf("metric %q finding %d contains text longer than %d characters", metricID, index, maxFindingTextLength)
 	}
 	if finding.Kind == "issue" && strings.TrimSpace(finding.Suggestion) == "" {
 		return fmt.Errorf("metric %q finding %d requires suggestion for an issue", metricID, index)

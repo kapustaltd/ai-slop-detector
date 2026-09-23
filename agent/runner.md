@@ -13,7 +13,7 @@ go run ./cmd/runner run \
 ```
 
 Для повторной оценки можно ограничить `--team` и `--area`. Завершённые области возобновляются из
-`out/state`; `--force` создаёт новый raw-run и не удаляет предыдущие ответы.
+`out/state`; `--force` пересчитывает выбранную область и заменяет её нормализованный state.
 
 Пересчёт агрегатов выполняется без provider:
 
@@ -22,4 +22,4 @@ go run ./cmd/runner recalculate --registry ./registry.yaml --rubrics-dir ../rubr
 ```
 
 В каталоге output находятся `index.json`, `teams/*.json`, `rubrics/*.json`, `stats.json`,
-`summary.json`, а также `raw/<run-id>/...` с каждой попыткой ответа и нормализованным отчётом.
+`summary.json` и `state/<team>/<area>.json`. Полные ответы модели не сохраняются.
