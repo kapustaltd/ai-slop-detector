@@ -19,6 +19,7 @@ import type {
   TeamMetric as GeneratedTeamMetric,
   TeamSubcategory as GeneratedTeamSubcategory,
 } from './generated/data-bundle'
+import type { RegistryTeam } from './registry'
 
 export type BundleSchemaVersion = string
 
@@ -66,13 +67,57 @@ export function getLeaderboardIndex(): LeaderboardIndexStub {
   return index
 }
 
-/** Асинхронная форма доступа к индексу: данные уже в основном чанке. */
+/** Live API replaces the build-time snapshot when the registry service is available. */
 export async function loadLeaderboardIndex(): Promise<LeaderboardIndexStub> {
+  try {
+    const response = await fetch('/api/bundle/index', { cache: 'no-store' })
+    if (response.ok) {
+      const index = (await response.json()) as LeaderboardIndexStub
+      if (index.bundle_schema === SUPPORTED_BUNDLE_SCHEMA) return index
+    }
+  } catch {
+    // The older registry service has no live-bundle route.
+  }
+  try {
+    const registryResponse = await fetch('/api/teams', { cache: 'no-store' })
+    if (registryResponse.ok) {
+      const registry = (await registryResponse.json()) as RegistryTeam[]
+      const staticIndex = getLeaderboardIndex()
+      const fetchedAt = new Date().toISOString()
+      return {
+        ...staticIndex,
+        built_at: fetchedAt,
+        meta: { ...staticIndex.meta, built_at: fetchedAt },
+        teams: registry
+          .filter((team) => team.active)
+          .map((team) => ({
+            team_id: team.id,
+            name: team.name,
+            rank: null,
+            total: null,
+            areas: {},
+            status: 'no_data' as const,
+            partial: false,
+          })),
+      }
+    }
+  } catch {
+    // Static-only deployments still read the build-time snapshot.
+  }
   return getLeaderboardIndex()
 }
 
 /** Данные одной команды. Отдельный чанк, поэтому загрузка асинхронная. */
 export async function loadTeam(teamId: string): Promise<TeamBundle> {
+  try {
+    const response = await fetch(`/api/bundle/teams/${encodeURIComponent(teamId)}`, {
+      cache: 'no-store',
+    })
+    if (response.ok) return (await response.json()) as TeamBundle
+    if (response.status !== 404) throw new BundleError('Не удалось загрузить оценку команды')
+  } catch (cause) {
+    if (cause instanceof BundleError) throw cause
+  }
   const loader = teamModules[`/data/teams/${teamId}.json`]
   if (!loader) {
     throw new BundleError(`В бандле нет файла команды ${teamId}`)
@@ -103,4 +148,14 @@ export function getStats(): StatsBundle {
       areas: [],
     }
   )
+}
+
+export async function loadStats(): Promise<StatsBundle> {
+  try {
+    const response = await fetch('/api/bundle/stats', { cache: 'no-store' })
+    if (response.ok) return (await response.json()) as StatsBundle
+  } catch {
+    // Static-only deployments use the bundled snapshot.
+  }
+  return getStats()
 }

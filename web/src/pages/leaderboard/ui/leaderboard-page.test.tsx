@@ -1,11 +1,55 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { LeaderboardPage } from './leaderboard-page'
 
+afterEach(() => vi.unstubAllGlobals())
+
 describe('LeaderboardPage', () => {
+  it('shows a newly registered pending team from the live API', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              bundle_schema: '0.1',
+              built_at: '2026-09-23T10:00:00Z',
+              meta: {
+                bundle_schema: '0.1',
+                built_at: '2026-09-23T10:00:00Z',
+                report_schema: '1.0',
+                rubric_versions: [],
+                skill_versions: [],
+                models: [],
+              },
+              teams: [
+                {
+                  team_id: 'new-team',
+                  name: 'Новая команда',
+                  rank: null,
+                  total: null,
+                  areas: {},
+                  status: 'running',
+                  partial: false,
+                },
+              ],
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+          ),
+      ),
+    )
+    render(
+      <MemoryRouter>
+        <LeaderboardPage />
+      </MemoryRouter>,
+    )
+    await waitFor(() => expect(screen.getAllByText('Новая команда').length).toBeGreaterThan(0))
+    expect(screen.queryByText('Команда 01')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Новая команда' })).not.toBeInTheDocument()
+  })
   it('отрисовывает команды из фикстурного бандла и время сборки бандла (FR-011)', () => {
     render(
       <MemoryRouter>

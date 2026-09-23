@@ -2,6 +2,7 @@ export {
   BundleError,
   SUPPORTED_BUNDLE_SCHEMA,
   getStats,
+  loadStats,
   getLeaderboardIndex,
   loadLeaderboardIndex,
   loadRubric,

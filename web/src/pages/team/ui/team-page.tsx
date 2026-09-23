@@ -2,7 +2,14 @@ import { CloudOff, FileQuestion } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
-import { getStats, loadRubric, loadTeam, type RubricBundle, type TeamBundle } from '@/shared/api'
+import {
+  loadStats,
+  loadRubric,
+  loadTeam,
+  type RubricBundle,
+  type TeamBundle,
+  type StatsBundle,
+} from '@/shared/api'
 import { EmptyState } from '@/shared/ui'
 import { DisclaimerBanner } from '@/widgets/disclaimer-banner'
 import { AreaProfile } from '@/widgets/area-profile'
@@ -31,6 +38,7 @@ export function TeamPage() {
   const [state, setState] = useState<PageState>('loading')
   const [team, setTeam] = useState<TeamBundle | null>(null)
   const [rubrics, setRubrics] = useState<Record<string, RubricBundle>>({})
+  const [stats, setStats] = useState<StatsBundle | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Переход по prev/next (005-стиль ссылок) меняет :teamId без размонтирования страницы — состояние
@@ -46,11 +54,17 @@ export function TeamPage() {
   useEffect(() => {
     if (!teamId) return
     let cancelled = false
-    Promise.all([loadTeam(teamId), loadRubric('backend.v1'), loadRubric('frontend.v1')])
-      .then(([loadedTeam, backend, frontend]) => {
+    Promise.all([
+      loadTeam(teamId),
+      loadRubric('backend.v1'),
+      loadRubric('frontend.v1'),
+      loadStats(),
+    ])
+      .then(([loadedTeam, backend, frontend, loadedStats]) => {
         if (cancelled) return
         setTeam(loadedTeam)
         setRubrics({ backend, frontend })
+        setStats(loadedStats)
         setState('ready')
       })
       .catch(() => {
@@ -64,10 +78,16 @@ export function TeamPage() {
   const retry = () => {
     setState('loading')
     if (!teamId) return
-    Promise.all([loadTeam(teamId), loadRubric('backend.v1'), loadRubric('frontend.v1')])
-      .then(([loadedTeam, backend, frontend]) => {
+    Promise.all([
+      loadTeam(teamId),
+      loadRubric('backend.v1'),
+      loadRubric('frontend.v1'),
+      loadStats(),
+    ])
+      .then(([loadedTeam, backend, frontend, loadedStats]) => {
         setTeam(loadedTeam)
         setRubrics({ backend, frontend })
+        setStats(loadedStats)
         setState('ready')
       })
       .catch(() => setState('error'))
@@ -141,7 +161,7 @@ export function TeamPage() {
 
           {doneAreas.map(([areaName, area]) => {
             const findingCounts = countFindings(area)
-            const areaStats = getStats().areas.find((item) => item.area === areaName)
+            const areaStats = stats?.areas.find((item) => item.area === areaName)
             return (
               <div key={areaName} className="flex flex-col gap-[18px]">
                 <AreaProfile areaName={areaName} area={area} stats={areaStats} />

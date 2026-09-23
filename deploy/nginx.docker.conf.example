@@ -18,6 +18,12 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
+    location /api/bundle/ {
+        proxy_pass http://172.17.0.1:8082;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
     location /api/ {
         proxy_pass http://172.17.0.1:8081;
         proxy_set_header Host $host;

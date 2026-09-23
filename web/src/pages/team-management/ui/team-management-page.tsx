@@ -154,7 +154,7 @@ export function TeamManagementPage() {
     try {
       await createRegistryTeam(draft)
       setDraft(null)
-      setNotice('Команда добавлена. Оценка начнётся при следующем запуске.')
+      setNotice('Команда добавлена. Статус обработки появится в рейтинге.')
       setStep('repo')
       void loadTeams()
     } catch (cause) {
@@ -177,7 +177,7 @@ export function TeamManagementPage() {
           </Link>
           <h1 className="text-h1 m-0">Команды</h1>
           <p className="mt-1 text-sm text-fg-muted">
-            Изменения применятся при следующем запуске оценки.
+            Новые команды сразу появляются в рейтинге. Оценка зависит от обработки на сервере.
           </p>
         </div>
         {apiAvailable ? (
@@ -380,8 +380,8 @@ function TeamForm({
             className="max-w-[90%] rounded-panel bg-muted-surface px-4 py-3 text-sm sm:max-w-[75%]"
           >
             <span className="mb-1 block text-xs font-semibold text-fg-muted">Помощник</span>
-            Репозитория нет в реестре. Уточните имя команды и ветку. Доступность кода проверит
-            запуск оценки.
+            Репозитория нет в реестре. Уточните имя команды и ветку. Код и доступ к нему пока не
+            проверялись.
           </div>
         )}
       </div>
@@ -510,8 +510,9 @@ function TeamForm({
             </dl>
           </div>
           <p className="m-0 text-sm text-fg-muted">
-            При следующем запуске оцениваются код выбранной ветки и находки по рубрикам. Добавление
-            команды не запускает оценку.
+            После сохранения команда появится в рейтинге. Если на сервере включена обработка,
+            начнётся проверка кода выбранной ветки по рубрикам. Результат появится после её
+            завершения.
           </p>
           {isSaving && <LoadingBar />}
           <form onSubmit={onSubmit} className="flex flex-wrap gap-2">

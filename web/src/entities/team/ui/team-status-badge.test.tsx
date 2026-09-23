@@ -10,11 +10,11 @@ describe('TeamStatusBadge', () => {
     expect(screen.getByText('Оценка завершена.')).toBeInTheDocument()
   })
 
-  it('для failed поясняет, что причина — на странице команды', () => {
+  it('для failed поясняет, что нужен повторный запуск', () => {
     render(<TeamStatusBadge status="failed" />)
     expect(screen.getByText('Не удалось')).toBeInTheDocument()
     expect(
-      screen.getByText('Оценка не удалась — подробности на странице команды.'),
+      screen.getByText('Оценка не удалась. Повторный запуск доступен оператору.'),
     ).toBeInTheDocument()
   })
 

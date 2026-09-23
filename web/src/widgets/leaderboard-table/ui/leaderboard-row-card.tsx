@@ -15,13 +15,10 @@ export interface LeaderboardRowCardProps {
 }
 
 export function LeaderboardRowCard({ team }: LeaderboardRowCardProps) {
-  const hasBadges = team.partial || (team.warnings?.length ?? 0) > 0
+  const hasBadges = team.status !== 'done' || team.partial || (team.warnings?.length ?? 0) > 0
 
-  return (
-    <Link
-      to={`/team/${team.team_id}`}
-      className="flex flex-col gap-[9px] rounded-card border border-line bg-surface px-[13px] py-3 no-underline"
-    >
+  const content = (
+    <>
       <div className="flex items-center gap-2.5">
         <span className="w-5 shrink-0 text-[15px] text-fg-muted">
           {team.rank ?? <span className="text-fg-subtle">—</span>}
@@ -59,10 +56,21 @@ export function LeaderboardRowCard({ team }: LeaderboardRowCardProps) {
       </div>
       {hasBadges ? (
         <div className="flex flex-wrap items-center gap-1.5">
-          {team.partial ? <TeamStatusBadge status={team.status} partial /> : null}
+          {team.status !== 'done' || team.partial ? (
+            <TeamStatusBadge status={team.status} partial={team.partial} />
+          ) : null}
           <TeamWarningBadges warnings={team.warnings} />
         </div>
       ) : null}
+    </>
+  )
+  const className =
+    'flex flex-col gap-[9px] rounded-card border border-line bg-surface px-[13px] py-3 no-underline'
+  return team.status === 'done' ? (
+    <Link to={`/team/${team.team_id}`} className={className}>
+      {content}
     </Link>
+  ) : (
+    <article className={className}>{content}</article>
   )
 }

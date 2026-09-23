@@ -83,7 +83,7 @@ export function describeStatus(status: EvaluationStatus, partial: boolean): Stat
       icon: CircleX,
       tone: 'critical',
       label: statusLabel(status),
-      description: 'Оценка не удалась — подробности на странице команды.',
+      description: 'Оценка не удалась. Повторный запуск доступен оператору.',
     }
   }
   if (status === 'running') {

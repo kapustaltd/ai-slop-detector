@@ -5,9 +5,9 @@ The GitHub Actions workflow builds `web/dist`, then deploys it over SSH to
 `/var/www/ai-slop-detector/releases/<commit-sha>` and mirrors the active release into the
 Docker bind-mounted document root `/opt/hackathon/dist`.
 
-The static site and a small registry API are deployed separately. Evaluation still runs through
-the pipeline CLI (`agent/cmd/runner`), which reads the registry YAML before a run and writes the
-data bundle into `web/data/` before the build.
+The static site and registry API are deployed separately. With automatic evaluation enabled,
+the API runs the existing pipeline for each new active team and serves the published result at
+`/api/bundle/`. Without a configured provider, it shows the registered team as unevaluated.
 
 The registry API serves `GET` and `POST /api/teams` without a token so visitors can add a team.
 `PUT` and `DELETE` require `REGISTRY_API_TOKEN` and are disabled when it is unset. Public additions
@@ -39,7 +39,26 @@ Build `agent/cmd/registry-api` for the server, install it as
 `/var/lib/ai-slop-detector/registry.yaml` with `version: "1"` and `teams: []`, owned by the
 `ai-slop-detector` service account. Enable the service and proxy `/api/teams` through Nginx to
 `172.17.0.1:8082` on the current Docker bridge (or `127.0.0.1:8082` on host Nginx). The sample
-configuration is `deploy/nginx.docker.conf.example`. Keep `/api/v1/` routed to the web runner.
+configuration is `deploy/nginx.docker.conf.example`. Proxy `/api/bundle/` to the same service.
+
+### Enable automatic evaluation
+
+Install the current `registry-api` binary and the revised systemd unit from
+`deploy/registry-api.service.example`. The service account needs write access to
+`/var/lib/ai-slop-detector`. The unit reads `/etc/ai-slop-detector/registry-bridge.env`, containing
+only `WEB_RUNNER_TOKEN` with the same value configured for the web runner, and delegates model work to the internal web runner at
+`127.0.0.1:8081`. The token stays server-side. Configure model credentials and model selection
+on that existing runner service; the registry API needs no model key or CLI.
+
+The bridge submits one team at a time, limits automatic starts to ten per UTC day (persisted in
+`/var/lib/ai-slop-detector/evaluation-budget.json`). The web runner keeps run artifacts under
+`runs/` and publishes successful team bundles under `public/`. On startup the bridge queues active registered teams
+that have no published result, including teams added before this update. Use
+`GET /api/bundle/index` to check their states. A server restart does not reset the daily limit.
+
+Update the mounted Nginx configuration and reload Nginx after verifying the new route. The
+frontend also supports the older registry API: it shows registered teams with “Нет данных” until
+the live bundle route and worker are deployed.
 
 The first deploy creates the release directory. To prepare it explicitly:
 

@@ -18,6 +18,7 @@ type Server struct {
 	registryPath string
 	token        string
 	writeMu      sync.Mutex
+	evaluation   *evaluationService
 }
 
 func New(registryPath, token string) (*Server, error) {
@@ -36,6 +37,9 @@ func (s *Server) Handler() http.Handler {
 		w.WriteHeader(http.StatusNoContent)
 	})
 	mux.HandleFunc("GET /api/teams", s.listTeams)
+	mux.HandleFunc("GET /api/bundle/index", s.liveIndex)
+	mux.HandleFunc("GET /api/bundle/stats", s.liveStats)
+	mux.HandleFunc("GET /api/bundle/teams/{id}", s.liveTeam)
 	mux.HandleFunc("POST /api/teams", s.createTeam)
 	mux.HandleFunc("PUT /api/teams/{id}", s.updateTeam)
 	mux.HandleFunc("DELETE /api/teams/{id}", s.deleteTeam)
@@ -44,7 +48,7 @@ func (s *Server) Handler() http.Handler {
 
 func (s *Server) authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/healthz" || (r.URL.Path == "/api/teams" && (r.Method == http.MethodGet || r.Method == http.MethodPost)) {
+		if r.URL.Path == "/healthz" || (r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/bundle/")) || (r.URL.Path == "/api/teams" && (r.Method == http.MethodGet || r.Method == http.MethodPost)) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -94,6 +98,9 @@ func (s *Server) createTeam(w http.ResponseWriter, r *http.Request) {
 		}
 		writeError(w, http.StatusBadRequest, "Проверьте ID, название, URL и ветку")
 		return
+	}
+	if s.evaluation != nil && team.Active {
+		s.evaluation.enqueue(team.ID)
 	}
 	writeJSON(w, http.StatusCreated, team)
 }

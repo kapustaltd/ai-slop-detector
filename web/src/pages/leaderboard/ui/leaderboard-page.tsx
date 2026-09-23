@@ -28,21 +28,31 @@ function readIndex() {
 }
 
 export function LeaderboardPage() {
-  const [index, setIndex] = useState<LeaderboardIndexStub | null>(readIndex)
+  const [index, setIndex] = useState<LeaderboardIndexStub | null>(() =>
+    import.meta.env.PROD ? null : readIndex(),
+  )
   const [loadFailed, setLoadFailed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     let cancelled = false
-    void loadLeaderboardIndex()
-      .then((freshIndex) => {
-        if (!cancelled) setIndex(freshIndex)
-      })
-      .catch(() => {
-        if (!cancelled) setLoadFailed(true)
-      })
+    const refresh = () => {
+      void loadLeaderboardIndex()
+        .then((freshIndex) => {
+          if (!cancelled) {
+            setIndex(freshIndex)
+            setLoadFailed(false)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setLoadFailed(true)
+        })
+    }
+    refresh()
+    const timer = window.setInterval(refresh, 10000)
     return () => {
       cancelled = true
+      window.clearInterval(timer)
     }
   }, [])
 
@@ -75,7 +85,12 @@ export function LeaderboardPage() {
     )
   }
 
-  if (!index) return null
+  if (!index)
+    return (
+      <main className="mx-auto max-w-[1600px] p-6" aria-busy="true">
+        Загружаем рейтинг…
+      </main>
+    )
 
   const builtAt = index.meta?.built_at ?? index.built_at
 
@@ -102,11 +117,17 @@ export function LeaderboardPage() {
 
       <DisclaimerBanner />
 
+      {loadFailed ? (
+        <p role="status" className="text-sm text-warn-fg">
+          Не удалось обновить рейтинг. Показываем последние загруженные данные.
+        </p>
+      ) : null}
+
       {total === 0 ? (
         <EmptyState
           icon={BarChart3}
           title="Оценок пока нет"
-          description="Конвейер ещё не отработал ни по одной команде. Страница обновится, когда появится первый набор файлов — перезагружать вручную не нужно."
+          description="В реестре пока нет активных команд. После добавления команда появится здесь, а оценка — по завершении обработки."
         />
       ) : (
         <>

@@ -20,13 +20,41 @@ describe('доступ к дата-бандлу', () => {
     await expect(loadLeaderboardIndex()).resolves.toEqual(getLeaderboardIndex())
   })
 
-  it('не обращается к сети: данные приходят импортом на сборке', async () => {
+  it('shows registry entries even before the server supports live bundles', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url === '/api/bundle/index'
+          ? new Response(null, { status: 404 })
+          : new Response(
+              JSON.stringify([
+                {
+                  id: 'new-team',
+                  name: 'New team',
+                  repo: 'https://github.com/example/new',
+                  branch: 'main',
+                  active: true,
+                },
+              ]),
+              { status: 200 },
+            ),
+      ),
+    )
+    try {
+      const index = await loadLeaderboardIndex()
+      expect(index.teams).toMatchObject([{ team_id: 'new-team', status: 'no_data', total: null }])
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('falls back to the build-time bundle when the live API is unavailable', async () => {
     const fetchSpy = vi.fn()
     vi.stubGlobal('fetch', fetchSpy)
     try {
       await loadLeaderboardIndex()
       await loadTeam('team-01')
-      expect(fetchSpy).not.toHaveBeenCalled()
+      expect(fetchSpy).toHaveBeenCalled()
     } finally {
       vi.unstubAllGlobals()
     }
