@@ -7,16 +7,16 @@ DESIGN.md: «строка узла одинакова на всех трёх у�
 
 ```ts
 interface TaxonomyRowProps {
-  level: 1 | 2 | 3               // категория | подкатегория | метрика
-  name: string
-  weight: number                  // вес внутри родителя (0..1)
-  score: number | null
-  contribution?: { value: number; ofTotal: number }  // «вклад 1.55 из 8.20» — только уровни 1–2
-  findingsCount?: number          // только уровни 1–2 («5 находок»)
-  confidence?: 'high' | 'medium' | 'low'  // только уровень 3
-  expanded: boolean
-  onToggle: () => void
-  className?: string
+  level: 1 | 2 | 3; // категория | подкатегория | метрика
+  name: string;
+  weight: number; // вес внутри родителя (0..1)
+  score: number | null;
+  contribution?: { value: number; ofTotal: number }; // «вклад 1.55 из 8.20» — только уровни 1–2
+  findingsCount?: number; // только уровни 1–2 («5 находок»)
+  confidence?: "high" | "medium" | "low"; // только уровень 3
+  expanded: boolean;
+  onToggle: () => void;
+  className?: string;
 }
 ```
 
@@ -28,9 +28,9 @@ interface TaxonomyRowProps {
 
 ```ts
 interface AnchorScaleProps {
-  anchors: { '2': string; '5': string; '8': string; '10': string }  // RubricMetric.anchors
-  score: number
-  className?: string
+  anchors: { "2": string; "5": string; "8": string; "10": string }; // RubricMetric.anchors
+  score: number;
+  className?: string;
 }
 ```
 
@@ -42,11 +42,11 @@ interface AnchorScaleProps {
 
 ```ts
 interface FindingCardProps {
-  finding: FindingView
-  density: 'summary' | 'expanded'   // строка (бейдж+заголовок+путь) | раскрытая (объяснение+код+рекомендация)
-  permalinkBase?: string            // SHA для «Открыть на <sha>»
-  onToggle?: () => void             // summary → expanded по клику
-  className?: string
+  finding: FindingView;
+  density: "summary" | "expanded"; // строка (бейдж+заголовок+путь) | раскрытая (объяснение+код+рекомендация)
+  permalinkBase?: string; // SHA для «Открыть на <sha>»
+  onToggle?: () => void; // summary → expanded по клику
+  className?: string;
 }
 ```
 
@@ -59,10 +59,10 @@ snippet.ts`), сворачиваемый при длинных фрагмент�
 
 ```ts
 interface SeverityBarProps {
-  counts: Record<'info' | 'minor' | 'major' | 'critical', number>
-  activeSeverity: 'all' | 'info' | 'minor' | 'major' | 'critical'
-  onSelect: (severity: 'all' | 'info' | 'minor' | 'major' | 'critical') => void
-  className?: string
+  counts: Record<"info" | "minor" | "major" | "critical", number>;
+  activeSeverity: "all" | "info" | "minor" | "major" | "critical";
+  onSelect: (severity: "all" | "info" | "minor" | "major" | "critical") => void;
+  className?: string;
 }
 ```
 
@@ -74,8 +74,8 @@ interface SeverityBarProps {
 
 ```ts
 interface TeamHeaderProps {
-  team: TeamBundle
-  rankContext: TeamRankContext   // data-model.md — rank/tiedWith/prev/next, может быть пустым
+  team: TeamBundle;
+  rankContext: TeamRankContext; // data-model.md — rank/tiedWith/prev/next, может быть пустым
 }
 ```
 
@@ -87,7 +87,7 @@ interface TeamHeaderProps {
 
 ```ts
 interface ScoreSummaryProps {
-  team: TeamBundle
+  team: TeamBundle;
 }
 ```
 
@@ -99,9 +99,9 @@ interface ScoreSummaryProps {
 
 ```ts
 interface AreaProfileProps {
-  areaName: 'backend' | 'frontend'
-  area: TeamArea
-  stats?: StatsBundle['areas'][number]   // может отсутствовать/insufficient_data
+  areaName: "backend" | "frontend";
+  area: TeamArea;
+  stats?: StatsBundle["areas"][number]; // может отсутствовать/insufficient_data
 }
 ```
 
@@ -114,9 +114,12 @@ Radar (recharts, перенос текущей реализации) + bar-vs-с
 
 ```ts
 interface FindingsSummaryProps {
-  counts: { strength: number; issue: number } & Record<'info'|'minor'|'major'|'critical', number>
-  filter: FindingsFilter
-  onFilterChange: (next: Partial<FindingsFilter>) => void
+  counts: { strength: number; issue: number } & Record<
+    "info" | "minor" | "major" | "critical",
+    number
+  >;
+  filter: FindingsFilter;
+  onFilterChange: (next: Partial<FindingsFilter>) => void;
 }
 ```
 
@@ -126,27 +129,27 @@ interface FindingsSummaryProps {
 
 ```ts
 interface TaxonomyTreeProps {
-  areaName: 'backend' | 'frontend'
-  area: TeamArea
-  rubric?: RubricBundle
-  path: TaxonomyPath
-  onPathChange: (next: TaxonomyPath) => void
-  findingsFilter: FindingsFilter
-  activeFindingSlug?: string
+  areaName: "backend" | "frontend";
+  area: TeamArea;
+  rubric?: RubricBundle;
+  path: TaxonomyPath;
+  onPathChange: (next: TaxonomyPath) => void;
+  findingsFilter: FindingsFilter;
+  activeFindingSlug?: string;
 }
 ```
 
 Композиция `TaxonomyRow` (категория/подкатегория) + на листе — `AnchorScale` + `FindingCard[]`
-(метрика). «Одновременно раскрыта одна ветка» (DESIGN.md) — раскрытие одного узла на уровне
-схлопывает братьев того же уровня; «Свернуть всё» (plan.md, пункт 2) — `onPathChange({ area:
-areaName })` (пустой `node`).
+(метрика). Раскрытые узлы хранятся независимо, поэтому открытие соседнего узла не
+схлопывает предыдущий. `TaxonomyPath` продолжает описывать активную ветку для URL; «Свернуть всё»
+очищает и локальные состояния, и `node` активной ветки.
 
 ## `widgets/evaluation-meta/ui/evaluation-meta.tsx` — `EvaluationMeta`
 
 ```ts
 interface EvaluationMetaProps {
-  team: TeamBundle
-  permalinkBase?: string   // SHA → ссылка на коммит (FR-017 #2)
+  team: TeamBundle;
+  permalinkBase?: string; // SHA → ссылка на коммит (FR-017 #2)
 }
 ```
 

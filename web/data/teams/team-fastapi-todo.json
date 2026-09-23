@@ -1,0 +1,2407 @@
+{
+  "bundle_schema": "0.1",
+  "built_at": "2026-09-23T15:46:55Z",
+  "team_id": "team-fastapi-todo",
+  "name": "FastAPI + Next.js Todo",
+  "status": "done",
+  "commit_sha": "6faee5f4314babfbfb3c5c144f17ee7ebb92db50",
+  "total": 4.2729125,
+  "partial": false,
+  "meta": {
+    "schema_version": "evaluation.v1",
+    "skill_version": "2.0.0",
+    "rubric_version": "backend.v1 + frontend.v1",
+    "model": "gpt-5.6-terra",
+    "evaluated_at": "2026-09-23T14:56:43Z"
+  },
+  "areas": {
+    "backend": {
+      "status": "done",
+      "score": 3.8506250000000004,
+      "max": 10,
+      "categories": [
+        {
+          "id": "architecture_structure",
+          "name": "Архитектура и структура",
+          "weight": 0.19,
+          "score": 2.6,
+          "subcategories": [
+            {
+              "id": "layers_boundaries",
+              "name": "Слои и границы",
+              "weight": 0.6,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "layer_separation",
+                  "name": "Разделение слоёв",
+                  "weight": 0.6,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Транспорт, модель, доступ к данным и инициализация БД объединены в одном модуле.",
+                  "rationale": "Сопоставление с якорем 2: Транспорт, модель, доступ к данным и инициализация БД объединены в одном модуле.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 18,
+                      "line_end": 43,
+                      "title": "Слои смешаны в main.py",
+                      "explanation": "ORM-модель, engine, создание таблиц и зависимости API находятся рядом с маршрутами.",
+                      "suggestion": "Вынести модели, конфигурацию БД, репозитории и маршруты в отдельные модули.",
+                      "link_status": "verified",
+                      "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)\n\n\n# engine is one for whole application\nconnection_string: str = str(setting.DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n\ndef create_tables():\n    SQLModel.metadata.create_all(engine)\n\n\ndef get_session():\n    with Session(engine) as session:\n        yield session\n\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    print('Creating Tables')\n    create_tables()",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L43"
+                    }
+                  ]
+                },
+                {
+                  "id": "module_boundaries",
+                  "name": "Границы модулей",
+                  "weight": 0.4,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Вся прикладная логика сосредоточена в единственном модуле main.py.",
+                  "rationale": "Сопоставление с якорем 2: Вся прикладная логика сосредоточена в единственном модуле main.py.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 18,
+                      "line_end": 107,
+                      "title": "Нет модульных границ",
+                      "explanation": "Один модуль одновременно определяет модель, подключение, lifespan и все CRUD-операции.",
+                      "suggestion": "Разделить приложение на модули API, сервиса, репозитория и моделей.",
+                      "link_status": "verified",
+                      "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)\n\n\n# engine is one for whole application\nconnection_string: str = str(setting.DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n\ndef create_tables():\n    SQLModel.metadata.create_all(engine)\n\n\ndef get_session():\n    with Session(engine) as session:\n        yield session\n\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    print('Creating Tables')\n    create_tables()\n    print(\"Tables Created\")\n    yield\n\n\napp: FastAPI = FastAPI(\n    lifespan=lifespan, title=\"dailyDo Todo App\", version='1.0.0')\n\n\n@app.get('/')\nasync def root():\n    return {\"message\": \"Welcome to dailyDo todo app\"}\n\n\n@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L107"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "project_organization",
+              "name": "Организация проекта",
+              "weight": 0.4,
+              "score": 3.5,
+              "metrics": [
+                {
+                  "id": "project_structure",
+                  "name": "Структура проекта",
+                  "weight": 0.5,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Каталоги пакета и тестов понятны, но код приложения практически не структурирован.",
+                  "rationale": "Сопоставление с якорем 5: Каталоги пакета и тестов понятны, но код приложения практически не структурирован.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "dailyDo-todo-app/tests/test_main.py",
+                      "line_start": 1,
+                      "line_end": 6,
+                      "title": "Тесты вынесены отдельно",
+                      "explanation": "Тесты расположены в выделенном каталоге и импортируют публичное приложение.",
+                      "link_status": "verified",
+                      "snippet": "from fastapi.testclient import TestClient\nfrom fastapi import FastAPI\nfrom dailydo_todo_app import setting\nfrom sqlmodel import SQLModel, create_engine, Session\nfrom dailydo_todo_app.main import app, get_session\nimport pytest",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/tests/test_main.py#L1-L6"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 18,
+                      "line_end": 107,
+                      "title": "Основная структура не масштабируется",
+                      "explanation": "Все серверные компоненты размещены в одном файле.",
+                      "suggestion": "Сгруппировать код по ответственности в предсказуемой структуре пакета.",
+                      "link_status": "verified",
+                      "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)\n\n\n# engine is one for whole application\nconnection_string: str = str(setting.DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n\ndef create_tables():\n    SQLModel.metadata.create_all(engine)\n\n\ndef get_session():\n    with Session(engine) as session:\n        yield session\n\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    print('Creating Tables')\n    create_tables()\n    print(\"Tables Created\")\n    yield\n\n\napp: FastAPI = FastAPI(\n    lifespan=lifespan, title=\"dailyDo Todo App\", version='1.0.0')\n\n\n@app.get('/')\nasync def root():\n    return {\"message\": \"Welcome to dailyDo todo app\"}\n\n\n@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L107"
+                    }
+                  ]
+                },
+                {
+                  "id": "dependency_direction",
+                  "name": "Направление зависимостей",
+                  "weight": 0.5,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Направление зависимостей не отделено: HTTP-обработчики напрямую используют SQLModel Session и запросы.",
+                  "rationale": "Сопоставление с якорем 2: Направление зависимостей не отделено: HTTP-обработчики напрямую используют SQLModel Session и запросы.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 57,
+                      "line_end": 103,
+                      "title": "Маршруты зависят от слоя хранения",
+                      "explanation": "Каждый CRUD-обработчик формирует ORM-запросы и управляет commit напрямую.",
+                      "suggestion": "Ввести слой репозиториев или сервисов и передавать его в маршруты через зависимости.",
+                      "link_status": "verified",
+                      "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:\n        session.delete(todo)\n        session.commit()",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L103"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "code_quality_readability",
+          "name": "Качество кода и читаемость",
+          "weight": 0.16,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "readability",
+              "name": "Читаемость",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "naming_clarity",
+                  "name": "Ясность имён",
+                  "weight": 0.5,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Большинство имён понятны, однако get_all и id недостаточно точно отражают назначение.",
+                  "rationale": "Сопоставление с якорем 5: Большинство имён понятны, однако get_all и id недостаточно точно отражают назначение.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 65,
+                      "line_end": 76,
+                      "title": "Часть имён слишком общая",
+                      "explanation": "get_all и параметр id не образуют единый точный язык домена.",
+                      "suggestion": "Использовать имена list_todos и todo_id.",
+                      "link_status": "verified",
+                      "snippet": "@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L65-L76"
+                    }
+                  ]
+                },
+                {
+                  "id": "function_complexity",
+                  "name": "Сложность функций",
+                  "weight": 0.5,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "CRUD-функции короткие, но повторяют поиск сущности, ветвление и управление транзакцией.",
+                  "rationale": "Сопоставление с якорем 5: CRUD-функции короткие, но повторяют поиск сущности, ветвление и управление транзакцией.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 74,
+                      "line_end": 107,
+                      "title": "Повторяющаяся CRUD-сложность в обработчиках",
+                      "explanation": "Получение Todo, проверка отсутствия и commit реализованы непосредственно в нескольких маршрутах.",
+                      "suggestion": "Вынести повторяющиеся операции в сервис или репозиторий.",
+                      "link_status": "verified",
+                      "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:\n        session.delete(todo)\n        session.commit()\n        # session.refresh(todo)\n        return {\"message\": \"Task successfully deleted\"}\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L107"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "maintainability",
+              "name": "Сопровождаемость",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "duplication",
+                  "name": "Дублирование",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Локально заметно дублирование SQL-поиска и большого закомментированного тестового шаблона.",
+                  "rationale": "Сопоставление с якорем 5: Локально заметно дублирование SQL-поиска и большого закомментированного тестового шаблона.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 74,
+                      "line_end": 101,
+                      "title": "Дублируется поиск Todo по идентификатору",
+                      "explanation": "Одинаковый select(...where(...)).first() повторён в чтении, обновлении и удалении.",
+                      "suggestion": "Добавить общий метод получения Todo или репозиторий.",
+                      "link_status": "verified",
+                      "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L101"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/tests/test_main.py",
+                      "line_start": 43,
+                      "line_end": 49,
+                      "title": "Закомментированный шаблон повторён в тестах",
+                      "explanation": "Неиспользуемые блоки настройки клиента копируются в нескольких тестах.",
+                      "suggestion": "Удалить закомментированный код и оставить общую fixture.",
+                      "link_status": "verified",
+                      "snippet": "def test_create_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/tests/test_main.py#L43-L49"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reliability_error_handling",
+          "name": "Надёжность и обработка ошибок",
+          "weight": 0.15,
+          "score": 2.8775000000000004,
+          "subcategories": [
+            {
+              "id": "error_handling",
+              "name": "Обработка ошибок",
+              "weight": 0.65,
+              "score": 3.35,
+              "metrics": [
+                {
+                  "id": "error_propagation",
+                  "name": "Распространение ошибок",
+                  "weight": 0.55,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Ошибки БД при commit, refresh и запросах не перехватываются и не переводятся в контракт API.",
+                  "rationale": "Сопоставление с якорем 2: Ошибки БД при commit, refresh и запросах не перехватываются и не переводятся в контракт API.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 57,
+                      "line_end": 62,
+                      "title": "Сбои записи не обрабатываются",
+                      "explanation": "commit и refresh выполняются без rollback и без контролируемого ответа при ошибке БД.",
+                      "suggestion": "Перехватывать ошибки хранения, выполнять rollback и возвращать безопасную HTTP-ошибку.",
+                      "link_status": "verified",
+                      "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L62"
+                    }
+                  ]
+                },
+                {
+                  "id": "failure_messages",
+                  "name": "Сообщения об ошибках",
+                  "weight": 0.45,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Для отсутствующих задач возвращается 404 с понятным сообщением, но прочие ошибки не имеют безопасного контракта.",
+                  "rationale": "Сопоставление с якорем 5: Для отсутствующих задач возвращается 404 с понятным сообщением, но прочие ошибки не имеют безопасного контракта.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 74,
+                      "line_end": 80,
+                      "title": "Отсутствующая задача явно обозначена",
+                      "explanation": "Маршрут чтения возвращает HTTP 404 с сообщением вместо пустого успешного ответа.",
+                      "link_status": "verified",
+                      "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L80"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 57,
+                      "line_end": 62,
+                      "title": "Нет сообщений для отказов хранилища",
+                      "explanation": "Ошибки записи остаются необработанными.",
+                      "suggestion": "Определить единый безопасный формат ошибок для отказов БД.",
+                      "link_status": "verified",
+                      "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L62"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "observability",
+              "name": "Наблюдаемость",
+              "weight": 0.35,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "logging",
+                  "name": "Логирование",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Ключевые операции и отказы не логируются; используются только print при старте.",
+                  "rationale": "Сопоставление с якорем 2: Ключевые операции и отказы не логируются; используются только print при старте.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 40,
+                      "line_end": 45,
+                      "title": "Наблюдаемость ограничена print",
+                      "explanation": "Создание таблиц выводится в stdout, а CRUD-операции и ошибки БД не журналируются.",
+                      "suggestion": "Настроить структурированный logger и журналировать старт, ошибки и значимые операции.",
+                      "link_status": "verified",
+                      "snippet": "@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    print('Creating Tables')\n    create_tables()\n    print(\"Tables Created\")\n    yield",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L40-L45"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "api_design",
+          "name": "Дизайн API",
+          "weight": 0.14,
+          "score": 6.35,
+          "subcategories": [
+            {
+              "id": "api_contract",
+              "name": "Контракт",
+              "weight": 0.55,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "api_contract_quality",
+                  "name": "Качество контракта",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "CRUD-маршруты согласованы по ресурсам, но модели создания и ответа не разделены, а успешные коды не заданы явно.",
+                  "rationale": "Сопоставление с якорем 5: CRUD-маршруты согласованы по ресурсам, но модели создания и ответа не разделены, а успешные коды не заданы явно.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 57,
+                      "line_end": 105,
+                      "title": "Контракт CRUD описан неполно",
+                      "explanation": "POST возвращает стандартный 200, PUT/DELETE не имеют response_model или явных status_code.",
+                      "suggestion": "Ввести отдельные DTO и явно определить коды и схемы ответов для всех операций.",
+                      "link_status": "verified",
+                      "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:\n        session.delete(todo)\n        session.commit()\n        # session.refresh(todo)\n        return {\"message\": \"Task successfully deleted\"}",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L105"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "api_behavior",
+              "name": "Поведение",
+              "weight": 0.45,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "input_validation",
+                  "name": "Валидация входа",
+                  "weight": 1,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Граница API валидирует типы и длину content через SQLModel, включая path-параметр id.",
+                  "rationale": "Сопоставление с якорем 8: Граница API валидирует типы и длину content через SQLModel, включая path-параметр id.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 18,
+                      "line_end": 21,
+                      "title": "Поля Todo валидируются схемой",
+                      "explanation": "content ограничен min_length/max_length, а is_completed имеет булев тип.",
+                      "link_status": "verified",
+                      "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L21"
+                    },
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 74,
+                      "line_end": 75,
+                      "title": "Идентификатор маршрута типизирован",
+                      "explanation": "FastAPI валидирует path-параметр как int.",
+                      "link_status": "verified",
+                      "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L75"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "data_work",
+          "name": "Работа с данными",
+          "weight": 0.12,
+          "score": 3.5,
+          "subcategories": [
+            {
+              "id": "data_model",
+              "name": "Модель данных",
+              "weight": 0.5,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "data_model_design",
+                  "name": "Схема данных и миграции",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Есть только первичный ключ и индекс; миграции отсутствуют, а схема создаётся автоматически при старте.",
+                  "rationale": "Сопоставление с якорем 2: Есть только первичный ключ и индекс; миграции отсутствуют, а схема создаётся автоматически при старте.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 18,
+                      "line_end": 32,
+                      "title": "Схема не управляется миграциями",
+                      "explanation": "create_all создаёт таблицы из метаданных, истории и воспроизводимого механизма изменений схемы нет.",
+                      "suggestion": "Добавить версионируемые миграции и применять их отдельно от запуска приложения.",
+                      "link_status": "verified",
+                      "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)\n\n\n# engine is one for whole application\nconnection_string: str = str(setting.DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n\ndef create_tables():\n    SQLModel.metadata.create_all(engine)",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L32"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "data_access",
+              "name": "Доступ к данным",
+              "weight": 0.5,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "query_correctness",
+                  "name": "Корректность запросов",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Основные запросы параметризованы ORM и изменения фиксируются, но транзакционные ошибки не обрабатываются.",
+                  "rationale": "Сопоставление с якорем 5: Основные запросы параметризованы ORM и изменения фиксируются, но транзакционные ошибки не обрабатываются.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 83,
+                      "line_end": 92,
+                      "title": "Обновление выполняется в сессии",
+                      "explanation": "Сущность ищется ORM-запросом, затем изменение фиксируется commit.",
+                      "link_status": "verified",
+                      "snippet": "@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L83-L92"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 57,
+                      "line_end": 62,
+                      "title": "Нет границы ошибки транзакции",
+                      "explanation": "При ошибке commit отсутствует rollback.",
+                      "suggestion": "Обернуть запись в транзакционную обработку с rollback при исключении.",
+                      "link_status": "verified",
+                      "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L62"
+                    }
+                  ]
+                },
+                {
+                  "id": "data_access_efficiency",
+                  "name": "Эффективность доступа",
+                  "weight": 0.4,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "content индексируется, но список задач выбирается целиком без пагинации и ограничений.",
+                  "rationale": "Сопоставление с якорем 5: content индексируется, но список задач выбирается целиком без пагинации и ограничений.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 18,
+                      "line_end": 20,
+                      "title": "Индекс не покрывает основной сценарий списка",
+                      "explanation": "Индекс задан для content, тогда как GET /todos/ загружает все записи без limit/offset.",
+                      "suggestion": "Добавить пагинацию и выбрать индексы по подтверждённым сценариям запросов.",
+                      "link_status": "verified",
+                      "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L20"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 65,
+                      "line_end": 67,
+                      "title": "Список задач не ограничен",
+                      "explanation": "select(Todo).all() может вернуть весь набор данных.",
+                      "suggestion": "Поддержать limit/offset или cursor-пагинацию.",
+                      "link_status": "verified",
+                      "snippet": "@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L65-L67"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "security",
+          "name": "Безопасность",
+          "weight": 0.14,
+          "score": 3.6500000000000004,
+          "subcategories": [
+            {
+              "id": "access_control",
+              "name": "Контроль доступа",
+              "weight": 0.45,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "authn_authz",
+                  "name": "Аутентификация и авторизация",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Все операции чтения и изменения доступны без аутентификации и проверки прав.",
+                  "rationale": "Сопоставление с якорем 2: Все операции чтения и изменения доступны без аутентификации и проверки прав.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "critical",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 57,
+                      "line_end": 107,
+                      "title": "CRUD-операции не защищены",
+                      "explanation": "Маршруты не требуют пользователя и не проверяют владельца Todo.",
+                      "suggestion": "Добавить аутентификацию и проверку авторизации/владения для каждого маршрута.",
+                      "link_status": "verified",
+                      "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:\n        session.delete(todo)\n        session.commit()\n        # session.refresh(todo)\n        return {\"message\": \"Task successfully deleted\"}\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L107"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "data_input_protection",
+              "name": "Защита данных и ввода",
+              "weight": 0.55,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "secrets_handling",
+                  "name": "Работа с секретами",
+                  "weight": 0.5,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Конфигурация читает значения из .env, но такой файл присутствует в рабочей копии; значение не раскрывается в отчёте.",
+                  "rationale": "Сопоставление с якорем 2: Конфигурация читает значения из .env, но такой файл присутствует в рабочей копии; значение не раскрывается в отчёте.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "dailyDo-todo-app/.env",
+                      "line_start": 1,
+                      "line_end": 3,
+                      "title": "Файл секретной конфигурации находится в репозитории",
+                      "explanation": "Содержимое намеренно не приводится; наличие .env вместе с загрузкой Config('.env') создаёт риск публикации учётных данных.",
+                      "suggestion": "Удалить .env из контроля версий, отозвать возможные раскрытые ключи и добавить value-free .env.example.",
+                      "link_status": "unverified"
+                    },
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/setting.py",
+                      "line_start": 4,
+                      "line_end": 10,
+                      "title": "URL БД загружается из конфигурации",
+                      "explanation": "Код получает DATABASE_URL через Config, а не содержит URL непосредственно в main.py.",
+                      "link_status": "verified",
+                      "snippet": "try:\n    config = Config(\".env\")\n\nexcept FileNotFoundError:\n    config = Config()\n\nDATABASE_URL = config(\"DATABASE_URL\", cast=Secret)",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/setting.py#L4-L10"
+                    }
+                  ]
+                },
+                {
+                  "id": "injection_protection",
+                  "name": "Защита от инъекций",
+                  "weight": 0.5,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Запросы строятся средствами SQLModel, а пользовательские значения не интерполируются в SQL.",
+                  "rationale": "Сопоставление с якорем 8: Запросы строятся средствами SQLModel, а пользовательские значения не интерполируются в SQL.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+                      "line_start": 74,
+                      "line_end": 76,
+                      "title": "Фильтр строится ORM",
+                      "explanation": "Идентификатор передаётся в выражение SQLModel вместо конкатенации SQL-строки.",
+                      "link_status": "verified",
+                      "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L76"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "testing",
+          "name": "Тестирование",
+          "weight": 0.1,
+          "score": 3.05,
+          "subcategories": [
+            {
+              "id": "test_content",
+              "name": "Содержание тестов",
+              "weight": 0.65,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "test_quality_and_coverage",
+                  "name": "Покрытие и качество тестов",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Проверены только успешные CRUD-сценарии; нет тестов валидации, 404, ошибок БД и изоляции состояния.",
+                  "rationale": "Сопоставление с якорем 2: Проверены только успешные CRUD-сценарии; нет тестов валидации, 404, ошибок БД и изоляции состояния.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "dailyDo-todo-app/tests/test_main.py",
+                      "line_start": 43,
+                      "line_end": 127,
+                      "title": "Тестируются только успешные сценарии",
+                      "explanation": "Тесты создают и изменяют записи, но не покрывают несуществующие ресурсы, невалидный ввод и ошибки хранилища.",
+                      "suggestion": "Добавить изолированные тесты 404, validation error, отказов БД и очистки данных между тестами.",
+                      "link_status": "verified",
+                      "snippet": "def test_create_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n    test_todo = {\"content\":\"create todo test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    data = response.json()\n    assert response.status_code == 200\n    assert data[\"content\"] == test_todo[\"content\"]\n\n# Test-3 : get_all\ndef test_get_all(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n    test_todo = {\"content\":\"get all todos test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    data = response.json()\n\n    response = test_app.get('/todos/')\n    new_todo = response.json()[-1]\n    assert response.status_code == 200\n    assert new_todo[\"content\"] == test_todo[\"content\"]\n\n# Test-4 Sinlge todo\ndef test_get_single_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n\n    test_todo = {\"content\":\"get single todo test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    todo_id = response.json()[\"id\"]\n\n    res = test_app.get(f'/todos/{todo_id}')\n    data = res.json()\n    assert res.status_code == 200\n    assert data[\"content\"] == test_todo[\"content\"]\n\n# Test-5 : Edit Todo\ndef test_edit_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n\n    test_todo = {\"content\":\"edit todo test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    todo_id = response.json()[\"id\"]\n\n    edited_todo = {\"content\":\"We have edited this\", \"is_completed\":False}\n    response = test_app.put(f'/todos/{todo_id}',json=edited_todo)\n    data = response.json()\n    assert response.status_code == 200\n    assert data[\"content\"] == edited_todo[\"content\"]\n\n\n# Test-6 Delete todo\ndef test_delete_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n\n    test_todo = {\"content\":\"delete todo test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    todo_id = response.json()[\"id\"]",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/tests/test_main.py#L43-L127"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "test_runnability_area",
+              "name": "Запускаемость",
+              "weight": 0.35,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "test_runnability",
+                  "name": "Запускаемость тестов",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Зависимости и pytest объявлены, но тестам требуются внешняя TEST_DATABASE_URL и доступная PostgreSQL БД.",
+                  "rationale": "Сопоставление с якорем 5: Зависимости и pytest объявлены, но тестам требуются внешняя TEST_DATABASE_URL и доступная PostgreSQL БД.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "dailyDo-todo-app/tests/test_main.py",
+                      "line_start": 9,
+                      "line_end": 21,
+                      "title": "Тесты зависят от внешней БД",
+                      "explanation": "Fixture создаёт engine из TEST_DATABASE_URL и не предоставляет локальную тестовую конфигурацию.",
+                      "suggestion": "Использовать изолированную локальную БД или документированную test fixture и добавить value-free .env.example.",
+                      "link_status": "verified",
+                      "snippet": "connection_string: str = str(setting.TEST_DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n#========================================================================================\n# Refactor with pytest fixture\n# 1- Arrange, 2-Act, 3-Assert 4- Cleanup\n\n@pytest.fixture(scope=\"module\", autouse=True)\ndef get_db_session():\n    SQLModel.metadata.create_all(engine)\n    yield Session(engine)",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/tests/test_main.py#L9-L21"
+                    },
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "dailyDo-todo-app/pyproject.toml",
+                      "line_start": 8,
+                      "line_end": 15,
+                      "title": "Тестовые зависимости объявлены",
+                      "explanation": "pytest и httpx указаны в зависимостях проекта.",
+                      "link_status": "verified",
+                      "snippet": "[tool.poetry.dependencies]\npython = \"^3.12\"\nfastapi = \"^0.110.0\"\nuvicorn = \"^0.29.0\"\nsqlmodel = \"^0.0.16\"\npsycopg = {extras = [\"binary\"], version = \"^3.1.18\"}\npytest = \"^8.1.1\"\nhttpx = \"^0.27.0\"",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/pyproject.toml#L8-L15"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "layer_separation",
+          "name": "Разделение слоёв",
+          "weight": 0.6,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Транспорт, модель, доступ к данным и инициализация БД объединены в одном модуле.",
+          "rationale": "Сопоставление с якорем 2: Транспорт, модель, доступ к данным и инициализация БД объединены в одном модуле.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 18,
+              "line_end": 43,
+              "title": "Слои смешаны в main.py",
+              "explanation": "ORM-модель, engine, создание таблиц и зависимости API находятся рядом с маршрутами.",
+              "suggestion": "Вынести модели, конфигурацию БД, репозитории и маршруты в отдельные модули.",
+              "link_status": "verified",
+              "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)\n\n\n# engine is one for whole application\nconnection_string: str = str(setting.DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n\ndef create_tables():\n    SQLModel.metadata.create_all(engine)\n\n\ndef get_session():\n    with Session(engine) as session:\n        yield session\n\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    print('Creating Tables')\n    create_tables()",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L43"
+            }
+          ]
+        },
+        {
+          "id": "module_boundaries",
+          "name": "Границы модулей",
+          "weight": 0.4,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Вся прикладная логика сосредоточена в единственном модуле main.py.",
+          "rationale": "Сопоставление с якорем 2: Вся прикладная логика сосредоточена в единственном модуле main.py.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 18,
+              "line_end": 107,
+              "title": "Нет модульных границ",
+              "explanation": "Один модуль одновременно определяет модель, подключение, lifespan и все CRUD-операции.",
+              "suggestion": "Разделить приложение на модули API, сервиса, репозитория и моделей.",
+              "link_status": "verified",
+              "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)\n\n\n# engine is one for whole application\nconnection_string: str = str(setting.DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n\ndef create_tables():\n    SQLModel.metadata.create_all(engine)\n\n\ndef get_session():\n    with Session(engine) as session:\n        yield session\n\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    print('Creating Tables')\n    create_tables()\n    print(\"Tables Created\")\n    yield\n\n\napp: FastAPI = FastAPI(\n    lifespan=lifespan, title=\"dailyDo Todo App\", version='1.0.0')\n\n\n@app.get('/')\nasync def root():\n    return {\"message\": \"Welcome to dailyDo todo app\"}\n\n\n@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L107"
+            }
+          ]
+        },
+        {
+          "id": "project_structure",
+          "name": "Структура проекта",
+          "weight": 0.5,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Каталоги пакета и тестов понятны, но код приложения практически не структурирован.",
+          "rationale": "Сопоставление с якорем 5: Каталоги пакета и тестов понятны, но код приложения практически не структурирован.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "dailyDo-todo-app/tests/test_main.py",
+              "line_start": 1,
+              "line_end": 6,
+              "title": "Тесты вынесены отдельно",
+              "explanation": "Тесты расположены в выделенном каталоге и импортируют публичное приложение.",
+              "link_status": "verified",
+              "snippet": "from fastapi.testclient import TestClient\nfrom fastapi import FastAPI\nfrom dailydo_todo_app import setting\nfrom sqlmodel import SQLModel, create_engine, Session\nfrom dailydo_todo_app.main import app, get_session\nimport pytest",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/tests/test_main.py#L1-L6"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 18,
+              "line_end": 107,
+              "title": "Основная структура не масштабируется",
+              "explanation": "Все серверные компоненты размещены в одном файле.",
+              "suggestion": "Сгруппировать код по ответственности в предсказуемой структуре пакета.",
+              "link_status": "verified",
+              "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)\n\n\n# engine is one for whole application\nconnection_string: str = str(setting.DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n\ndef create_tables():\n    SQLModel.metadata.create_all(engine)\n\n\ndef get_session():\n    with Session(engine) as session:\n        yield session\n\n\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    print('Creating Tables')\n    create_tables()\n    print(\"Tables Created\")\n    yield\n\n\napp: FastAPI = FastAPI(\n    lifespan=lifespan, title=\"dailyDo Todo App\", version='1.0.0')\n\n\n@app.get('/')\nasync def root():\n    return {\"message\": \"Welcome to dailyDo todo app\"}\n\n\n@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L107"
+            }
+          ]
+        },
+        {
+          "id": "dependency_direction",
+          "name": "Направление зависимостей",
+          "weight": 0.5,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Направление зависимостей не отделено: HTTP-обработчики напрямую используют SQLModel Session и запросы.",
+          "rationale": "Сопоставление с якорем 2: Направление зависимостей не отделено: HTTP-обработчики напрямую используют SQLModel Session и запросы.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 57,
+              "line_end": 103,
+              "title": "Маршруты зависят от слоя хранения",
+              "explanation": "Каждый CRUD-обработчик формирует ORM-запросы и управляет commit напрямую.",
+              "suggestion": "Ввести слой репозиториев или сервисов и передавать его в маршруты через зависимости.",
+              "link_status": "verified",
+              "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:\n        session.delete(todo)\n        session.commit()",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L103"
+            }
+          ]
+        },
+        {
+          "id": "naming_clarity",
+          "name": "Ясность имён",
+          "weight": 0.5,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Большинство имён понятны, однако get_all и id недостаточно точно отражают назначение.",
+          "rationale": "Сопоставление с якорем 5: Большинство имён понятны, однако get_all и id недостаточно точно отражают назначение.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 65,
+              "line_end": 76,
+              "title": "Часть имён слишком общая",
+              "explanation": "get_all и параметр id не образуют единый точный язык домена.",
+              "suggestion": "Использовать имена list_todos и todo_id.",
+              "link_status": "verified",
+              "snippet": "@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L65-L76"
+            }
+          ]
+        },
+        {
+          "id": "function_complexity",
+          "name": "Сложность функций",
+          "weight": 0.5,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "CRUD-функции короткие, но повторяют поиск сущности, ветвление и управление транзакцией.",
+          "rationale": "Сопоставление с якорем 5: CRUD-функции короткие, но повторяют поиск сущности, ветвление и управление транзакцией.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 74,
+              "line_end": 107,
+              "title": "Повторяющаяся CRUD-сложность в обработчиках",
+              "explanation": "Получение Todo, проверка отсутствия и commit реализованы непосредственно в нескольких маршрутах.",
+              "suggestion": "Вынести повторяющиеся операции в сервис или репозиторий.",
+              "link_status": "verified",
+              "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:\n        session.delete(todo)\n        session.commit()\n        # session.refresh(todo)\n        return {\"message\": \"Task successfully deleted\"}\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L107"
+            }
+          ]
+        },
+        {
+          "id": "duplication",
+          "name": "Дублирование",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Локально заметно дублирование SQL-поиска и большого закомментированного тестового шаблона.",
+          "rationale": "Сопоставление с якорем 5: Локально заметно дублирование SQL-поиска и большого закомментированного тестового шаблона.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 74,
+              "line_end": 101,
+              "title": "Дублируется поиск Todo по идентификатору",
+              "explanation": "Одинаковый select(...where(...)).first() повторён в чтении, обновлении и удалении.",
+              "suggestion": "Добавить общий метод получения Todo или репозиторий.",
+              "link_status": "verified",
+              "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L101"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/tests/test_main.py",
+              "line_start": 43,
+              "line_end": 49,
+              "title": "Закомментированный шаблон повторён в тестах",
+              "explanation": "Неиспользуемые блоки настройки клиента копируются в нескольких тестах.",
+              "suggestion": "Удалить закомментированный код и оставить общую fixture.",
+              "link_status": "verified",
+              "snippet": "def test_create_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/tests/test_main.py#L43-L49"
+            }
+          ]
+        },
+        {
+          "id": "error_propagation",
+          "name": "Распространение ошибок",
+          "weight": 0.55,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Ошибки БД при commit, refresh и запросах не перехватываются и не переводятся в контракт API.",
+          "rationale": "Сопоставление с якорем 2: Ошибки БД при commit, refresh и запросах не перехватываются и не переводятся в контракт API.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 57,
+              "line_end": 62,
+              "title": "Сбои записи не обрабатываются",
+              "explanation": "commit и refresh выполняются без rollback и без контролируемого ответа при ошибке БД.",
+              "suggestion": "Перехватывать ошибки хранения, выполнять rollback и возвращать безопасную HTTP-ошибку.",
+              "link_status": "verified",
+              "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L62"
+            }
+          ]
+        },
+        {
+          "id": "failure_messages",
+          "name": "Сообщения об ошибках",
+          "weight": 0.45,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Для отсутствующих задач возвращается 404 с понятным сообщением, но прочие ошибки не имеют безопасного контракта.",
+          "rationale": "Сопоставление с якорем 5: Для отсутствующих задач возвращается 404 с понятным сообщением, но прочие ошибки не имеют безопасного контракта.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 74,
+              "line_end": 80,
+              "title": "Отсутствующая задача явно обозначена",
+              "explanation": "Маршрут чтения возвращает HTTP 404 с сообщением вместо пустого успешного ответа.",
+              "link_status": "verified",
+              "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L80"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 57,
+              "line_end": 62,
+              "title": "Нет сообщений для отказов хранилища",
+              "explanation": "Ошибки записи остаются необработанными.",
+              "suggestion": "Определить единый безопасный формат ошибок для отказов БД.",
+              "link_status": "verified",
+              "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L62"
+            }
+          ]
+        },
+        {
+          "id": "logging",
+          "name": "Логирование",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Ключевые операции и отказы не логируются; используются только print при старте.",
+          "rationale": "Сопоставление с якорем 2: Ключевые операции и отказы не логируются; используются только print при старте.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 40,
+              "line_end": 45,
+              "title": "Наблюдаемость ограничена print",
+              "explanation": "Создание таблиц выводится в stdout, а CRUD-операции и ошибки БД не журналируются.",
+              "suggestion": "Настроить структурированный logger и журналировать старт, ошибки и значимые операции.",
+              "link_status": "verified",
+              "snippet": "@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    print('Creating Tables')\n    create_tables()\n    print(\"Tables Created\")\n    yield",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L40-L45"
+            }
+          ]
+        },
+        {
+          "id": "api_contract_quality",
+          "name": "Качество контракта",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "CRUD-маршруты согласованы по ресурсам, но модели создания и ответа не разделены, а успешные коды не заданы явно.",
+          "rationale": "Сопоставление с якорем 5: CRUD-маршруты согласованы по ресурсам, но модели создания и ответа не разделены, а успешные коды не заданы явно.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 57,
+              "line_end": 105,
+              "title": "Контракт CRUD описан неполно",
+              "explanation": "POST возвращает стандартный 200, PUT/DELETE не имеют response_model или явных status_code.",
+              "suggestion": "Ввести отдельные DTO и явно определить коды и схемы ответов для всех операций.",
+              "link_status": "verified",
+              "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:\n        session.delete(todo)\n        session.commit()\n        # session.refresh(todo)\n        return {\"message\": \"Task successfully deleted\"}",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L105"
+            }
+          ]
+        },
+        {
+          "id": "input_validation",
+          "name": "Валидация входа",
+          "weight": 1,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Граница API валидирует типы и длину content через SQLModel, включая path-параметр id.",
+          "rationale": "Сопоставление с якорем 8: Граница API валидирует типы и длину content через SQLModel, включая path-параметр id.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 18,
+              "line_end": 21,
+              "title": "Поля Todo валидируются схемой",
+              "explanation": "content ограничен min_length/max_length, а is_completed имеет булев тип.",
+              "link_status": "verified",
+              "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L21"
+            },
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 74,
+              "line_end": 75,
+              "title": "Идентификатор маршрута типизирован",
+              "explanation": "FastAPI валидирует path-параметр как int.",
+              "link_status": "verified",
+              "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L75"
+            }
+          ]
+        },
+        {
+          "id": "data_model_design",
+          "name": "Схема данных и миграции",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Есть только первичный ключ и индекс; миграции отсутствуют, а схема создаётся автоматически при старте.",
+          "rationale": "Сопоставление с якорем 2: Есть только первичный ключ и индекс; миграции отсутствуют, а схема создаётся автоматически при старте.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 18,
+              "line_end": 32,
+              "title": "Схема не управляется миграциями",
+              "explanation": "create_all создаёт таблицы из метаданных, истории и воспроизводимого механизма изменений схемы нет.",
+              "suggestion": "Добавить версионируемые миграции и применять их отдельно от запуска приложения.",
+              "link_status": "verified",
+              "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)\n    is_completed: bool = Field(default=False)\n\n\n# engine is one for whole application\nconnection_string: str = str(setting.DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n\ndef create_tables():\n    SQLModel.metadata.create_all(engine)",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L32"
+            }
+          ]
+        },
+        {
+          "id": "query_correctness",
+          "name": "Корректность запросов",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Основные запросы параметризованы ORM и изменения фиксируются, но транзакционные ошибки не обрабатываются.",
+          "rationale": "Сопоставление с якорем 5: Основные запросы параметризованы ORM и изменения фиксируются, но транзакционные ошибки не обрабатываются.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 83,
+              "line_end": 92,
+              "title": "Обновление выполняется в сессии",
+              "explanation": "Сущность ищется ORM-запросом, затем изменение фиксируется commit.",
+              "link_status": "verified",
+              "snippet": "@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L83-L92"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 57,
+              "line_end": 62,
+              "title": "Нет границы ошибки транзакции",
+              "explanation": "При ошибке commit отсутствует rollback.",
+              "suggestion": "Обернуть запись в транзакционную обработку с rollback при исключении.",
+              "link_status": "verified",
+              "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L62"
+            }
+          ]
+        },
+        {
+          "id": "data_access_efficiency",
+          "name": "Эффективность доступа",
+          "weight": 0.4,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "content индексируется, но список задач выбирается целиком без пагинации и ограничений.",
+          "rationale": "Сопоставление с якорем 5: content индексируется, но список задач выбирается целиком без пагинации и ограничений.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 18,
+              "line_end": 20,
+              "title": "Индекс не покрывает основной сценарий списка",
+              "explanation": "Индекс задан для content, тогда как GET /todos/ загружает все записи без limit/offset.",
+              "suggestion": "Добавить пагинацию и выбрать индексы по подтверждённым сценариям запросов.",
+              "link_status": "verified",
+              "snippet": "class Todo (SQLModel, table=True):\n    id: int | None = Field(default=None, primary_key=True)\n    content: str = Field(index=True, min_length=3, max_length=54)",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L18-L20"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 65,
+              "line_end": 67,
+              "title": "Список задач не ограничен",
+              "explanation": "select(Todo).all() может вернуть весь набор данных.",
+              "suggestion": "Поддержать limit/offset или cursor-пагинацию.",
+              "link_status": "verified",
+              "snippet": "@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L65-L67"
+            }
+          ]
+        },
+        {
+          "id": "authn_authz",
+          "name": "Аутентификация и авторизация",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Все операции чтения и изменения доступны без аутентификации и проверки прав.",
+          "rationale": "Сопоставление с якорем 2: Все операции чтения и изменения доступны без аутентификации и проверки прав.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "critical",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 57,
+              "line_end": 107,
+              "title": "CRUD-операции не защищены",
+              "explanation": "Маршруты не требуют пользователя и не проверяют владельца Todo.",
+              "suggestion": "Добавить аутентификацию и проверку авторизации/владения для каждого маршрута.",
+              "link_status": "verified",
+              "snippet": "@app.post('/todos/', response_model=Todo)\nasync def create_todo(todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)\n    return todo\n\n\n@app.get('/todos/', response_model=list[Todo])\nasync def get_all(session: Annotated[Session, Depends(get_session)]):\n    todos = session.exec(select(Todo)).all()\n    if todos:\n        return todos\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if todo:\n        return todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No Task found\")\n\n\n@app.put('/todos/{id}')\nasync def edit_todo(id: int, todo: Todo, session: Annotated[Session, Depends(get_session)]):\n    existing_todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    if existing_todo:\n        existing_todo.content = todo.content\n        existing_todo.is_completed = todo.is_completed\n        session.add(existing_todo)\n        session.commit()\n        session.refresh(existing_todo)\n        return existing_todo\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")\n\n\n@app.delete('/todos/{id}')\nasync def delete_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()\n    # todo = session.get(Todo,id)\n    if todo:\n        session.delete(todo)\n        session.commit()\n        # session.refresh(todo)\n        return {\"message\": \"Task successfully deleted\"}\n    else:\n        raise HTTPException(status_code=404, detail=\"No task found\")",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L57-L107"
+            }
+          ]
+        },
+        {
+          "id": "secrets_handling",
+          "name": "Работа с секретами",
+          "weight": 0.5,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Конфигурация читает значения из .env, но такой файл присутствует в рабочей копии; значение не раскрывается в отчёте.",
+          "rationale": "Сопоставление с якорем 2: Конфигурация читает значения из .env, но такой файл присутствует в рабочей копии; значение не раскрывается в отчёте.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "dailyDo-todo-app/.env",
+              "line_start": 1,
+              "line_end": 3,
+              "title": "Файл секретной конфигурации находится в репозитории",
+              "explanation": "Содержимое намеренно не приводится; наличие .env вместе с загрузкой Config('.env') создаёт риск публикации учётных данных.",
+              "suggestion": "Удалить .env из контроля версий, отозвать возможные раскрытые ключи и добавить value-free .env.example.",
+              "link_status": "unverified"
+            },
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "dailyDo-todo-app/dailydo_todo_app/setting.py",
+              "line_start": 4,
+              "line_end": 10,
+              "title": "URL БД загружается из конфигурации",
+              "explanation": "Код получает DATABASE_URL через Config, а не содержит URL непосредственно в main.py.",
+              "link_status": "verified",
+              "snippet": "try:\n    config = Config(\".env\")\n\nexcept FileNotFoundError:\n    config = Config()\n\nDATABASE_URL = config(\"DATABASE_URL\", cast=Secret)",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/setting.py#L4-L10"
+            }
+          ]
+        },
+        {
+          "id": "injection_protection",
+          "name": "Защита от инъекций",
+          "weight": 0.5,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Запросы строятся средствами SQLModel, а пользовательские значения не интерполируются в SQL.",
+          "rationale": "Сопоставление с якорем 8: Запросы строятся средствами SQLModel, а пользовательские значения не интерполируются в SQL.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "dailyDo-todo-app/dailydo_todo_app/main.py",
+              "line_start": 74,
+              "line_end": 76,
+              "title": "Фильтр строится ORM",
+              "explanation": "Идентификатор передаётся в выражение SQLModel вместо конкатенации SQL-строки.",
+              "link_status": "verified",
+              "snippet": "@app.get('/todos/{id}', response_model=Todo)\nasync def get_single_todo(id: int, session: Annotated[Session, Depends(get_session)]):\n    todo = session.exec(select(Todo).where(Todo.id == id)).first()",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/dailydo_todo_app/main.py#L74-L76"
+            }
+          ]
+        },
+        {
+          "id": "test_quality_and_coverage",
+          "name": "Покрытие и качество тестов",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Проверены только успешные CRUD-сценарии; нет тестов валидации, 404, ошибок БД и изоляции состояния.",
+          "rationale": "Сопоставление с якорем 2: Проверены только успешные CRUD-сценарии; нет тестов валидации, 404, ошибок БД и изоляции состояния.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "dailyDo-todo-app/tests/test_main.py",
+              "line_start": 43,
+              "line_end": 127,
+              "title": "Тестируются только успешные сценарии",
+              "explanation": "Тесты создают и изменяют записи, но не покрывают несуществующие ресурсы, невалидный ввод и ошибки хранилища.",
+              "suggestion": "Добавить изолированные тесты 404, validation error, отказов БД и очистки данных между тестами.",
+              "link_status": "verified",
+              "snippet": "def test_create_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n    test_todo = {\"content\":\"create todo test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    data = response.json()\n    assert response.status_code == 200\n    assert data[\"content\"] == test_todo[\"content\"]\n\n# Test-3 : get_all\ndef test_get_all(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n    test_todo = {\"content\":\"get all todos test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    data = response.json()\n\n    response = test_app.get('/todos/')\n    new_todo = response.json()[-1]\n    assert response.status_code == 200\n    assert new_todo[\"content\"] == test_todo[\"content\"]\n\n# Test-4 Sinlge todo\ndef test_get_single_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n\n    test_todo = {\"content\":\"get single todo test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    todo_id = response.json()[\"id\"]\n\n    res = test_app.get(f'/todos/{todo_id}')\n    data = res.json()\n    assert res.status_code == 200\n    assert data[\"content\"] == test_todo[\"content\"]\n\n# Test-5 : Edit Todo\ndef test_edit_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n\n    test_todo = {\"content\":\"edit todo test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    todo_id = response.json()[\"id\"]\n\n    edited_todo = {\"content\":\"We have edited this\", \"is_completed\":False}\n    response = test_app.put(f'/todos/{todo_id}',json=edited_todo)\n    data = response.json()\n    assert response.status_code == 200\n    assert data[\"content\"] == edited_todo[\"content\"]\n\n\n# Test-6 Delete todo\ndef test_delete_todo(test_app):\n    # SQLModel.metadata.create_all(engine)\n    # with Session(engine) as session:\n    #     def db_session_ovrride():\n    #         return session\n    # app.dependency_overrides[get_session] = db_session_ovrride\n    # client = TestClient(app=app)\n\n    test_todo = {\"content\":\"delete todo test\", \"is_completed\":False}\n    response = test_app.post('/todos/',json=test_todo)\n    todo_id = response.json()[\"id\"]",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/tests/test_main.py#L43-L127"
+            }
+          ]
+        },
+        {
+          "id": "test_runnability",
+          "name": "Запускаемость тестов",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Зависимости и pytest объявлены, но тестам требуются внешняя TEST_DATABASE_URL и доступная PostgreSQL БД.",
+          "rationale": "Сопоставление с якорем 5: Зависимости и pytest объявлены, но тестам требуются внешняя TEST_DATABASE_URL и доступная PostgreSQL БД.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "dailyDo-todo-app/tests/test_main.py",
+              "line_start": 9,
+              "line_end": 21,
+              "title": "Тесты зависят от внешней БД",
+              "explanation": "Fixture создаёт engine из TEST_DATABASE_URL и не предоставляет локальную тестовую конфигурацию.",
+              "suggestion": "Использовать изолированную локальную БД или документированную test fixture и добавить value-free .env.example.",
+              "link_status": "verified",
+              "snippet": "connection_string: str = str(setting.TEST_DATABASE_URL).replace(\n    \"postgresql\", \"postgresql+psycopg\")\nengine = create_engine(connection_string, connect_args={\n                       \"sslmode\": \"require\"}, pool_recycle=300, pool_size=10, echo=True)\n\n#========================================================================================\n# Refactor with pytest fixture\n# 1- Arrange, 2-Act, 3-Assert 4- Cleanup\n\n@pytest.fixture(scope=\"module\", autouse=True)\ndef get_db_session():\n    SQLModel.metadata.create_all(engine)\n    yield Session(engine)",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/tests/test_main.py#L9-L21"
+            },
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "dailyDo-todo-app/pyproject.toml",
+              "line_start": 8,
+              "line_end": 15,
+              "title": "Тестовые зависимости объявлены",
+              "explanation": "pytest и httpx указаны в зависимостях проекта.",
+              "link_status": "verified",
+              "snippet": "[tool.poetry.dependencies]\npython = \"^3.12\"\nfastapi = \"^0.110.0\"\nuvicorn = \"^0.29.0\"\nsqlmodel = \"^0.0.16\"\npsycopg = {extras = [\"binary\"], version = \"^3.1.18\"}\npytest = \"^8.1.1\"\nhttpx = \"^0.27.0\"",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/backend/dailyDo-todo-app/pyproject.toml#L8-L15"
+            }
+          ]
+        }
+      ]
+    },
+    "frontend": {
+      "status": "done",
+      "score": 4.695200000000001,
+      "max": 10,
+      "categories": [
+        {
+          "id": "component_architecture",
+          "name": "Компонентная архитектура",
+          "weight": 0.2,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "decomposition",
+              "name": "Декомпозиция",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "component_design",
+                  "name": "Декомпозиция и переиспользование",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Основные части UI вынесены в отдельные компоненты, но обёртка модального окна объединяет варианты создания и редактирования через флаги.",
+                  "rationale": "Сопоставление с якорем 5: Основные части UI вынесены в отдельные компоненты, но обёртка модального окна объединяет варианты создания и редактирования через флаги.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/ui/Modal.tsx",
+                      "line_start": 16,
+                      "line_end": 28,
+                      "title": "Модальный компонент совмещает два сценария",
+                      "explanation": "Поведение определяется сочетанием Adding, Editing и task, вместо явного содержимого или отдельных обёрток.",
+                      "suggestion": "Передавайте содержимое формы через children либо выделите отдельные AddTaskModal и EditTaskModal.",
+                      "link_status": "verified",
+                      "snippet": "export function Modal({children, title, Adding, Editing, task}:{children:React.ReactNode, title:string, Adding?:boolean, Editing?:boolean, task:Todo}) {\n  return (\n    \u003cDialog\u003e\n      \u003cDialogTrigger asChild\u003e\n        {children}\n        \n      \u003c/DialogTrigger\u003e\n      \u003cDialogContent className=\"sm:max-w-[425px]\"\u003e\n        \u003cDialogHeader\u003e\n          \u003cDialogTitle\u003e{title}\u003c/DialogTitle\u003e\n        \u003c/DialogHeader\u003e\n        {Adding \u0026\u0026 \u003cAddTask/\u003e}\n        {Editing \u0026\u0026 \u003cEditTask task = {task} /\u003e}",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/ui/Modal.tsx#L16-L28"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "code_organization",
+              "name": "Организация кода",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "code_structure_and_concerns",
+                  "name": "Структура и разделение ответственности",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Структура app/components/actions понятна, но HTTP-доступ и его контракт смешаны с server actions и дублируются.",
+                  "rationale": "Сопоставление с якорем 5: Структура app/components/actions понятна, но HTTP-доступ и его контракт смешаны с server actions и дублируются.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/actions/actions.ts",
+                      "line_start": 16,
+                      "line_end": 22,
+                      "title": "HTTP-вызовы не выделены в слой API",
+                      "explanation": "Базовый URL, заголовки и обработка ответа повторяются в нескольких действиях.",
+                      "suggestion": "Вынесите запросы и типы ответов в модуль API, а server actions оставьте оркестраторами.",
+                      "link_status": "verified",
+                      "snippet": "    const response = await fetch(\"http://localhost:8000/todo/\", {\n      method: \"POST\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n      },\n      body: JSON.stringify({ content: new_todo }),\n    });",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/actions/actions.ts#L16-L22"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "state_data_management",
+          "name": "Управление состоянием и данными",
+          "weight": 0.16,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "state",
+              "name": "Состояние",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "state_management",
+                  "name": "Размещение и предсказуемость состояния",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Состояние форм локализовано в компонентах и обновление списка опирается на сервер, но результат мутаций не согласован с маршрутом страницы.",
+                  "rationale": "Сопоставление с якорем 5: Состояние форм локализовано в компонентах и обновление списка опирается на сервер, но результат мутаций не согласован с маршрутом страницы.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/actions/actions.ts",
+                      "line_start": 23,
+                      "line_end": 26,
+                      "title": "Инвалидируется несуществующий для страницы маршрут",
+                      "explanation": "После добавления вызывается revalidatePath('/todos'), тогда как экран определён в src/app/page.tsx для '/'.",
+                      "suggestion": "Инвалидируйте фактический маршрут списка и используйте единый путь во всех мутациях.",
+                      "link_status": "verified",
+                      "snippet": "    revalidatePath(\"/todos\");\n    const data = await response.json();\n    if (data.content) {\n      revalidatePath(\"/todos/\");",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/actions/actions.ts#L23-L26"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "server_data",
+              "name": "Работа с сервером",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "data_fetching",
+                  "name": "Получение данных",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Получение списка сосредоточено в серверном компоненте, а отключённый кеш делает обновления прямолинейными; общий API-клиент и единая стратегия обновления отсутствуют.",
+                  "rationale": "Сопоставление с якорем 5: Получение списка сосредоточено в серверном компоненте, а отключённый кеш делает обновления прямолинейными; общий API-клиент и единая стратегия обновления отсутствуют.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/TodoTable.tsx",
+                      "line_start": 5,
+                      "line_end": 10,
+                      "title": "Запрос списка не имеет общей абстракции данных",
+                      "explanation": "Компонент напрямую обращается к localhost и вручную приводит неявно типизированный JSON.",
+                      "suggestion": "Переместите запрос и проверку ответа в типизированный API-модуль и определите стратегию кеша и инвалидирования.",
+                      "link_status": "verified",
+                      "snippet": "export default async function TodoTable() {\n    const response = await fetch('http://localhost:8000/todos/',{\n        cache: 'no-store'\n    })\n    const data = await response.json()\n    const todo_list : Todo[] = data.sort((a:Todo,b:Todo)=\u003ea.id - b.id)",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/TodoTable.tsx#L5-L10"
+                    }
+                  ]
+                },
+                {
+                  "id": "async_states",
+                  "name": "Асинхронные состояния",
+                  "weight": 0.4,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Формы показывают pending-состояние и сообщения об ошибках, но у загрузки списка нет видимых состояний ошибки или пустых данных.",
+                  "rationale": "Сопоставление с якорем 5: Формы показывают pending-состояние и сообщения об ошибках, но у загрузки списка нет видимых состояний ошибки или пустых данных.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/TodoTable.tsx",
+                      "line_start": 5,
+                      "line_end": 10,
+                      "title": "Ошибки и пустой список не отображаются",
+                      "explanation": "Исключение fetch/json прерывает рендер, а пустой массив выводит таблицу без пояснения.",
+                      "suggestion": "Добавьте error/loading-границы и понятное empty-state для списка задач.",
+                      "link_status": "verified",
+                      "snippet": "export default async function TodoTable() {\n    const response = await fetch('http://localhost:8000/todos/',{\n        cache: 'no-store'\n    })\n    const data = await response.json()\n    const todo_list : Todo[] = data.sort((a:Todo,b:Todo)=\u003ea.id - b.id)",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/TodoTable.tsx#L5-L10"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "typing_contracts",
+          "name": "Типизация и контракты",
+          "weight": 0.14,
+          "score": 4.28,
+          "subcategories": [
+            {
+              "id": "type_strictness",
+              "name": "Строгость типов",
+              "weight": 0.6,
+              "score": 3.8,
+              "metrics": [
+                {
+                  "id": "type_strictness",
+                  "name": "Строгость типов",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Strict TypeScript включён и ключевые props типизированы, однако границы FormData и ответы fetch обходятся приведениями и неявным JSON.",
+                  "rationale": "Сопоставление с якорем 5: Strict TypeScript включён и ключевые props типизированы, однако границы FormData и ответы fetch обходятся приведениями и неявным JSON.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/EditTask.tsx",
+                      "line_start": 18,
+                      "line_end": 26,
+                      "title": "Значение формы принудительно приводится к строке",
+                      "explanation": "formData.get может вернуть null, но результат без проверки приводится к string.",
+                      "suggestion": "Проверьте тип и наличие значения до вызова action либо валидируйте форму схемой.",
+                      "link_status": "verified",
+                      "snippet": "  const handleChange = (e:React.ChangeEvent\u003cHTMLInputElement\u003e) =\u003e {\n    setValue(e.target.value)\n  }\n\n  const handleSubmit = (formData:FormData) =\u003e {\n    const id:number = task.id\n    const content:string = formData.get('edit_task') as string\n    const is_completed:boolean = task.is_completed\n    formAction({id,content,is_completed})",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/EditTask.tsx#L18-L26"
+                    }
+                  ]
+                },
+                {
+                  "id": "api_types",
+                  "name": "Типы API",
+                  "weight": 0.4,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Тип Todo описан вручную, а данные ответов API остаются неявно типизированными и не проверяются на границе.",
+                  "rationale": "Сопоставление с якорем 2: Тип Todo описан вручную, а данные ответов API остаются неявно типизированными и не проверяются на границе.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/TodoTable.tsx",
+                      "line_start": 6,
+                      "line_end": 10,
+                      "title": "Ответ API не имеет проверяемого контракта",
+                      "explanation": "response.json() используется как неявный any, затем вызывается sort без валидации структуры.",
+                      "suggestion": "Определите общий контракт ответов API и валидируйте JSON на границе перед использованием.",
+                      "link_status": "verified",
+                      "snippet": "    const response = await fetch('http://localhost:8000/todos/',{\n        cache: 'no-store'\n    })\n    const data = await response.json()\n    const todo_list : Todo[] = data.sort((a:Todo,b:Todo)=\u003ea.id - b.id)",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/TodoTable.tsx#L6-L10"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "component_boundaries",
+              "name": "Границы компонентов",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "props_contracts",
+                  "name": "Контракты props",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Основные компоненты объявляют типы props, но контракт Modal требует task даже для сценария добавления, где он не передаётся.",
+                  "rationale": "Сопоставление с якорем 5: Основные компоненты объявляют типы props, но контракт Modal требует task даже для сценария добавления, где он не передаётся.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/ui/Modal.tsx",
+                      "line_start": 16,
+                      "line_end": 16,
+                      "title": "Контракт props модального окна противоречит использованию",
+                      "explanation": "task объявлен обязательным, хотя Add Task открывает Modal без task.",
+                      "suggestion": "Сделайте task необязательным с discriminated union для режимов либо разделите компоненты.",
+                      "link_status": "verified",
+                      "snippet": "export function Modal({children, title, Adding, Editing, task}:{children:React.ReactNode, title:string, Adding?:boolean, Editing?:boolean, task:Todo}) {",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/ui/Modal.tsx#L16-L16"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "performance",
+          "name": "Производительность",
+          "weight": 0.12,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "rendering",
+              "name": "Рендеринг",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "render_efficiency",
+                  "name": "Эффективность рендеринга",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Список рендерится сервером, локальное состояние редактора изолировано, а явных дорогостоящих вычислений в UI не видно.",
+                  "rationale": "Сопоставление с якорем 5: Список рендерится сервером, локальное состояние редактора изолировано, а явных дорогостоящих вычислений в UI не видно.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/TodoTable.tsx",
+                      "line_start": 21,
+                      "line_end": 25,
+                      "title": "Список использует стабильный ключ",
+                      "explanation": "Каждая задача передаётся отдельному компоненту с key={task.id}.",
+                      "link_status": "verified",
+                      "snippet": "        \u003ctbody\u003e\n            {\n                todo_list.map((task:Todo)=\u003e(\n                    \u003cTask key={task.id} task={task}/\u003e\n                ))",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/TodoTable.tsx#L21-L25"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "loading",
+              "name": "Загрузка",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "bundle_and_assets",
+                  "name": "Бандл и ассеты",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Шрифт подключён через next/font, а интерактивные зависимости изолированы в client-компонентах; системный контроль размера бандла не подтверждён.",
+                  "rationale": "Сопоставление с якорем 5: Шрифт подключён через next/font, а интерактивные зависимости изолированы в client-компонентах; системный контроль размера бандла не подтверждён.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/app/layout.tsx",
+                      "line_start": 1,
+                      "line_end": 6,
+                      "title": "Шрифт подключён через Next.js",
+                      "explanation": "Inter импортируется из next/font/google, а не через ручную загрузку в разметке.",
+                      "link_status": "verified",
+                      "snippet": "import type { Metadata } from \"next\";\nimport { Inter } from \"next/font/google\";\nimport \"./globals.css\";\nimport { Toaster } from \"react-hot-toast\";\n\nconst inter = Inter({ subsets: [\"latin\"] });",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/app/layout.tsx#L1-L6"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "accessibility",
+          "name": "Доступность",
+          "weight": 0.12,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "semantics",
+              "name": "Семантика",
+              "weight": 0.55,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "semantic_accessibility",
+                  "name": "Семантика и ARIA",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Используются main, section, form и table, а диалог основан на доступном примитиве; у управляющих иконок нет собственных текстовых имён.",
+                  "rationale": "Сопоставление с якорем 5: Используются main, section, form и table, а диалог основан на доступном примитиве; у управляющих иконок нет собственных текстовых имён.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/Task.tsx",
+                      "line_start": 40,
+                      "line_end": 57,
+                      "title": "Кнопки с иконками не имеют доступных имён",
+                      "explanation": "Кнопки завершения и удаления содержат только SVG; tooltip есть только у завершения и не задаёт имя кнопки.",
+                      "suggestion": "Добавьте aria-label к каждой кнопке с иконкой и доступное описание действия.",
+                      "link_status": "verified",
+                      "snippet": "        \u003cToolTip tool_tip_content=\"Mark as completed\"\u003e\n          \u003cbutton onClick={handleStatus}\u003e\n            \u003cCiSquareCheck\n              size={28}\n              className={`${\n                task.is_completed ? \"text-green-500\" : \"text-gray-300\"\n              }`}\n            /\u003e\n          \u003c/button\u003e\n        \u003c/ToolTip\u003e\n\n        \u003cModal title=\"Edit Task\" Editing={true} task={task}\u003e\n          \u003cFiEdit size={24} className=\"text-blue-500\" /\u003e\n        \u003c/Modal\u003e\n\n        \u003cbutton onClick={handleDelete}\u003e\n        \u003cFiTrash2 size={24} className=\"text-red-600\" /\u003e\n        \u003c/button\u003e      ",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/Task.tsx#L40-L57"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "interaction",
+              "name": "Взаимодействие",
+              "weight": 0.45,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "keyboard_navigation",
+                  "name": "Навигация с клавиатуры",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Интерактивные действия реализованы нативными button, а модальный диалог использует Radix, но видимость и порядок фокуса у собственных кнопок не стандартизированы.",
+                  "rationale": "Сопоставление с якорем 5: Интерактивные действия реализованы нативными button, а модальный диалог использует Radix, но видимость и порядок фокуса у собственных кнопок не стандартизированы.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/ui/dialog.tsx",
+                      "line_start": 36,
+                      "line_end": 50,
+                      "title": "Диалог имеет доступную кнопку закрытия",
+                      "explanation": "Radix Dialog содержит нативный Close и скрытую текстовую подпись Close.",
+                      "link_status": "verified",
+                      "snippet": "  \u003cDialogPortal\u003e\n    \u003cDialogOverlay /\u003e\n    \u003cDialogPrimitive.Content\n      ref={ref}\n      className={cn(\n        \"fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg\",\n        className\n      )}\n      {...props}\n    \u003e\n      {children}\n      \u003cDialogPrimitive.Close className=\"absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground\"\u003e\n        \u003cX className=\"h-4 w-4\" /\u003e\n        \u003cspan className=\"sr-only\"\u003eClose\u003c/span\u003e\n      \u003c/DialogPrimitive.Close\u003e",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/ui/dialog.tsx#L36-L50"
+                    }
+                  ]
+                },
+                {
+                  "id": "contrast_and_focus",
+                  "name": "Контраст и фокус",
+                  "weight": 0.4,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Базовый Button и диалог содержат focus-visible/focus стили, но кнопки действий используют голые элементы без локального фокусного оформления.",
+                  "rationale": "Сопоставление с якорем 5: Базовый Button и диалог содержат focus-visible/focus стили, но кнопки действий используют голые элементы без локального фокусного оформления.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/Task.tsx",
+                      "line_start": 40,
+                      "line_end": 57,
+                      "title": "У кнопок действий не задан стиль фокуса",
+                      "explanation": "Кнопки завершения и удаления не используют общий Button и не имеют className с focus-visible состоянием.",
+                      "suggestion": "Используйте общий Button для иконок или добавьте заметные стили focus-visible к этим кнопкам.",
+                      "link_status": "verified",
+                      "snippet": "        \u003cToolTip tool_tip_content=\"Mark as completed\"\u003e\n          \u003cbutton onClick={handleStatus}\u003e\n            \u003cCiSquareCheck\n              size={28}\n              className={`${\n                task.is_completed ? \"text-green-500\" : \"text-gray-300\"\n              }`}\n            /\u003e\n          \u003c/button\u003e\n        \u003c/ToolTip\u003e\n\n        \u003cModal title=\"Edit Task\" Editing={true} task={task}\u003e\n          \u003cFiEdit size={24} className=\"text-blue-500\" /\u003e\n        \u003c/Modal\u003e\n\n        \u003cbutton onClick={handleDelete}\u003e\n        \u003cFiTrash2 size={24} className=\"text-red-600\" /\u003e\n        \u003c/button\u003e      ",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/Task.tsx#L40-L57"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ui_style_consistency",
+          "name": "Консистентность UI и стилей",
+          "weight": 0.12,
+          "score": 6.8,
+          "subcategories": [
+            {
+              "id": "style_system",
+              "name": "Система стилей",
+              "weight": 0.6,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "styling_consistency",
+                  "name": "Подход к стилям и консистентность",
+                  "weight": 1,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Tailwind-конфигурация связывает общие цветовые токены с CSS-переменными, а базовые UI-примитивы используют единый вариантный подход.",
+                  "rationale": "Сопоставление с якорем 8: Tailwind-конфигурация связывает общие цветовые токены с CSS-переменными, а базовые UI-примитивы используют единый вариантный подход.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "tailwind.config.ts",
+                      "line_start": 20,
+                      "line_end": 59,
+                      "title": "Определены общие дизайн-токены",
+                      "explanation": "Цвета и радиусы выводятся из CSS-переменных и доступны через единые Tailwind-имена.",
+                      "link_status": "verified",
+                      "snippet": "    extend: {\n      colors: {\n        border: \"hsl(var(--border))\",\n        input: \"hsl(var(--input))\",\n        ring: \"hsl(var(--ring))\",\n        background: \"hsl(var(--background))\",\n        foreground: \"hsl(var(--foreground))\",\n        primary: {\n          DEFAULT: \"hsl(var(--primary))\",\n          foreground: \"hsl(var(--primary-foreground))\",\n        },\n        secondary: {\n          DEFAULT: \"hsl(var(--secondary))\",\n          foreground: \"hsl(var(--secondary-foreground))\",\n        },\n        destructive: {\n          DEFAULT: \"hsl(var(--destructive))\",\n          foreground: \"hsl(var(--destructive-foreground))\",\n        },\n        muted: {\n          DEFAULT: \"hsl(var(--muted))\",\n          foreground: \"hsl(var(--muted-foreground))\",\n        },\n        accent: {\n          DEFAULT: \"hsl(var(--accent))\",\n          foreground: \"hsl(var(--accent-foreground))\",\n        },\n        popover: {\n          DEFAULT: \"hsl(var(--popover))\",\n          foreground: \"hsl(var(--popover-foreground))\",\n        },\n        card: {\n          DEFAULT: \"hsl(var(--card))\",\n          foreground: \"hsl(var(--card-foreground))\",\n        },\n      },\n      borderRadius: {\n        lg: \"var(--radius)\",\n        md: \"calc(var(--radius) - 2px)\",\n        sm: \"calc(var(--radius) - 4px)\",",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/tailwind.config.ts#L20-L59"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "responsiveness",
+              "name": "Адаптивность",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "responsiveness",
+                  "name": "Адаптивность",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Контент ограничен max-width, а диалог имеет responsive-ограничение, но у основной страницы и таблицы нет явной мобильной компоновки или отступов.",
+                  "rationale": "Сопоставление с якорем 5: Контент ограничен max-width, а диалог имеет responsive-ограничение, но у основной страницы и таблицы нет явной мобильной компоновки или отступов.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/app/page.tsx",
+                      "line_start": 8,
+                      "line_end": 18,
+                      "title": "Основной макет не задаёт мобильные отступы",
+                      "explanation": "Контейнер имеет max-width и внешнюю верхнюю границу, но не имеет горизонтальных padding для узких экранов.",
+                      "suggestion": "Добавьте адаптивные горизонтальные отступы и проверьте компоновку таблицы на узкой ширине.",
+                      "link_status": "verified",
+                      "snippet": "    \u003cmain className=\"max-w-5xl mx-auto mt-8\"\u003e\n      {/* Add Task Section */}\n      \u003csection\u003e\n        \u003cModal title=\"Add New Task\" Adding = {true}\u003e\n        \u003cButton variant=\"default\" className=\"w-full bg-teal-600 px-2 py-1 text-white uppercase text-lg\"\u003eAdd Task\u003c/Button\u003e\n        \u003c/Modal\u003e\n      \u003c/section\u003e\n\n      {/* Todo Table */}\n      \u003csection className=\"mt-4\"\u003e\n        \u003cTodoTable /\u003e",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/app/page.tsx#L8-L18"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "testing",
+          "name": "Тестирование",
+          "weight": 0.14,
+          "score": 2,
+          "subcategories": [
+            {
+              "id": "test_content",
+              "name": "Содержание тестов",
+              "weight": 0.6,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "test_quality_and_coverage",
+                  "name": "Покрытие и качество тестов",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "В авторском frontend-коде не обнаружены тестовые файлы; ключевые сценарии списка и мутаций не подтверждены тестами.",
+                  "rationale": "Сопоставление с якорем 2: В авторском frontend-коде не обнаружены тестовые файлы; ключевые сценарии списка и мутаций не подтверждены тестами.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/Task.tsx",
+                      "line_start": 12,
+                      "line_end": 33,
+                      "title": "Ключевые мутации не защищены UI-тестами",
+                      "explanation": "Обработчики смены статуса и удаления содержат пользовательскую логику, но тестов для неё в области нет.",
+                      "suggestion": "Добавьте компонентные тесты для добавления, редактирования, завершения, удаления и отображения ошибок.",
+                      "link_status": "verified",
+                      "snippet": "  const handleStatus = async () =\u003e {\n    const response = await status_change(\n      task.id,\n      task.content,\n      task.is_completed\n    );\n\n    if (response.status == \"success\") {\n      toast.success(response.message);\n    } else if (response.status == \"error\") {\n      toast.error(response.message);\n    }\n  };\n\n  const handleDelete = async () =\u003e {\n    const response = await delete_todo(task.id)\n    if(response.status == \"error\"){\n      toast.error(response.message)\n    } else {\n      toast.success(response.message)\n    }\n  }",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/Task.tsx#L12-L33"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "test_runnability_area",
+              "name": "Запускаемость",
+              "weight": 0.4,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "test_runnability",
+                  "name": "Запускаемость тестов",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "В package.json отсутствует скрипт test и не найдено конфигурации или тестов, поэтому воспроизводимый запуск не определён.",
+                  "rationale": "Сопоставление с якорем 2: В package.json отсутствует скрипт test и не найдено конфигурации или тестов, поэтому воспроизводимый запуск не определён.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "package.json",
+                      "line_start": 5,
+                      "line_end": 10,
+                      "title": "Не определён запуск тестов",
+                      "explanation": "Скрипты содержат dev, build, start и lint, но не test.",
+                      "suggestion": "Настройте тестовый раннер, добавьте скрипт test и зафиксируйте требуемую конфигурацию.",
+                      "link_status": "verified",
+                      "snippet": "  \"scripts\": {\n    \"dev\": \"next dev\",\n    \"build\": \"next build\",\n    \"start\": \"next start\",\n    \"lint\": \"next lint\"\n  },",
+                      "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/package.json#L5-L10"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "component_design",
+          "name": "Декомпозиция и переиспользование",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Основные части UI вынесены в отдельные компоненты, но обёртка модального окна объединяет варианты создания и редактирования через флаги.",
+          "rationale": "Сопоставление с якорем 5: Основные части UI вынесены в отдельные компоненты, но обёртка модального окна объединяет варианты создания и редактирования через флаги.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/ui/Modal.tsx",
+              "line_start": 16,
+              "line_end": 28,
+              "title": "Модальный компонент совмещает два сценария",
+              "explanation": "Поведение определяется сочетанием Adding, Editing и task, вместо явного содержимого или отдельных обёрток.",
+              "suggestion": "Передавайте содержимое формы через children либо выделите отдельные AddTaskModal и EditTaskModal.",
+              "link_status": "verified",
+              "snippet": "export function Modal({children, title, Adding, Editing, task}:{children:React.ReactNode, title:string, Adding?:boolean, Editing?:boolean, task:Todo}) {\n  return (\n    \u003cDialog\u003e\n      \u003cDialogTrigger asChild\u003e\n        {children}\n        \n      \u003c/DialogTrigger\u003e\n      \u003cDialogContent className=\"sm:max-w-[425px]\"\u003e\n        \u003cDialogHeader\u003e\n          \u003cDialogTitle\u003e{title}\u003c/DialogTitle\u003e\n        \u003c/DialogHeader\u003e\n        {Adding \u0026\u0026 \u003cAddTask/\u003e}\n        {Editing \u0026\u0026 \u003cEditTask task = {task} /\u003e}",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/ui/Modal.tsx#L16-L28"
+            }
+          ]
+        },
+        {
+          "id": "code_structure_and_concerns",
+          "name": "Структура и разделение ответственности",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Структура app/components/actions понятна, но HTTP-доступ и его контракт смешаны с server actions и дублируются.",
+          "rationale": "Сопоставление с якорем 5: Структура app/components/actions понятна, но HTTP-доступ и его контракт смешаны с server actions и дублируются.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/actions/actions.ts",
+              "line_start": 16,
+              "line_end": 22,
+              "title": "HTTP-вызовы не выделены в слой API",
+              "explanation": "Базовый URL, заголовки и обработка ответа повторяются в нескольких действиях.",
+              "suggestion": "Вынесите запросы и типы ответов в модуль API, а server actions оставьте оркестраторами.",
+              "link_status": "verified",
+              "snippet": "    const response = await fetch(\"http://localhost:8000/todo/\", {\n      method: \"POST\",\n      headers: {\n        \"Content-Type\": \"application/json\",\n      },\n      body: JSON.stringify({ content: new_todo }),\n    });",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/actions/actions.ts#L16-L22"
+            }
+          ]
+        },
+        {
+          "id": "state_management",
+          "name": "Размещение и предсказуемость состояния",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Состояние форм локализовано в компонентах и обновление списка опирается на сервер, но результат мутаций не согласован с маршрутом страницы.",
+          "rationale": "Сопоставление с якорем 5: Состояние форм локализовано в компонентах и обновление списка опирается на сервер, но результат мутаций не согласован с маршрутом страницы.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/actions/actions.ts",
+              "line_start": 23,
+              "line_end": 26,
+              "title": "Инвалидируется несуществующий для страницы маршрут",
+              "explanation": "После добавления вызывается revalidatePath('/todos'), тогда как экран определён в src/app/page.tsx для '/'.",
+              "suggestion": "Инвалидируйте фактический маршрут списка и используйте единый путь во всех мутациях.",
+              "link_status": "verified",
+              "snippet": "    revalidatePath(\"/todos\");\n    const data = await response.json();\n    if (data.content) {\n      revalidatePath(\"/todos/\");",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/actions/actions.ts#L23-L26"
+            }
+          ]
+        },
+        {
+          "id": "data_fetching",
+          "name": "Получение данных",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Получение списка сосредоточено в серверном компоненте, а отключённый кеш делает обновления прямолинейными; общий API-клиент и единая стратегия обновления отсутствуют.",
+          "rationale": "Сопоставление с якорем 5: Получение списка сосредоточено в серверном компоненте, а отключённый кеш делает обновления прямолинейными; общий API-клиент и единая стратегия обновления отсутствуют.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/TodoTable.tsx",
+              "line_start": 5,
+              "line_end": 10,
+              "title": "Запрос списка не имеет общей абстракции данных",
+              "explanation": "Компонент напрямую обращается к localhost и вручную приводит неявно типизированный JSON.",
+              "suggestion": "Переместите запрос и проверку ответа в типизированный API-модуль и определите стратегию кеша и инвалидирования.",
+              "link_status": "verified",
+              "snippet": "export default async function TodoTable() {\n    const response = await fetch('http://localhost:8000/todos/',{\n        cache: 'no-store'\n    })\n    const data = await response.json()\n    const todo_list : Todo[] = data.sort((a:Todo,b:Todo)=\u003ea.id - b.id)",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/TodoTable.tsx#L5-L10"
+            }
+          ]
+        },
+        {
+          "id": "async_states",
+          "name": "Асинхронные состояния",
+          "weight": 0.4,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Формы показывают pending-состояние и сообщения об ошибках, но у загрузки списка нет видимых состояний ошибки или пустых данных.",
+          "rationale": "Сопоставление с якорем 5: Формы показывают pending-состояние и сообщения об ошибках, но у загрузки списка нет видимых состояний ошибки или пустых данных.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/TodoTable.tsx",
+              "line_start": 5,
+              "line_end": 10,
+              "title": "Ошибки и пустой список не отображаются",
+              "explanation": "Исключение fetch/json прерывает рендер, а пустой массив выводит таблицу без пояснения.",
+              "suggestion": "Добавьте error/loading-границы и понятное empty-state для списка задач.",
+              "link_status": "verified",
+              "snippet": "export default async function TodoTable() {\n    const response = await fetch('http://localhost:8000/todos/',{\n        cache: 'no-store'\n    })\n    const data = await response.json()\n    const todo_list : Todo[] = data.sort((a:Todo,b:Todo)=\u003ea.id - b.id)",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/TodoTable.tsx#L5-L10"
+            }
+          ]
+        },
+        {
+          "id": "type_strictness",
+          "name": "Строгость типов",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Strict TypeScript включён и ключевые props типизированы, однако границы FormData и ответы fetch обходятся приведениями и неявным JSON.",
+          "rationale": "Сопоставление с якорем 5: Strict TypeScript включён и ключевые props типизированы, однако границы FormData и ответы fetch обходятся приведениями и неявным JSON.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/EditTask.tsx",
+              "line_start": 18,
+              "line_end": 26,
+              "title": "Значение формы принудительно приводится к строке",
+              "explanation": "formData.get может вернуть null, но результат без проверки приводится к string.",
+              "suggestion": "Проверьте тип и наличие значения до вызова action либо валидируйте форму схемой.",
+              "link_status": "verified",
+              "snippet": "  const handleChange = (e:React.ChangeEvent\u003cHTMLInputElement\u003e) =\u003e {\n    setValue(e.target.value)\n  }\n\n  const handleSubmit = (formData:FormData) =\u003e {\n    const id:number = task.id\n    const content:string = formData.get('edit_task') as string\n    const is_completed:boolean = task.is_completed\n    formAction({id,content,is_completed})",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/EditTask.tsx#L18-L26"
+            }
+          ]
+        },
+        {
+          "id": "api_types",
+          "name": "Типы API",
+          "weight": 0.4,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Тип Todo описан вручную, а данные ответов API остаются неявно типизированными и не проверяются на границе.",
+          "rationale": "Сопоставление с якорем 2: Тип Todo описан вручную, а данные ответов API остаются неявно типизированными и не проверяются на границе.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/TodoTable.tsx",
+              "line_start": 6,
+              "line_end": 10,
+              "title": "Ответ API не имеет проверяемого контракта",
+              "explanation": "response.json() используется как неявный any, затем вызывается sort без валидации структуры.",
+              "suggestion": "Определите общий контракт ответов API и валидируйте JSON на границе перед использованием.",
+              "link_status": "verified",
+              "snippet": "    const response = await fetch('http://localhost:8000/todos/',{\n        cache: 'no-store'\n    })\n    const data = await response.json()\n    const todo_list : Todo[] = data.sort((a:Todo,b:Todo)=\u003ea.id - b.id)",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/TodoTable.tsx#L6-L10"
+            }
+          ]
+        },
+        {
+          "id": "props_contracts",
+          "name": "Контракты props",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Основные компоненты объявляют типы props, но контракт Modal требует task даже для сценария добавления, где он не передаётся.",
+          "rationale": "Сопоставление с якорем 5: Основные компоненты объявляют типы props, но контракт Modal требует task даже для сценария добавления, где он не передаётся.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/ui/Modal.tsx",
+              "line_start": 16,
+              "line_end": 16,
+              "title": "Контракт props модального окна противоречит использованию",
+              "explanation": "task объявлен обязательным, хотя Add Task открывает Modal без task.",
+              "suggestion": "Сделайте task необязательным с discriminated union для режимов либо разделите компоненты.",
+              "link_status": "verified",
+              "snippet": "export function Modal({children, title, Adding, Editing, task}:{children:React.ReactNode, title:string, Adding?:boolean, Editing?:boolean, task:Todo}) {",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/ui/Modal.tsx#L16-L16"
+            }
+          ]
+        },
+        {
+          "id": "render_efficiency",
+          "name": "Эффективность рендеринга",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Список рендерится сервером, локальное состояние редактора изолировано, а явных дорогостоящих вычислений в UI не видно.",
+          "rationale": "Сопоставление с якорем 5: Список рендерится сервером, локальное состояние редактора изолировано, а явных дорогостоящих вычислений в UI не видно.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/TodoTable.tsx",
+              "line_start": 21,
+              "line_end": 25,
+              "title": "Список использует стабильный ключ",
+              "explanation": "Каждая задача передаётся отдельному компоненту с key={task.id}.",
+              "link_status": "verified",
+              "snippet": "        \u003ctbody\u003e\n            {\n                todo_list.map((task:Todo)=\u003e(\n                    \u003cTask key={task.id} task={task}/\u003e\n                ))",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/TodoTable.tsx#L21-L25"
+            }
+          ]
+        },
+        {
+          "id": "bundle_and_assets",
+          "name": "Бандл и ассеты",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Шрифт подключён через next/font, а интерактивные зависимости изолированы в client-компонентах; системный контроль размера бандла не подтверждён.",
+          "rationale": "Сопоставление с якорем 5: Шрифт подключён через next/font, а интерактивные зависимости изолированы в client-компонентах; системный контроль размера бандла не подтверждён.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/app/layout.tsx",
+              "line_start": 1,
+              "line_end": 6,
+              "title": "Шрифт подключён через Next.js",
+              "explanation": "Inter импортируется из next/font/google, а не через ручную загрузку в разметке.",
+              "link_status": "verified",
+              "snippet": "import type { Metadata } from \"next\";\nimport { Inter } from \"next/font/google\";\nimport \"./globals.css\";\nimport { Toaster } from \"react-hot-toast\";\n\nconst inter = Inter({ subsets: [\"latin\"] });",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/app/layout.tsx#L1-L6"
+            }
+          ]
+        },
+        {
+          "id": "semantic_accessibility",
+          "name": "Семантика и ARIA",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Используются main, section, form и table, а диалог основан на доступном примитиве; у управляющих иконок нет собственных текстовых имён.",
+          "rationale": "Сопоставление с якорем 5: Используются main, section, form и table, а диалог основан на доступном примитиве; у управляющих иконок нет собственных текстовых имён.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/Task.tsx",
+              "line_start": 40,
+              "line_end": 57,
+              "title": "Кнопки с иконками не имеют доступных имён",
+              "explanation": "Кнопки завершения и удаления содержат только SVG; tooltip есть только у завершения и не задаёт имя кнопки.",
+              "suggestion": "Добавьте aria-label к каждой кнопке с иконкой и доступное описание действия.",
+              "link_status": "verified",
+              "snippet": "        \u003cToolTip tool_tip_content=\"Mark as completed\"\u003e\n          \u003cbutton onClick={handleStatus}\u003e\n            \u003cCiSquareCheck\n              size={28}\n              className={`${\n                task.is_completed ? \"text-green-500\" : \"text-gray-300\"\n              }`}\n            /\u003e\n          \u003c/button\u003e\n        \u003c/ToolTip\u003e\n\n        \u003cModal title=\"Edit Task\" Editing={true} task={task}\u003e\n          \u003cFiEdit size={24} className=\"text-blue-500\" /\u003e\n        \u003c/Modal\u003e\n\n        \u003cbutton onClick={handleDelete}\u003e\n        \u003cFiTrash2 size={24} className=\"text-red-600\" /\u003e\n        \u003c/button\u003e      ",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/Task.tsx#L40-L57"
+            }
+          ]
+        },
+        {
+          "id": "keyboard_navigation",
+          "name": "Навигация с клавиатуры",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Интерактивные действия реализованы нативными button, а модальный диалог использует Radix, но видимость и порядок фокуса у собственных кнопок не стандартизированы.",
+          "rationale": "Сопоставление с якорем 5: Интерактивные действия реализованы нативными button, а модальный диалог использует Radix, но видимость и порядок фокуса у собственных кнопок не стандартизированы.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/ui/dialog.tsx",
+              "line_start": 36,
+              "line_end": 50,
+              "title": "Диалог имеет доступную кнопку закрытия",
+              "explanation": "Radix Dialog содержит нативный Close и скрытую текстовую подпись Close.",
+              "link_status": "verified",
+              "snippet": "  \u003cDialogPortal\u003e\n    \u003cDialogOverlay /\u003e\n    \u003cDialogPrimitive.Content\n      ref={ref}\n      className={cn(\n        \"fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg\",\n        className\n      )}\n      {...props}\n    \u003e\n      {children}\n      \u003cDialogPrimitive.Close className=\"absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground\"\u003e\n        \u003cX className=\"h-4 w-4\" /\u003e\n        \u003cspan className=\"sr-only\"\u003eClose\u003c/span\u003e\n      \u003c/DialogPrimitive.Close\u003e",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/ui/dialog.tsx#L36-L50"
+            }
+          ]
+        },
+        {
+          "id": "contrast_and_focus",
+          "name": "Контраст и фокус",
+          "weight": 0.4,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Базовый Button и диалог содержат focus-visible/focus стили, но кнопки действий используют голые элементы без локального фокусного оформления.",
+          "rationale": "Сопоставление с якорем 5: Базовый Button и диалог содержат focus-visible/focus стили, но кнопки действий используют голые элементы без локального фокусного оформления.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/Task.tsx",
+              "line_start": 40,
+              "line_end": 57,
+              "title": "У кнопок действий не задан стиль фокуса",
+              "explanation": "Кнопки завершения и удаления не используют общий Button и не имеют className с focus-visible состоянием.",
+              "suggestion": "Используйте общий Button для иконок или добавьте заметные стили focus-visible к этим кнопкам.",
+              "link_status": "verified",
+              "snippet": "        \u003cToolTip tool_tip_content=\"Mark as completed\"\u003e\n          \u003cbutton onClick={handleStatus}\u003e\n            \u003cCiSquareCheck\n              size={28}\n              className={`${\n                task.is_completed ? \"text-green-500\" : \"text-gray-300\"\n              }`}\n            /\u003e\n          \u003c/button\u003e\n        \u003c/ToolTip\u003e\n\n        \u003cModal title=\"Edit Task\" Editing={true} task={task}\u003e\n          \u003cFiEdit size={24} className=\"text-blue-500\" /\u003e\n        \u003c/Modal\u003e\n\n        \u003cbutton onClick={handleDelete}\u003e\n        \u003cFiTrash2 size={24} className=\"text-red-600\" /\u003e\n        \u003c/button\u003e      ",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/Task.tsx#L40-L57"
+            }
+          ]
+        },
+        {
+          "id": "styling_consistency",
+          "name": "Подход к стилям и консистентность",
+          "weight": 1,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Tailwind-конфигурация связывает общие цветовые токены с CSS-переменными, а базовые UI-примитивы используют единый вариантный подход.",
+          "rationale": "Сопоставление с якорем 8: Tailwind-конфигурация связывает общие цветовые токены с CSS-переменными, а базовые UI-примитивы используют единый вариантный подход.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "tailwind.config.ts",
+              "line_start": 20,
+              "line_end": 59,
+              "title": "Определены общие дизайн-токены",
+              "explanation": "Цвета и радиусы выводятся из CSS-переменных и доступны через единые Tailwind-имена.",
+              "link_status": "verified",
+              "snippet": "    extend: {\n      colors: {\n        border: \"hsl(var(--border))\",\n        input: \"hsl(var(--input))\",\n        ring: \"hsl(var(--ring))\",\n        background: \"hsl(var(--background))\",\n        foreground: \"hsl(var(--foreground))\",\n        primary: {\n          DEFAULT: \"hsl(var(--primary))\",\n          foreground: \"hsl(var(--primary-foreground))\",\n        },\n        secondary: {\n          DEFAULT: \"hsl(var(--secondary))\",\n          foreground: \"hsl(var(--secondary-foreground))\",\n        },\n        destructive: {\n          DEFAULT: \"hsl(var(--destructive))\",\n          foreground: \"hsl(var(--destructive-foreground))\",\n        },\n        muted: {\n          DEFAULT: \"hsl(var(--muted))\",\n          foreground: \"hsl(var(--muted-foreground))\",\n        },\n        accent: {\n          DEFAULT: \"hsl(var(--accent))\",\n          foreground: \"hsl(var(--accent-foreground))\",\n        },\n        popover: {\n          DEFAULT: \"hsl(var(--popover))\",\n          foreground: \"hsl(var(--popover-foreground))\",\n        },\n        card: {\n          DEFAULT: \"hsl(var(--card))\",\n          foreground: \"hsl(var(--card-foreground))\",\n        },\n      },\n      borderRadius: {\n        lg: \"var(--radius)\",\n        md: \"calc(var(--radius) - 2px)\",\n        sm: \"calc(var(--radius) - 4px)\",",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/tailwind.config.ts#L20-L59"
+            }
+          ]
+        },
+        {
+          "id": "responsiveness",
+          "name": "Адаптивность",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Контент ограничен max-width, а диалог имеет responsive-ограничение, но у основной страницы и таблицы нет явной мобильной компоновки или отступов.",
+          "rationale": "Сопоставление с якорем 5: Контент ограничен max-width, а диалог имеет responsive-ограничение, но у основной страницы и таблицы нет явной мобильной компоновки или отступов.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/app/page.tsx",
+              "line_start": 8,
+              "line_end": 18,
+              "title": "Основной макет не задаёт мобильные отступы",
+              "explanation": "Контейнер имеет max-width и внешнюю верхнюю границу, но не имеет горизонтальных padding для узких экранов.",
+              "suggestion": "Добавьте адаптивные горизонтальные отступы и проверьте компоновку таблицы на узкой ширине.",
+              "link_status": "verified",
+              "snippet": "    \u003cmain className=\"max-w-5xl mx-auto mt-8\"\u003e\n      {/* Add Task Section */}\n      \u003csection\u003e\n        \u003cModal title=\"Add New Task\" Adding = {true}\u003e\n        \u003cButton variant=\"default\" className=\"w-full bg-teal-600 px-2 py-1 text-white uppercase text-lg\"\u003eAdd Task\u003c/Button\u003e\n        \u003c/Modal\u003e\n      \u003c/section\u003e\n\n      {/* Todo Table */}\n      \u003csection className=\"mt-4\"\u003e\n        \u003cTodoTable /\u003e",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/app/page.tsx#L8-L18"
+            }
+          ]
+        },
+        {
+          "id": "test_quality_and_coverage",
+          "name": "Покрытие и качество тестов",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "В авторском frontend-коде не обнаружены тестовые файлы; ключевые сценарии списка и мутаций не подтверждены тестами.",
+          "rationale": "Сопоставление с якорем 2: В авторском frontend-коде не обнаружены тестовые файлы; ключевые сценарии списка и мутаций не подтверждены тестами.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/Task.tsx",
+              "line_start": 12,
+              "line_end": 33,
+              "title": "Ключевые мутации не защищены UI-тестами",
+              "explanation": "Обработчики смены статуса и удаления содержат пользовательскую логику, но тестов для неё в области нет.",
+              "suggestion": "Добавьте компонентные тесты для добавления, редактирования, завершения, удаления и отображения ошибок.",
+              "link_status": "verified",
+              "snippet": "  const handleStatus = async () =\u003e {\n    const response = await status_change(\n      task.id,\n      task.content,\n      task.is_completed\n    );\n\n    if (response.status == \"success\") {\n      toast.success(response.message);\n    } else if (response.status == \"error\") {\n      toast.error(response.message);\n    }\n  };\n\n  const handleDelete = async () =\u003e {\n    const response = await delete_todo(task.id)\n    if(response.status == \"error\"){\n      toast.error(response.message)\n    } else {\n      toast.success(response.message)\n    }\n  }",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/src/components/Task.tsx#L12-L33"
+            }
+          ]
+        },
+        {
+          "id": "test_runnability",
+          "name": "Запускаемость тестов",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "В package.json отсутствует скрипт test и не найдено конфигурации или тестов, поэтому воспроизводимый запуск не определён.",
+          "rationale": "Сопоставление с якорем 2: В package.json отсутствует скрипт test и не найдено конфигурации или тестов, поэтому воспроизводимый запуск не определён.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "package.json",
+              "line_start": 5,
+              "line_end": 10,
+              "title": "Не определён запуск тестов",
+              "explanation": "Скрипты содержат dev, build, start и lint, но не test.",
+              "suggestion": "Настройте тестовый раннер, добавьте скрипт test и зафиксируйте требуемую конфигурацию.",
+              "link_status": "verified",
+              "snippet": "  \"scripts\": {\n    \"dev\": \"next dev\",\n    \"build\": \"next build\",\n    \"start\": \"next start\",\n    \"lint\": \"next lint\"\n  },",
+              "permalink": "https://github.com/Rehan-Ul-Haq/Fullstack-Todo-App-with-FastAPI-SQLModel-Nextjs-14/blob/6faee5f4314babfbfb3c5c144f17ee7ebb92db50/frontend/package.json#L5-L10"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "warnings": [
+    "repo_too_large",
+    "secret_redacted"
+  ]
+}

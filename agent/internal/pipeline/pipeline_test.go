@@ -152,8 +152,27 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	}
 	config.Recalculate = true
 	config.Provider = nil
+	var recalculable savedEvaluation
+	if err := json.Unmarshal(baseline, &recalculable); err != nil {
+		t.Fatal(err)
+	}
+	recalculable.Warnings = []string{"cached-warning"}
+	if err := writeJSON(statePath, recalculable); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := (Pipeline{}).Run(context.Background(), config); err != nil {
 		t.Fatal(err)
+	}
+	var recalculated bundle.Team
+	teamData, err := os.ReadFile(filepath.Join(output, "teams", "team-1.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(teamData, &recalculated); err != nil {
+		t.Fatal(err)
+	}
+	if recalculated.CommitSHA != recalculable.CommitSHA || len(recalculated.Warnings) != 1 || recalculated.Warnings[0] != "cached-warning" {
+		t.Fatalf("recalculate lost provenance: %#v", recalculated)
 	}
 	before, err := os.ReadFile(filepath.Join(output, "index.json"))
 	if err != nil {
@@ -220,6 +239,19 @@ func TestOutputLockPreventsConcurrentRuns(t *testing.T) {
 	defer release()
 	if _, err := acquireLock(output); err == nil {
 		t.Fatal("expected second pipeline to be rejected")
+	}
+}
+
+func TestMergeTeamMetaCombinesRubricsDeterministically(t *testing.T) {
+	backend := &bundle.TeamMeta{SchemaVersion: "evaluation.v1", SkillVersion: "2.0.0", RubricVersion: "backend.v1", Model: "test-model", EvaluatedAt: "2026-09-23T10:00:00Z"}
+	frontend := &bundle.TeamMeta{SchemaVersion: "evaluation.v1", SkillVersion: "2.0.0", RubricVersion: "frontend.v1", Model: "test-model", EvaluatedAt: "2026-09-23T10:01:00Z"}
+
+	merged := mergeTeamMeta(frontend, backend)
+	if merged.RubricVersion != "backend.v1 + frontend.v1" {
+		t.Fatalf("rubric version = %q", merged.RubricVersion)
+	}
+	if merged.EvaluatedAt != frontend.EvaluatedAt {
+		t.Fatalf("evaluated_at = %q", merged.EvaluatedAt)
 	}
 }
 

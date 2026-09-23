@@ -167,11 +167,31 @@ func CategoriesFromAggregate(value aggregation.AreaScore, enriched enrichment.Re
 }
 
 func Write(output string, builtAt time.Time, teams []InputTeam, rubrics map[string]rubric.Rubric) error {
-	if err := os.MkdirAll(filepath.Join(output, "teams"), 0o750); err != nil {
+	teamDir := filepath.Join(output, "teams")
+	if err := os.MkdirAll(teamDir, 0o750); err != nil {
 		return fmt.Errorf("create bundle directories: %w", err)
 	}
 	if err := os.MkdirAll(filepath.Join(output, "rubrics"), 0o750); err != nil {
 		return fmt.Errorf("create rubric directory: %w", err)
+	}
+	activeTeamFiles := make(map[string]struct{}, len(teams))
+	for _, team := range teams {
+		activeTeamFiles[team.Registry.ID+".json"] = struct{}{}
+	}
+	entries, err := os.ReadDir(teamDir)
+	if err != nil {
+		return fmt.Errorf("read team bundle directory: %w", err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || filepath.Ext(entry.Name()) != ".json" {
+			continue
+		}
+		if _, active := activeTeamFiles[entry.Name()]; active {
+			continue
+		}
+		if err := os.Remove(filepath.Join(teamDir, entry.Name())); err != nil {
+			return fmt.Errorf("remove stale team bundle %s: %w", entry.Name(), err)
+		}
 	}
 	meta := buildMeta(builtAt, teams, rubrics)
 	ranked := make([]aggregation.RankedTeam, 0, len(teams))

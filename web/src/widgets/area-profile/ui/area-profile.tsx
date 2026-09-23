@@ -17,6 +17,7 @@ import {
 import type { StatsBundle, TeamArea } from '@/shared/api'
 
 import { areaChartData } from '../model/chart-data'
+import { ChartTooltip } from './chart-tooltip'
 
 /**
  * Radar + bar-vs-среднее + текстовая таблица-альтернатива, всегда развёрнутая (DESIGN.md: «не под
@@ -69,7 +70,7 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
                   fillOpacity={1}
                   strokeWidth={2.2}
                 />
-                <Tooltip />
+                <Tooltip content={ChartTooltip} cursor={false} />
                 <Legend verticalAlign="bottom" wrapperStyle={{ paddingTop: 16 }} />
               </RadarChart>
             </ResponsiveContainer>
@@ -92,10 +93,20 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--ds-chart-grid)" />
                   <XAxis type="number" domain={[0, 10]} tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10 }} />
-                  <Tooltip />
+                  <Tooltip content={ChartTooltip} cursor={false} />
                   <Legend />
-                  <Bar dataKey="score" name="Команда" fill="var(--ds-chart-team-stroke)" />
-                  <Bar dataKey="mean" name="Среднее" fill="var(--ds-chart-average-bar)" />
+                  <Bar
+                    dataKey="score"
+                    name="Команда"
+                    fill="var(--ds-chart-team-stroke)"
+                    activeBar={false}
+                  />
+                  <Bar
+                    dataKey="mean"
+                    name="Среднее"
+                    fill="var(--ds-chart-average-bar)"
+                    activeBar={false}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>

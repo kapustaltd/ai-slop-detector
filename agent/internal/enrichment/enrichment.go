@@ -47,6 +47,7 @@ type Metric struct {
 
 type Options struct {
 	RepoRoot        string
+	AreaPath        string
 	RepoURL         string
 	CommitSHA       string
 	Templates       TemplateConfig
@@ -144,7 +145,7 @@ func enrichFinding(finding contract.Finding, options Options, maxLines, maxBytes
 	}
 	result.Snippet = snippet
 	result.LinkStatus = "verified"
-	result.Permalink = makePermalink(options.RepoURL, options.CommitSHA, finding.File, finding.LineStart, finding.LineEnd, options.Templates)
+	result.Permalink = makePermalink(options.RepoURL, options.CommitSHA, repositoryPath(options.AreaPath, finding.File), finding.LineStart, finding.LineEnd, options.Templates)
 	if result.Permalink == "" {
 		result.LinkStatus = "unverified"
 		result.LinkError = "no permalink template configured for repository host"
@@ -152,7 +153,44 @@ func enrichFinding(finding contract.Finding, options Options, maxLines, maxBytes
 	return result
 }
 
-func makePermalink(repoURL, sha, path string, start, end int, templates TemplateConfig) string {
+// RefreshPermalinks rebuilds links in an already verified result without reading the
+// repository again. It is used by local recalculation to migrate cached reports when the
+// analyzed area lives below the repository root.
+func RefreshPermalinks(result *Result, options Options) {
+	if result == nil {
+		return
+	}
+	for metricIndex := range result.Metrics {
+		for findingIndex := range result.Metrics[metricIndex].Findings {
+			finding := &result.Metrics[metricIndex].Findings[findingIndex]
+			if finding.LinkStatus != "verified" {
+				continue
+			}
+			finding.Permalink = makePermalink(
+				options.RepoURL,
+				options.CommitSHA,
+				repositoryPath(options.AreaPath, finding.File),
+				finding.LineStart,
+				finding.LineEnd,
+				options.Templates,
+			)
+			if finding.Permalink == "" {
+				finding.LinkStatus = "unverified"
+				finding.LinkError = "no permalink template configured for repository host"
+			}
+		}
+	}
+}
+
+func repositoryPath(areaPath, findingPath string) string {
+	prefix := filepath.ToSlash(filepath.Clean(areaPath))
+	if prefix == "." || prefix == "" {
+		return findingPath
+	}
+	return strings.TrimSuffix(prefix, "/") + "/" + findingPath
+}
+
+func makePermalink(repoURL, sha, filePath string, start, end int, templates TemplateConfig) string {
 	template := templateFor(repoURL, templates)
 	if template == "" {
 		return ""
@@ -161,7 +199,7 @@ func makePermalink(repoURL, sha, path string, start, end int, templates Template
 	return strings.NewReplacer(
 		"{base}", base,
 		"{sha}", sha,
-		"{path}", escapePath(path),
+		"{path}", escapePath(filePath),
 		"{start}", fmt.Sprintf("%d", start),
 		"{end}", fmt.Sprintf("%d", end),
 	).Replace(template)

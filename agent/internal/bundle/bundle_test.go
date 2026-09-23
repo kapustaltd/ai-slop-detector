@@ -24,6 +24,12 @@ func TestWriteUsesStaticBundleContractShape(t *testing.T) {
 	}}}
 	total := 8.0
 	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "teams"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "teams", "stale-team.json"), []byte("{}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	rubricValue := rubric.Rubric{ID: "backend.v1", Version: "backend.v1", Area: "backend", Scale: rubric.Scale{Min: 0, Max: 10, Anchors: []int{2, 5, 8, 10}}, AreaWeights: map[string]float64{"backend": .5, "frontend": .5}, Categories: []rubric.Category{{ID: "cat", Name: "Category", Weight: 1}}}
 	err := Write(root, time.Date(2026, 9, 22, 0, 0, 0, 0, time.UTC), []InputTeam{{Registry: registry.Team{ID: "team-1", Name: "Team 1"}, Status: "done", Total: &total, Areas: map[string]Area{"backend": area}}}, map[string]rubric.Rubric{"backend.v1": rubricValue})
 	if err != nil {
@@ -33,6 +39,9 @@ func TestWriteUsesStaticBundleContractShape(t *testing.T) {
 		if _, err := os.Stat(filepath.Join(root, name)); err != nil {
 			t.Fatal(err)
 		}
+	}
+	if _, err := os.Stat(filepath.Join(root, "teams", "stale-team.json")); !os.IsNotExist(err) {
+		t.Fatalf("stale team bundle was not removed, stat error = %v", err)
 	}
 	var index map[string]any
 	data, err := os.ReadFile(filepath.Join(root, "index.json"))

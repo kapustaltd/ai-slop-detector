@@ -5,11 +5,12 @@ import { BundleError, getLeaderboardIndex, loadLeaderboardIndex, loadTeam } from
 describe('доступ к дата-бандлу', () => {
   it('отдаёт индекс рейтинга из бандла', () => {
     const index = getLeaderboardIndex()
-    expect(index.teams).toHaveLength(4)
+    expect(index.teams.length).toBeGreaterThan(0)
   })
 
   it('загружает файл команды отдельным модулем', async () => {
-    await expect(loadTeam('team-01')).resolves.toMatchObject({ team_id: 'team-01' })
+    const teamId = getLeaderboardIndex().teams[0]!.team_id
+    await expect(loadTeam(teamId)).resolves.toMatchObject({ team_id: teamId })
   })
 
   it('сообщает об отсутствии команды в бандле', async () => {
@@ -25,7 +26,7 @@ describe('доступ к дата-бандлу', () => {
     vi.stubGlobal('fetch', fetchSpy)
     try {
       await loadLeaderboardIndex()
-      await loadTeam('team-01')
+      await loadTeam(getLeaderboardIndex().teams[0]!.team_id)
       expect(fetchSpy).not.toHaveBeenCalled()
     } finally {
       vi.unstubAllGlobals()

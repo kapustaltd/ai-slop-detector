@@ -1,0 +1,2197 @@
+{
+  "bundle_schema": "0.1",
+  "built_at": "2026-09-23T15:46:55Z",
+  "team_id": "team-finsberg-fastapi-react",
+  "name": "FastAPI React App",
+  "status": "done",
+  "commit_sha": "988115cc2e69742739b17c13e8662e8e6c65dbac",
+  "total": 5.350437500000001,
+  "partial": false,
+  "meta": {
+    "schema_version": "evaluation.v1",
+    "skill_version": "2.0.0",
+    "rubric_version": "backend.v1 + frontend.v1",
+    "model": "gpt-5.6-terra",
+    "evaluated_at": "2026-09-23T15:17:01Z"
+  },
+  "areas": {
+    "backend": {
+      "status": "done",
+      "score": 5.430875,
+      "max": 10,
+      "categories": [
+        {
+          "id": "architecture_structure",
+          "name": "Архитектура и структура",
+          "weight": 0.19,
+          "score": 8,
+          "subcategories": [
+            {
+              "id": "layers_boundaries",
+              "name": "Слои и границы",
+              "weight": 0.6,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "layer_separation",
+                  "name": "Разделение слоёв",
+                  "weight": 0.6,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "HTTP-обработчики делегируют операции сервисам, а модели и сессия вынесены отдельно.",
+                  "rationale": "Сопоставление с якорем 8: HTTP-обработчики делегируют операции сервисам, а модели и сессия вынесены отдельно.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "app/api/api_v1/handlers/todo.py",
+                      "line_start": 25,
+                      "line_end": 32,
+                      "title": "Транспорт отделён от операции",
+                      "explanation": "Обработчик получает зависимости и передаёт данные в todo_service.",
+                      "link_status": "verified",
+                      "snippet": "@todo_router.post(\"/\", summary=\"Create Todo\", response_model=Todo)\nasync def create_todo(\n    *,\n    session: Session = Depends(get_session),\n    data: TodoCreate,\n    user: User = Depends(get_current_user)\n):\n    return await todo_service.create_todo(user=user, data=data, session=session)",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/api/api_v1/handlers/todo.py#L25-L32"
+                    }
+                  ]
+                },
+                {
+                  "id": "module_boundaries",
+                  "name": "Границы модулей",
+                  "weight": 0.4,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Маршруты, зависимости, сервисы, модели и конфигурация разнесены по самостоятельным пакетам.",
+                  "rationale": "Сопоставление с якорем 8: Маршруты, зависимости, сервисы, модели и конфигурация разнесены по самостоятельным пакетам.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "app/api/api_v1/router.py",
+                      "line_start": 1,
+                      "line_end": 10,
+                      "title": "Собранные границы API",
+                      "explanation": "Корневой роутер подключает изолированные маршруты пользователей, задач и аутентификации.",
+                      "link_status": "verified",
+                      "snippet": "from app.api.api_v1.handlers import todo\nfrom app.api.api_v1.handlers import user\nfrom app.api.auth.jwt import auth_router\nfrom fastapi import APIRouter\n\nrouter = APIRouter()\n\nrouter.include_router(user.user_router, prefix=\"/users\", tags=[\"users\"])\nrouter.include_router(todo.todo_router, prefix=\"/todo\", tags=[\"todo\"])\nrouter.include_router(auth_router, prefix=\"/auth\", tags=[\"auth\"])",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/api/api_v1/router.py#L1-L10"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "project_organization",
+              "name": "Организация проекта",
+              "weight": 0.4,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "project_structure",
+                  "name": "Структура проекта",
+                  "weight": 0.5,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Структура app/api, core, models, services, tests предсказуема для небольшого FastAPI-приложения.",
+                  "rationale": "Сопоставление с якорем 8: Структура app/api, core, models, services, tests предсказуема для небольшого FastAPI-приложения.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "app/main.py",
+                      "line_start": 1,
+                      "line_end": 27,
+                      "title": "Явная точка входа",
+                      "explanation": "Приложение централизованно собирает настройки, БД, middleware и API-роутер.",
+                      "link_status": "verified",
+                      "snippet": "from app.api.api_v1.router import router\nfrom app.core.config import settings\nfrom app.database import create_db_and_tables\nfrom fastapi import FastAPI\nfrom fastapi.middleware.cors import CORSMiddleware\n\n\napp = FastAPI(\n    title=settings.PROJECT_NAME,\n    openapi_url=f\"{settings.API_V1_STR}/openapi.json\",\n)\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=settings.BACKEND_CORS_ORIGINS,\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\n\n@app.on_event(\"startup\")\ndef on_startup():\n    create_db_and_tables()\n\n\napp.include_router(router, prefix=settings.API_V1_STR)",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/main.py#L1-L27"
+                    }
+                  ]
+                },
+                {
+                  "id": "dependency_direction",
+                  "name": "Направление зависимостей",
+                  "weight": 0.5,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Направление зависимостей в основном идёт от API к сервисам и моделям; формальной защиты архитектуры нет.",
+                  "rationale": "Сопоставление с якорем 8: Направление зависимостей в основном идёт от API к сервисам и моделям; формальной защиты архитектуры нет.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "app/services/user_service.py",
+                      "line_start": 4,
+                      "line_end": 12,
+                      "title": "Сервис не зависит от HTTP-слоя",
+                      "explanation": "Сервис использует security, модели и SQLModel, но не FastAPI-обработчики.",
+                      "link_status": "verified",
+                      "snippet": "from app.core.security import get_password\nfrom app.core.security import UnauthorizedError\nfrom app.core.security import verify_password\nfrom app.models.user_model import User\nfrom app.models.user_model import UserCreate\nfrom app.models.user_model import UserUpdate\nfrom sqlmodel import or_\nfrom sqlmodel import select\nfrom sqlmodel import Session",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/user_service.py#L4-L12"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "code_quality_readability",
+          "name": "Качество кода и читаемость",
+          "weight": 0.16,
+          "score": 6.8,
+          "subcategories": [
+            {
+              "id": "readability",
+              "name": "Читаемость",
+              "weight": 0.6,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "naming_clarity",
+                  "name": "Ясность имён",
+                  "weight": 0.5,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Имена сервисов, DTO и операций в целом ясно описывают предметную область; стиль полей местами смешивает camelCase и snake_case.",
+                  "rationale": "Сопоставление с якорем 8: Имена сервисов, DTO и операций в целом ясно описывают предметную область; стиль полей местами смешивает camelCase и snake_case.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "app/services/todo_service.py",
+                      "line_start": 17,
+                      "line_end": 25,
+                      "title": "Понятные имена операций",
+                      "explanation": "list_todos и create_todo явно отражают выполняемое действие.",
+                      "link_status": "verified",
+                      "snippet": "async def list_todos(user: User, session: Session) -\u003e List[Todo]:\n    statement = select(Todo).where(Todo.user_id == user.id)\n    results = session.exec(statement)\n    todos = results.all()\n\n    return todos\n\n\nasync def create_todo(user: User, data: TodoCreate, session: Session) -\u003e Todo:",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L17-L25"
+                    }
+                  ]
+                },
+                {
+                  "id": "function_complexity",
+                  "name": "Сложность функций",
+                  "weight": 0.5,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Функции короткие и выполняют ограниченные операции; обновление пользователя остаётся читаемым.",
+                  "rationale": "Сопоставление с якорем 8: Функции короткие и выполняют ограниченные операции; обновление пользователя остаётся читаемым.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "app/services/user_service.py",
+                      "line_start": 81,
+                      "line_end": 104,
+                      "title": "Локальная сложность обновления",
+                      "explanation": "Проверка пароля, выбор разрешённых полей и сохранение расположены в одной небольшой функции.",
+                      "link_status": "verified",
+                      "snippet": "async def update_user(id: UUID, data: UserUpdate, session: Session) -\u003e User:\n    statement = select(User).where(User.id == id)\n    results = session.exec(statement)\n    user = results.first()\n\n    if not user:\n        raise UserNotFoundError(f\"User with id {id} not found\")\n\n    if not verify_password(password= [REDACTED] hashed_pass=user.hashed_password):\n        raise UnauthorizedError(\"Wrong password passed when trying to update user\")\n\n    for attr in [\"firstName\", \"lastName\", \"email\", \"username\", \"isAdmin\"]:\n        value = getattr(data, attr)\n        if value is not None:\n            setattr(user, attr, value)\n\n    if data.new_password is not None:\n        user.hashed_password = [REDACTED]\n\n    session.add(user)\n    session.commit()\n    session.refresh(user)\n\n    return user",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/user_service.py#L81-L104"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "maintainability",
+              "name": "Сопровождаемость",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "duplication",
+                  "name": "Дублирование",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Логика выпуска access- и refresh-токенов почти полностью скопирована.",
+                  "rationale": "Сопоставление с якорем 5: Логика выпуска access- и refresh-токенов почти полностью скопирована.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "app/core/security.py",
+                      "line_start": 29,
+                      "line_end": 62,
+                      "title": "Дублирование генерации JWT",
+                      "explanation": "Две функции одинаково рассчитывают срок и подписывают одинаковый payload, различаясь настройками.",
+                      "suggestion": "Выделить общий помощник выпуска токена с параметрами ключа и времени жизни.",
+                      "link_status": "verified",
+                      "snippet": "def create_access_token(\n    subject: Union[str, Any],\n    expires_delta: int | None = None,\n) -\u003e str:\n    if expires_delta is not None:\n        exp = datetime.utcnow() + timedelta(minutes=expires_delta)\n    else:\n        exp = datetime.utcnow() + timedelta(\n            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,\n        )\n\n    to_encode = {\"exp\": exp, \"sub\": str(subject)}\n    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, settings.ALGORITHM)\n    return encoded_jwt\n\n\ndef create_refresh_token(\n    subject: Union[str, Any],\n    expires_delta: int | None = None,\n) -\u003e str:\n    if expires_delta is not None:\n        exp = datetime.utcnow() + timedelta(minutes=expires_delta)\n    else:\n        exp = datetime.utcnow() + timedelta(\n            minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES,\n        )\n\n    to_encode = {\"exp\": exp, \"sub\": str(subject)}\n    encoded_jwt = jwt.encode(\n        to_encode,\n        settings.JWT_REFRESH_SECRET_KEY,\n        settings.ALGORITHM,\n    )\n    return encoded_jwt",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/core/security.py#L29-L62"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reliability_error_handling",
+          "name": "Надёжность и обработка ошибок",
+          "weight": 0.15,
+          "score": 3.0725,
+          "subcategories": [
+            {
+              "id": "error_handling",
+              "name": "Обработка ошибок",
+              "weight": 0.65,
+              "score": 3.65,
+              "metrics": [
+                {
+                  "id": "error_propagation",
+                  "name": "Распространение ошибок",
+                  "weight": 0.55,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Доменные ошибки преобразуются в HTTP-ответы, но ошибки БД и удаление отсутствующей задачи не обрабатываются последовательно.",
+                  "rationale": "Сопоставление с якорем 5: Доменные ошибки преобразуются в HTTP-ответы, но ошибки БД и удаление отсутствующей задачи не обрабатываются последовательно.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "app/services/todo_service.py",
+                      "line_start": 72,
+                      "line_end": 75,
+                      "title": "Удаление несуществующей задачи не проверяется",
+                      "explanation": "retrieve_todo может вернуть None, после чего session.delete вызывается без контролируемой доменной ошибки.",
+                      "suggestion": "Проверять результат retrieve_todo и выбрасывать TodoNotFoundError, который обработчик преобразует в 404.",
+                      "link_status": "verified",
+                      "snippet": "async def delete_todo(user: User, todo_id: UUID, session: Session) -\u003e None:\n    todo = await retrieve_todo(user, todo_id, session=session)\n    session.delete(todo)\n    session.commit()",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L72-L75"
+                    }
+                  ]
+                },
+                {
+                  "id": "failure_messages",
+                  "name": "Сообщения об ошибках",
+                  "weight": 0.45,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Неожиданные исключения и представление входного пользователя возвращаются клиенту, что может раскрывать внутренние сведения.",
+                  "rationale": "Сопоставление с якорем 2: Неожиданные исключения и представление входного пользователя возвращаются клиенту, что может раскрывать внутренние сведения.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "app/api/api_v1/handlers/user.py",
+                      "line_start": 19,
+                      "line_end": 26,
+                      "title": "В ответ попадают детали исключений",
+                      "explanation": "HTTP 409 и общий 400 используют str(ex); UserExistsError формируется с полным объектом UserCreate, содержащим пароль.",
+                      "suggestion": "Логировать внутреннее исключение на сервере, а клиенту возвращать фиксированные безопасные сообщения без сериализации входной модели.",
+                      "link_status": "verified",
+                      "snippet": "@user_router.post(\"/\", summary=\"Create new user\", response_model=User)\nasync def create_user(*, session: Session = Depends(get_session), data: UserCreate):\n    try:\n        return await user_service.create_user(user=data, session=session)\n    except user_service.UserExistsError as ex:\n        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(ex))\n    except Exception as ex:\n        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ex))",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/api/api_v1/handlers/user.py#L19-L26"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "observability",
+              "name": "Наблюдаемость",
+              "weight": 0.35,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "logging",
+                  "name": "Логирование",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Структурированного журналирования ключевых событий и отказов нет; присутствует отладочный print.",
+                  "rationale": "Сопоставление с якорем 2: Структурированного журналирования ключевых событий и отказов нет; присутствует отладочный print.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "app/services/todo_service.py",
+                      "line_start": 55,
+                      "line_end": 67,
+                      "title": "Отладочный вывод вместо логирования",
+                      "explanation": "При обновлении выводятся поля в stdout, а операции и сбои не получают контекстного лог-события.",
+                      "suggestion": "Заменить print на настроенный logger и логировать безопасные события ошибок и операций с идентификаторами запроса.",
+                      "link_status": "verified",
+                      "snippet": "    todo_data = data.dict(exclude_unset=True)\n    todo = await retrieve_todo(user, todo_id, session=session)\n\n    if todo is None:\n        raise TodoNotFoundError(f\"Todo with id {todo_id} not found\")\n\n    for key, value in todo_data.items():\n        print(key, value)\n        setattr(todo, key, value)\n\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L55-L67"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "api_design",
+          "name": "Дизайн API",
+          "weight": 0.14,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "api_contract",
+              "name": "Контракт",
+              "weight": 0.55,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "api_contract_quality",
+                  "name": "Качество контракта",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Маршруты имеют summary и response_model, но коды успеха и ошибки непоследовательны, а контракт раскрывает внутреннюю модель пользователя.",
+                  "rationale": "Сопоставление с якорем 5: Маршруты имеют summary и response_model, но коды успеха и ошибки непоследовательны, а контракт раскрывает внутреннюю модель пользователя.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "app/models/user_model.py",
+                      "line_start": 37,
+                      "line_end": 39,
+                      "title": "В публичную модель включён хеш пароля",
+                      "explanation": "User применяется как response_model и содержит hashed_password, поэтому API возвращает клиенту хеш пароля.",
+                      "suggestion": "Создать отдельные безопасные схемы ответов и исключить hashed_password из всех публичных response_model.",
+                      "link_status": "verified",
+                      "snippet": "class User(UserBase, table=True):\n    id: UUID = Field(default_factory=uuid4, primary_key=True, description=\"user id\")\n    hashed_password: [REDACTED] = Field(default=\"The hash of the password\")",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/models/user_model.py#L37-L39"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "api_behavior",
+              "name": "Поведение",
+              "weight": 0.45,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "input_validation",
+                  "name": "Валидация входа",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Pydantic и типы UUID/email ограничивают основные поля, но модель задачи допускает пустой обязательный заголовок, а создание пользователя принимает isAdmin от клиента.",
+                  "rationale": "Сопоставление с якорем 5: Pydantic и типы UUID/email ограничивают основные поля, но модель задачи допускает пустой обязательный заголовок, а создание пользователя принимает isAdmin от клиента.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "app/models/user_model.py",
+                      "line_start": 9,
+                      "line_end": 21,
+                      "title": "Клиент задаёт административную роль",
+                      "explanation": "UserCreate наследует isAdmin из UserBase, поэтому регистрационный запрос может назначить себе права администратора.",
+                      "suggestion": "Исключить isAdmin из схемы публичной регистрации и назначать роль только в защищённой серверной операции.",
+                      "link_status": "verified",
+                      "snippet": "class UserBase(SQLModel):\n    username: str | None = Field(index=True, unique=True, description=\"user username\")\n    email: EmailStr | None = Field(unique=True, description=\"user email\")\n    firstName: str | None = Field(default=None, description=\"user first name\")\n    lastName: str | None = Field(default=None, description=\"user last name\")\n    isAdmin: bool = Field(\n        default=False,\n        description=\"Flag to indicate wether user is admin\",\n    )\n\n\nclass UserCreate(UserBase):\n    password: [REDACTED] = Field(min_length=5, max_length=24, description=\"user password\")",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/models/user_model.py#L9-L21"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "data_work",
+          "name": "Работа с данными",
+          "weight": 0.12,
+          "score": 3.5,
+          "subcategories": [
+            {
+              "id": "data_model",
+              "name": "Модель данных",
+              "weight": 0.5,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "data_model_design",
+                  "name": "Схема данных и миграции",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Есть первичные и уникальные ключи, однако схема создаётся create_all при старте и миграций для воспроизводимой истории изменений нет.",
+                  "rationale": "Сопоставление с якорем 2: Есть первичные и уникальные ключи, однако схема создаётся create_all при старте и миграций для воспроизводимой истории изменений нет.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "app/database.py",
+                      "line_start": 19,
+                      "line_end": 20,
+                      "title": "Нет управляемых миграций схемы",
+                      "explanation": "Схема неявно создаётся из текущих моделей при запуске, без версионированного пути обновления.",
+                      "suggestion": "Добавить версионированные миграции и применять их отдельным шагом развёртывания вместо create_all в startup.",
+                      "link_status": "verified",
+                      "snippet": "def create_db_and_tables():\n    SQLModel.metadata.create_all(engine)",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/database.py#L19-L20"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "data_access",
+              "name": "Доступ к данным",
+              "weight": 0.5,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "query_correctness",
+                  "name": "Корректность запросов",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Основные запросы параметризованы и задачи ограничены владельцем, но транзакционные сбои не обрабатываются, а обновление пользователя не проверяет конфликт уникальных полей.",
+                  "rationale": "Сопоставление с якорем 5: Основные запросы параметризованы и задачи ограничены владельцем, но транзакционные сбои не обрабатываются, а обновление пользователя не проверяет конфликт уникальных полей.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "app/services/todo_service.py",
+                      "line_start": 40,
+                      "line_end": 46,
+                      "title": "Выборка задачи ограничена владельцем",
+                      "explanation": "Запрос одновременно фильтрует todo_id и user.id, предотвращая чтение чужой задачи обычным путём.",
+                      "link_status": "verified",
+                      "snippet": "async def retrieve_todo(user: User, todo_id: UUID, session: Session) -\u003e Optional[Todo]:\n    statement = select(Todo).where(Todo.id == todo_id).where(Todo.user_id == user.id)\n\n    results = session.exec(statement)\n    todo = results.first()\n\n    return todo",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L40-L46"
+                    }
+                  ]
+                },
+                {
+                  "id": "data_access_efficiency",
+                  "name": "Эффективность доступа",
+                  "weight": 0.4,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Простые запросы не демонстрируют N+1, но список задач выгружается полностью без пагинации и ограничений объёма.",
+                  "rationale": "Сопоставление с якорем 5: Простые запросы не демонстрируют N+1, но список задач выгружается полностью без пагинации и ограничений объёма.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "app/services/todo_service.py",
+                      "line_start": 17,
+                      "line_end": 22,
+                      "title": "Список задач не ограничен",
+                      "explanation": "results.all() возвращает все задачи пользователя без limit, offset или курсора.",
+                      "suggestion": "Добавить пагинацию с ограничением размера страницы и документировать её в контракте API.",
+                      "link_status": "verified",
+                      "snippet": "async def list_todos(user: User, session: Session) -\u003e List[Todo]:\n    statement = select(Todo).where(Todo.user_id == user.id)\n    results = session.exec(statement)\n    todos = results.all()\n\n    return todos",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L17-L22"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "security",
+          "name": "Безопасность",
+          "weight": 0.14,
+          "score": 5.300000000000001,
+          "subcategories": [
+            {
+              "id": "access_control",
+              "name": "Контроль доступа",
+              "weight": 0.45,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "authn_authz",
+                  "name": "Аутентификация и авторизация",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "JWT-проверка существует для части маршрутов, но изменение пользователя не требует текущего пользователя, а регистрация позволяет назначить isAdmin.",
+                  "rationale": "Сопоставление с якорем 2: JWT-проверка существует для части маршрутов, но изменение пользователя не требует текущего пользователя, а регистрация позволяет назначить isAdmin.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "critical",
+                      "file": "app/api/api_v1/handlers/user.py",
+                      "line_start": 38,
+                      "line_end": 58,
+                      "title": "Обновление пользователя не авторизовано",
+                      "explanation": "Маршрут PUT /users/{user_id} не зависит от get_current_user и не сопоставляет токен с user_id; знание пароля жертвы и её UUID позволяет менять профиль.",
+                      "suggestion": "Требовать get_current_user, разрешать изменение только собственного профиля либо проверять отдельное административное право.",
+                      "link_status": "verified",
+                      "snippet": "@user_router.put(\"/{user_id}\", summary=\"Update User\", response_model=User)\nasync def update_user(\n    *, session: Session = Depends(get_session), user_id: UUID, data: UserUpdate\n):\n    try:\n        return await user_service.update_user(id=user_id, data=data, session=session)\n    except user_service.UserNotFoundError as ex:\n        raise HTTPException(\n            status_code=status.HTTP_404_NOT_FOUND,\n            detail=[{\"msg\": str(ex)}],\n        )\n    except security.UnauthorizedError as ex:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=[{\"msg\": str(ex)}],\n        )\n    except Exception as ex:\n        raise HTTPException(\n            status_code=status.HTTP_400_BAD_REQUEST,\n            detail=[{\"msg\": str(ex)}],\n        )",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/api/api_v1/handlers/user.py#L38-L58"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "data_input_protection",
+              "name": "Защита данных и ввода",
+              "weight": 0.55,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "secrets_handling",
+                  "name": "Работа с секретами",
+                  "weight": 0.5,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Ключи JWT и строка подключения считываются из окружения, а в репозитории есть value-free по смыслу пример конфигурации.",
+                  "rationale": "Сопоставление с якорем 8: Ключи JWT и строка подключения считываются из окружения, а в репозитории есть value-free по смыслу пример конфигурации.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "app/core/config.py",
+                      "line_start": 9,
+                      "line_end": 22,
+                      "title": "Секреты отделены от исходного кода",
+                      "explanation": "JWT-ключи и строка подключения загружаются через config, а не задаются непосредственно в модуле.",
+                      "link_status": "verified",
+                      "snippet": "class Settings(BaseSettings):\n    API_V1_STR: str = \"/api/v1\"\n    JWT_SECRET_KEY: str = config(\"JWT_SECRET_KEY\", cast=str)\n    JWT_REFRESH_SECRET_KEY: str = config(\"JWT_REFRESH_SECRET_KEY\", cast=str)\n    ALGORITHM = \"HS256\"\n    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60\n    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days\n    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [\n        parse_obj_as(AnyHttpUrl, \"http://localhost:5173\"),\n    ]\n    PROJECT_NAME: str = \"TODO list\"\n\n    # Database\n    SQL_CONNECTION_STRING: str = config(\"SQL_CONNECTION_STRING\", cast=str)",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/core/config.py#L9-L22"
+                    }
+                  ]
+                },
+                {
+                  "id": "injection_protection",
+                  "name": "Защита от инъекций",
+                  "weight": 0.5,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Ввод типизирован Pydantic-моделями, а запросы строятся через SQLModel-выражения без конкатенации SQL.",
+                  "rationale": "Сопоставление с якорем 8: Ввод типизирован Pydantic-моделями, а запросы строятся через SQLModel-выражения без конкатенации SQL.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "app/services/user_service.py",
+                      "line_start": 23,
+                      "line_end": 29,
+                      "title": "Параметризованный запрос пользователя",
+                      "explanation": "Условия поиска строятся SQLModel через поля модели и or_, а не через строковый SQL из ввода.",
+                      "link_status": "verified",
+                      "snippet": "async def check_user_exists(user: UserCreate, session: Session) -\u003e None:\n    statement = select(User).where(\n        or_(User.username == user.username, User.email == user.email),\n    )\n    results = session.exec(statement).all()\n    if len(results) \u003e 0:\n        raise UserExistsError(f\"User {user} already exists\")",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/user_service.py#L23-L29"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "testing",
+          "name": "Тестирование",
+          "weight": 0.1,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "test_content",
+              "name": "Содержание тестов",
+              "weight": 0.65,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "test_quality_and_coverage",
+                  "name": "Покрытие и качество тестов",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Покрыты базовые CRUD-сценарии и несколько ошибок, но критичные входы аутентификации, refresh и разграничение доступа не проверяются; тесты подменяют текущего пользователя.",
+                  "rationale": "Сопоставление с якорем 5: Покрыты базовые CRUD-сценарии и несколько ошибок, но критичные входы аутентификации, refresh и разграничение доступа не проверяются; тесты подменяют текущего пользователя.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "tests/conftest.py",
+                      "line_start": 29,
+                      "line_end": 49,
+                      "title": "Тесты обходят реальную аутентификацию",
+                      "explanation": "dependency_overrides всегда подставляет get_current_user, поэтому JWT-аутентификация и авторизация маршрутов не проверяются.",
+                      "suggestion": "Добавить изолированные тесты login, refresh, неверных и просроченных токенов, а также запрета доступа к чужим ресурсам.",
+                      "link_status": "verified",
+                      "snippet": "@functools.lru_cache\ndef get_current_user_override():\n    return User(\n        username=\"currentuser\",\n        email=\"currentuser@gmail.com\",\n        firstName=\"Current\",\n        lastName=\"User\",\n        hashed_password= [REDACTED]\"verylongpassword\"),\n    )\n\n\n@pytest.fixture(name=\"client\")\ndef client_fixture(session: Session):\n    def get_session_override():\n        return session\n\n    app.dependency_overrides[get_current_user] = get_current_user_override\n    app.dependency_overrides[get_session] = get_session_override\n    client = TestClient(app)\n    yield client\n    app.dependency_overrides.clear()",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/tests/conftest.py#L29-L49"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "test_runnability_area",
+              "name": "Запускаемость",
+              "weight": 0.35,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "test_runnability",
+                  "name": "Запускаемость тестов",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Зависимости для pytest перечислены и testpaths настроен, но в проверенной области нет инструкции запуска или декларации воспроизводимого окружения.",
+                  "rationale": "Сопоставление с якорем 5: Зависимости для pytest перечислены и testpaths настроен, но в проверенной области нет инструкции запуска или декларации воспроизводимого окружения.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "pytest.ini",
+                      "line_start": 1,
+                      "line_end": 5,
+                      "title": "Запуск тестов описан неполно",
+                      "explanation": "Конфигурация pytest задаёт пути и coverage, но не документирует подготовку окружения и команду запуска.",
+                      "suggestion": "Добавить в README или отдельную документацию минимальные шаги установки dev-зависимостей и запуска pytest.",
+                      "link_status": "verified",
+                      "snippet": "[pytest]\nminversion = 6.0\naddopts = --cov=app --cov-report html --cov-report term-missing -v\ntestpaths =\n    tests",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/pytest.ini#L1-L5"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "layer_separation",
+          "name": "Разделение слоёв",
+          "weight": 0.6,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "HTTP-обработчики делегируют операции сервисам, а модели и сессия вынесены отдельно.",
+          "rationale": "Сопоставление с якорем 8: HTTP-обработчики делегируют операции сервисам, а модели и сессия вынесены отдельно.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "app/api/api_v1/handlers/todo.py",
+              "line_start": 25,
+              "line_end": 32,
+              "title": "Транспорт отделён от операции",
+              "explanation": "Обработчик получает зависимости и передаёт данные в todo_service.",
+              "link_status": "verified",
+              "snippet": "@todo_router.post(\"/\", summary=\"Create Todo\", response_model=Todo)\nasync def create_todo(\n    *,\n    session: Session = Depends(get_session),\n    data: TodoCreate,\n    user: User = Depends(get_current_user)\n):\n    return await todo_service.create_todo(user=user, data=data, session=session)",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/api/api_v1/handlers/todo.py#L25-L32"
+            }
+          ]
+        },
+        {
+          "id": "module_boundaries",
+          "name": "Границы модулей",
+          "weight": 0.4,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Маршруты, зависимости, сервисы, модели и конфигурация разнесены по самостоятельным пакетам.",
+          "rationale": "Сопоставление с якорем 8: Маршруты, зависимости, сервисы, модели и конфигурация разнесены по самостоятельным пакетам.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "app/api/api_v1/router.py",
+              "line_start": 1,
+              "line_end": 10,
+              "title": "Собранные границы API",
+              "explanation": "Корневой роутер подключает изолированные маршруты пользователей, задач и аутентификации.",
+              "link_status": "verified",
+              "snippet": "from app.api.api_v1.handlers import todo\nfrom app.api.api_v1.handlers import user\nfrom app.api.auth.jwt import auth_router\nfrom fastapi import APIRouter\n\nrouter = APIRouter()\n\nrouter.include_router(user.user_router, prefix=\"/users\", tags=[\"users\"])\nrouter.include_router(todo.todo_router, prefix=\"/todo\", tags=[\"todo\"])\nrouter.include_router(auth_router, prefix=\"/auth\", tags=[\"auth\"])",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/api/api_v1/router.py#L1-L10"
+            }
+          ]
+        },
+        {
+          "id": "project_structure",
+          "name": "Структура проекта",
+          "weight": 0.5,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Структура app/api, core, models, services, tests предсказуема для небольшого FastAPI-приложения.",
+          "rationale": "Сопоставление с якорем 8: Структура app/api, core, models, services, tests предсказуема для небольшого FastAPI-приложения.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "app/main.py",
+              "line_start": 1,
+              "line_end": 27,
+              "title": "Явная точка входа",
+              "explanation": "Приложение централизованно собирает настройки, БД, middleware и API-роутер.",
+              "link_status": "verified",
+              "snippet": "from app.api.api_v1.router import router\nfrom app.core.config import settings\nfrom app.database import create_db_and_tables\nfrom fastapi import FastAPI\nfrom fastapi.middleware.cors import CORSMiddleware\n\n\napp = FastAPI(\n    title=settings.PROJECT_NAME,\n    openapi_url=f\"{settings.API_V1_STR}/openapi.json\",\n)\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=settings.BACKEND_CORS_ORIGINS,\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\n\n@app.on_event(\"startup\")\ndef on_startup():\n    create_db_and_tables()\n\n\napp.include_router(router, prefix=settings.API_V1_STR)",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/main.py#L1-L27"
+            }
+          ]
+        },
+        {
+          "id": "dependency_direction",
+          "name": "Направление зависимостей",
+          "weight": 0.5,
+          "score": 8,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Направление зависимостей в основном идёт от API к сервисам и моделям; формальной защиты архитектуры нет.",
+          "rationale": "Сопоставление с якорем 8: Направление зависимостей в основном идёт от API к сервисам и моделям; формальной защиты архитектуры нет.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "app/services/user_service.py",
+              "line_start": 4,
+              "line_end": 12,
+              "title": "Сервис не зависит от HTTP-слоя",
+              "explanation": "Сервис использует security, модели и SQLModel, но не FastAPI-обработчики.",
+              "link_status": "verified",
+              "snippet": "from app.core.security import get_password\nfrom app.core.security import UnauthorizedError\nfrom app.core.security import verify_password\nfrom app.models.user_model import User\nfrom app.models.user_model import UserCreate\nfrom app.models.user_model import UserUpdate\nfrom sqlmodel import or_\nfrom sqlmodel import select\nfrom sqlmodel import Session",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/user_service.py#L4-L12"
+            }
+          ]
+        },
+        {
+          "id": "naming_clarity",
+          "name": "Ясность имён",
+          "weight": 0.5,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Имена сервисов, DTO и операций в целом ясно описывают предметную область; стиль полей местами смешивает camelCase и snake_case.",
+          "rationale": "Сопоставление с якорем 8: Имена сервисов, DTO и операций в целом ясно описывают предметную область; стиль полей местами смешивает camelCase и snake_case.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "app/services/todo_service.py",
+              "line_start": 17,
+              "line_end": 25,
+              "title": "Понятные имена операций",
+              "explanation": "list_todos и create_todo явно отражают выполняемое действие.",
+              "link_status": "verified",
+              "snippet": "async def list_todos(user: User, session: Session) -\u003e List[Todo]:\n    statement = select(Todo).where(Todo.user_id == user.id)\n    results = session.exec(statement)\n    todos = results.all()\n\n    return todos\n\n\nasync def create_todo(user: User, data: TodoCreate, session: Session) -\u003e Todo:",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L17-L25"
+            }
+          ]
+        },
+        {
+          "id": "function_complexity",
+          "name": "Сложность функций",
+          "weight": 0.5,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Функции короткие и выполняют ограниченные операции; обновление пользователя остаётся читаемым.",
+          "rationale": "Сопоставление с якорем 8: Функции короткие и выполняют ограниченные операции; обновление пользователя остаётся читаемым.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "app/services/user_service.py",
+              "line_start": 81,
+              "line_end": 104,
+              "title": "Локальная сложность обновления",
+              "explanation": "Проверка пароля, выбор разрешённых полей и сохранение расположены в одной небольшой функции.",
+              "link_status": "verified",
+              "snippet": "async def update_user(id: UUID, data: UserUpdate, session: Session) -\u003e User:\n    statement = select(User).where(User.id == id)\n    results = session.exec(statement)\n    user = results.first()\n\n    if not user:\n        raise UserNotFoundError(f\"User with id {id} not found\")\n\n    if not verify_password(password= [REDACTED] hashed_pass=user.hashed_password):\n        raise UnauthorizedError(\"Wrong password passed when trying to update user\")\n\n    for attr in [\"firstName\", \"lastName\", \"email\", \"username\", \"isAdmin\"]:\n        value = getattr(data, attr)\n        if value is not None:\n            setattr(user, attr, value)\n\n    if data.new_password is not None:\n        user.hashed_password = [REDACTED]\n\n    session.add(user)\n    session.commit()\n    session.refresh(user)\n\n    return user",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/user_service.py#L81-L104"
+            }
+          ]
+        },
+        {
+          "id": "duplication",
+          "name": "Дублирование",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Логика выпуска access- и refresh-токенов почти полностью скопирована.",
+          "rationale": "Сопоставление с якорем 5: Логика выпуска access- и refresh-токенов почти полностью скопирована.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "app/core/security.py",
+              "line_start": 29,
+              "line_end": 62,
+              "title": "Дублирование генерации JWT",
+              "explanation": "Две функции одинаково рассчитывают срок и подписывают одинаковый payload, различаясь настройками.",
+              "suggestion": "Выделить общий помощник выпуска токена с параметрами ключа и времени жизни.",
+              "link_status": "verified",
+              "snippet": "def create_access_token(\n    subject: Union[str, Any],\n    expires_delta: int | None = None,\n) -\u003e str:\n    if expires_delta is not None:\n        exp = datetime.utcnow() + timedelta(minutes=expires_delta)\n    else:\n        exp = datetime.utcnow() + timedelta(\n            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES,\n        )\n\n    to_encode = {\"exp\": exp, \"sub\": str(subject)}\n    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, settings.ALGORITHM)\n    return encoded_jwt\n\n\ndef create_refresh_token(\n    subject: Union[str, Any],\n    expires_delta: int | None = None,\n) -\u003e str:\n    if expires_delta is not None:\n        exp = datetime.utcnow() + timedelta(minutes=expires_delta)\n    else:\n        exp = datetime.utcnow() + timedelta(\n            minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES,\n        )\n\n    to_encode = {\"exp\": exp, \"sub\": str(subject)}\n    encoded_jwt = jwt.encode(\n        to_encode,\n        settings.JWT_REFRESH_SECRET_KEY,\n        settings.ALGORITHM,\n    )\n    return encoded_jwt",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/core/security.py#L29-L62"
+            }
+          ]
+        },
+        {
+          "id": "error_propagation",
+          "name": "Распространение ошибок",
+          "weight": 0.55,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Доменные ошибки преобразуются в HTTP-ответы, но ошибки БД и удаление отсутствующей задачи не обрабатываются последовательно.",
+          "rationale": "Сопоставление с якорем 5: Доменные ошибки преобразуются в HTTP-ответы, но ошибки БД и удаление отсутствующей задачи не обрабатываются последовательно.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "app/services/todo_service.py",
+              "line_start": 72,
+              "line_end": 75,
+              "title": "Удаление несуществующей задачи не проверяется",
+              "explanation": "retrieve_todo может вернуть None, после чего session.delete вызывается без контролируемой доменной ошибки.",
+              "suggestion": "Проверять результат retrieve_todo и выбрасывать TodoNotFoundError, который обработчик преобразует в 404.",
+              "link_status": "verified",
+              "snippet": "async def delete_todo(user: User, todo_id: UUID, session: Session) -\u003e None:\n    todo = await retrieve_todo(user, todo_id, session=session)\n    session.delete(todo)\n    session.commit()",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L72-L75"
+            }
+          ]
+        },
+        {
+          "id": "failure_messages",
+          "name": "Сообщения об ошибках",
+          "weight": 0.45,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Неожиданные исключения и представление входного пользователя возвращаются клиенту, что может раскрывать внутренние сведения.",
+          "rationale": "Сопоставление с якорем 2: Неожиданные исключения и представление входного пользователя возвращаются клиенту, что может раскрывать внутренние сведения.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "app/api/api_v1/handlers/user.py",
+              "line_start": 19,
+              "line_end": 26,
+              "title": "В ответ попадают детали исключений",
+              "explanation": "HTTP 409 и общий 400 используют str(ex); UserExistsError формируется с полным объектом UserCreate, содержащим пароль.",
+              "suggestion": "Логировать внутреннее исключение на сервере, а клиенту возвращать фиксированные безопасные сообщения без сериализации входной модели.",
+              "link_status": "verified",
+              "snippet": "@user_router.post(\"/\", summary=\"Create new user\", response_model=User)\nasync def create_user(*, session: Session = Depends(get_session), data: UserCreate):\n    try:\n        return await user_service.create_user(user=data, session=session)\n    except user_service.UserExistsError as ex:\n        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(ex))\n    except Exception as ex:\n        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(ex))",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/api/api_v1/handlers/user.py#L19-L26"
+            }
+          ]
+        },
+        {
+          "id": "logging",
+          "name": "Логирование",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Структурированного журналирования ключевых событий и отказов нет; присутствует отладочный print.",
+          "rationale": "Сопоставление с якорем 2: Структурированного журналирования ключевых событий и отказов нет; присутствует отладочный print.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "app/services/todo_service.py",
+              "line_start": 55,
+              "line_end": 67,
+              "title": "Отладочный вывод вместо логирования",
+              "explanation": "При обновлении выводятся поля в stdout, а операции и сбои не получают контекстного лог-события.",
+              "suggestion": "Заменить print на настроенный logger и логировать безопасные события ошибок и операций с идентификаторами запроса.",
+              "link_status": "verified",
+              "snippet": "    todo_data = data.dict(exclude_unset=True)\n    todo = await retrieve_todo(user, todo_id, session=session)\n\n    if todo is None:\n        raise TodoNotFoundError(f\"Todo with id {todo_id} not found\")\n\n    for key, value in todo_data.items():\n        print(key, value)\n        setattr(todo, key, value)\n\n    session.add(todo)\n    session.commit()\n    session.refresh(todo)",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L55-L67"
+            }
+          ]
+        },
+        {
+          "id": "api_contract_quality",
+          "name": "Качество контракта",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Маршруты имеют summary и response_model, но коды успеха и ошибки непоследовательны, а контракт раскрывает внутреннюю модель пользователя.",
+          "rationale": "Сопоставление с якорем 5: Маршруты имеют summary и response_model, но коды успеха и ошибки непоследовательны, а контракт раскрывает внутреннюю модель пользователя.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "app/models/user_model.py",
+              "line_start": 37,
+              "line_end": 39,
+              "title": "В публичную модель включён хеш пароля",
+              "explanation": "User применяется как response_model и содержит hashed_password, поэтому API возвращает клиенту хеш пароля.",
+              "suggestion": "Создать отдельные безопасные схемы ответов и исключить hashed_password из всех публичных response_model.",
+              "link_status": "verified",
+              "snippet": "class User(UserBase, table=True):\n    id: UUID = Field(default_factory=uuid4, primary_key=True, description=\"user id\")\n    hashed_password: [REDACTED] = Field(default=\"The hash of the password\")",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/models/user_model.py#L37-L39"
+            }
+          ]
+        },
+        {
+          "id": "input_validation",
+          "name": "Валидация входа",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Pydantic и типы UUID/email ограничивают основные поля, но модель задачи допускает пустой обязательный заголовок, а создание пользователя принимает isAdmin от клиента.",
+          "rationale": "Сопоставление с якорем 5: Pydantic и типы UUID/email ограничивают основные поля, но модель задачи допускает пустой обязательный заголовок, а создание пользователя принимает isAdmin от клиента.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "app/models/user_model.py",
+              "line_start": 9,
+              "line_end": 21,
+              "title": "Клиент задаёт административную роль",
+              "explanation": "UserCreate наследует isAdmin из UserBase, поэтому регистрационный запрос может назначить себе права администратора.",
+              "suggestion": "Исключить isAdmin из схемы публичной регистрации и назначать роль только в защищённой серверной операции.",
+              "link_status": "verified",
+              "snippet": "class UserBase(SQLModel):\n    username: str | None = Field(index=True, unique=True, description=\"user username\")\n    email: EmailStr | None = Field(unique=True, description=\"user email\")\n    firstName: str | None = Field(default=None, description=\"user first name\")\n    lastName: str | None = Field(default=None, description=\"user last name\")\n    isAdmin: bool = Field(\n        default=False,\n        description=\"Flag to indicate wether user is admin\",\n    )\n\n\nclass UserCreate(UserBase):\n    password: [REDACTED] = Field(min_length=5, max_length=24, description=\"user password\")",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/models/user_model.py#L9-L21"
+            }
+          ]
+        },
+        {
+          "id": "data_model_design",
+          "name": "Схема данных и миграции",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Есть первичные и уникальные ключи, однако схема создаётся create_all при старте и миграций для воспроизводимой истории изменений нет.",
+          "rationale": "Сопоставление с якорем 2: Есть первичные и уникальные ключи, однако схема создаётся create_all при старте и миграций для воспроизводимой истории изменений нет.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "app/database.py",
+              "line_start": 19,
+              "line_end": 20,
+              "title": "Нет управляемых миграций схемы",
+              "explanation": "Схема неявно создаётся из текущих моделей при запуске, без версионированного пути обновления.",
+              "suggestion": "Добавить версионированные миграции и применять их отдельным шагом развёртывания вместо create_all в startup.",
+              "link_status": "verified",
+              "snippet": "def create_db_and_tables():\n    SQLModel.metadata.create_all(engine)",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/database.py#L19-L20"
+            }
+          ]
+        },
+        {
+          "id": "query_correctness",
+          "name": "Корректность запросов",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Основные запросы параметризованы и задачи ограничены владельцем, но транзакционные сбои не обрабатываются, а обновление пользователя не проверяет конфликт уникальных полей.",
+          "rationale": "Сопоставление с якорем 5: Основные запросы параметризованы и задачи ограничены владельцем, но транзакционные сбои не обрабатываются, а обновление пользователя не проверяет конфликт уникальных полей.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "app/services/todo_service.py",
+              "line_start": 40,
+              "line_end": 46,
+              "title": "Выборка задачи ограничена владельцем",
+              "explanation": "Запрос одновременно фильтрует todo_id и user.id, предотвращая чтение чужой задачи обычным путём.",
+              "link_status": "verified",
+              "snippet": "async def retrieve_todo(user: User, todo_id: UUID, session: Session) -\u003e Optional[Todo]:\n    statement = select(Todo).where(Todo.id == todo_id).where(Todo.user_id == user.id)\n\n    results = session.exec(statement)\n    todo = results.first()\n\n    return todo",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L40-L46"
+            }
+          ]
+        },
+        {
+          "id": "data_access_efficiency",
+          "name": "Эффективность доступа",
+          "weight": 0.4,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Простые запросы не демонстрируют N+1, но список задач выгружается полностью без пагинации и ограничений объёма.",
+          "rationale": "Сопоставление с якорем 5: Простые запросы не демонстрируют N+1, но список задач выгружается полностью без пагинации и ограничений объёма.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "app/services/todo_service.py",
+              "line_start": 17,
+              "line_end": 22,
+              "title": "Список задач не ограничен",
+              "explanation": "results.all() возвращает все задачи пользователя без limit, offset или курсора.",
+              "suggestion": "Добавить пагинацию с ограничением размера страницы и документировать её в контракте API.",
+              "link_status": "verified",
+              "snippet": "async def list_todos(user: User, session: Session) -\u003e List[Todo]:\n    statement = select(Todo).where(Todo.user_id == user.id)\n    results = session.exec(statement)\n    todos = results.all()\n\n    return todos",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/todo_service.py#L17-L22"
+            }
+          ]
+        },
+        {
+          "id": "authn_authz",
+          "name": "Аутентификация и авторизация",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "JWT-проверка существует для части маршрутов, но изменение пользователя не требует текущего пользователя, а регистрация позволяет назначить isAdmin.",
+          "rationale": "Сопоставление с якорем 2: JWT-проверка существует для части маршрутов, но изменение пользователя не требует текущего пользователя, а регистрация позволяет назначить isAdmin.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "critical",
+              "file": "app/api/api_v1/handlers/user.py",
+              "line_start": 38,
+              "line_end": 58,
+              "title": "Обновление пользователя не авторизовано",
+              "explanation": "Маршрут PUT /users/{user_id} не зависит от get_current_user и не сопоставляет токен с user_id; знание пароля жертвы и её UUID позволяет менять профиль.",
+              "suggestion": "Требовать get_current_user, разрешать изменение только собственного профиля либо проверять отдельное административное право.",
+              "link_status": "verified",
+              "snippet": "@user_router.put(\"/{user_id}\", summary=\"Update User\", response_model=User)\nasync def update_user(\n    *, session: Session = Depends(get_session), user_id: UUID, data: UserUpdate\n):\n    try:\n        return await user_service.update_user(id=user_id, data=data, session=session)\n    except user_service.UserNotFoundError as ex:\n        raise HTTPException(\n            status_code=status.HTTP_404_NOT_FOUND,\n            detail=[{\"msg\": str(ex)}],\n        )\n    except security.UnauthorizedError as ex:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=[{\"msg\": str(ex)}],\n        )\n    except Exception as ex:\n        raise HTTPException(\n            status_code=status.HTTP_400_BAD_REQUEST,\n            detail=[{\"msg\": str(ex)}],\n        )",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/api/api_v1/handlers/user.py#L38-L58"
+            }
+          ]
+        },
+        {
+          "id": "secrets_handling",
+          "name": "Работа с секретами",
+          "weight": 0.5,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Ключи JWT и строка подключения считываются из окружения, а в репозитории есть value-free по смыслу пример конфигурации.",
+          "rationale": "Сопоставление с якорем 8: Ключи JWT и строка подключения считываются из окружения, а в репозитории есть value-free по смыслу пример конфигурации.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "app/core/config.py",
+              "line_start": 9,
+              "line_end": 22,
+              "title": "Секреты отделены от исходного кода",
+              "explanation": "JWT-ключи и строка подключения загружаются через config, а не задаются непосредственно в модуле.",
+              "link_status": "verified",
+              "snippet": "class Settings(BaseSettings):\n    API_V1_STR: str = \"/api/v1\"\n    JWT_SECRET_KEY: str = config(\"JWT_SECRET_KEY\", cast=str)\n    JWT_REFRESH_SECRET_KEY: str = config(\"JWT_REFRESH_SECRET_KEY\", cast=str)\n    ALGORITHM = \"HS256\"\n    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60\n    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days\n    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [\n        parse_obj_as(AnyHttpUrl, \"http://localhost:5173\"),\n    ]\n    PROJECT_NAME: str = \"TODO list\"\n\n    # Database\n    SQL_CONNECTION_STRING: str = config(\"SQL_CONNECTION_STRING\", cast=str)",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/core/config.py#L9-L22"
+            }
+          ]
+        },
+        {
+          "id": "injection_protection",
+          "name": "Защита от инъекций",
+          "weight": 0.5,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Ввод типизирован Pydantic-моделями, а запросы строятся через SQLModel-выражения без конкатенации SQL.",
+          "rationale": "Сопоставление с якорем 8: Ввод типизирован Pydantic-моделями, а запросы строятся через SQLModel-выражения без конкатенации SQL.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "app/services/user_service.py",
+              "line_start": 23,
+              "line_end": 29,
+              "title": "Параметризованный запрос пользователя",
+              "explanation": "Условия поиска строятся SQLModel через поля модели и or_, а не через строковый SQL из ввода.",
+              "link_status": "verified",
+              "snippet": "async def check_user_exists(user: UserCreate, session: Session) -\u003e None:\n    statement = select(User).where(\n        or_(User.username == user.username, User.email == user.email),\n    )\n    results = session.exec(statement).all()\n    if len(results) \u003e 0:\n        raise UserExistsError(f\"User {user} already exists\")",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/app/services/user_service.py#L23-L29"
+            }
+          ]
+        },
+        {
+          "id": "test_quality_and_coverage",
+          "name": "Покрытие и качество тестов",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Покрыты базовые CRUD-сценарии и несколько ошибок, но критичные входы аутентификации, refresh и разграничение доступа не проверяются; тесты подменяют текущего пользователя.",
+          "rationale": "Сопоставление с якорем 5: Покрыты базовые CRUD-сценарии и несколько ошибок, но критичные входы аутентификации, refresh и разграничение доступа не проверяются; тесты подменяют текущего пользователя.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "tests/conftest.py",
+              "line_start": 29,
+              "line_end": 49,
+              "title": "Тесты обходят реальную аутентификацию",
+              "explanation": "dependency_overrides всегда подставляет get_current_user, поэтому JWT-аутентификация и авторизация маршрутов не проверяются.",
+              "suggestion": "Добавить изолированные тесты login, refresh, неверных и просроченных токенов, а также запрета доступа к чужим ресурсам.",
+              "link_status": "verified",
+              "snippet": "@functools.lru_cache\ndef get_current_user_override():\n    return User(\n        username=\"currentuser\",\n        email=\"currentuser@gmail.com\",\n        firstName=\"Current\",\n        lastName=\"User\",\n        hashed_password= [REDACTED]\"verylongpassword\"),\n    )\n\n\n@pytest.fixture(name=\"client\")\ndef client_fixture(session: Session):\n    def get_session_override():\n        return session\n\n    app.dependency_overrides[get_current_user] = get_current_user_override\n    app.dependency_overrides[get_session] = get_session_override\n    client = TestClient(app)\n    yield client\n    app.dependency_overrides.clear()",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/tests/conftest.py#L29-L49"
+            }
+          ]
+        },
+        {
+          "id": "test_runnability",
+          "name": "Запускаемость тестов",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Зависимости для pytest перечислены и testpaths настроен, но в проверенной области нет инструкции запуска или декларации воспроизводимого окружения.",
+          "rationale": "Сопоставление с якорем 5: Зависимости для pytest перечислены и testpaths настроен, но в проверенной области нет инструкции запуска или декларации воспроизводимого окружения.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "pytest.ini",
+              "line_start": 1,
+              "line_end": 5,
+              "title": "Запуск тестов описан неполно",
+              "explanation": "Конфигурация pytest задаёт пути и coverage, но не документирует подготовку окружения и команду запуска.",
+              "suggestion": "Добавить в README или отдельную документацию минимальные шаги установки dev-зависимостей и запуска pytest.",
+              "link_status": "verified",
+              "snippet": "[pytest]\nminversion = 6.0\naddopts = --cov=app --cov-report html --cov-report term-missing -v\ntestpaths =\n    tests",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/backend/pytest.ini#L1-L5"
+            }
+          ]
+        }
+      ]
+    },
+    "frontend": {
+      "status": "done",
+      "score": 5.270000000000001,
+      "max": 10,
+      "categories": [
+        {
+          "id": "component_architecture",
+          "name": "Компонентная архитектура",
+          "weight": 0.2,
+          "score": 6.8,
+          "subcategories": [
+            {
+              "id": "decomposition",
+              "name": "Декомпозиция",
+              "weight": 0.6,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "component_design",
+                  "name": "Декомпозиция и переиспользование",
+                  "weight": 1,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Функции списка, карточки, деталей и создания/редактирования задач разделены; форма переиспользуется для двух сценариев.",
+                  "rationale": "Сопоставление с якорем 8: Функции списка, карточки, деталей и создания/редактирования задач разделены; форма переиспользуется для двух сценариев.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/Todo/AddUpdateTodoModal.tsx",
+                      "line_start": 28,
+                      "line_end": 40,
+                      "title": "Переиспользуемый компонент формы задачи",
+                      "explanation": "Один компонент параметризован режимом editable, начальными значениями и callback успешного сохранения.",
+                      "link_status": "verified",
+                      "snippet": "export type AddUpdateTodoModalProps = {\n  editable?: boolean\n  defaultValues?: TodoType\n  onSuccess: () =\u003e void\n  style?: BoxProps\n}\n\nexport const AddUpdateTodoModal = ({\n  editable = false,\n  defaultValues,\n  onSuccess,\n  style = {},\n}: AddUpdateTodoModalProps) =\u003e {",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/AddUpdateTodoModal.tsx#L28-L40"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "code_organization",
+              "name": "Организация кода",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "code_structure_and_concerns",
+                  "name": "Структура и разделение ответственности",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Структура по компонентам понятна и HTTP-клиент выделен, но запросы и обработка их состояний остаются внутри экранных компонентов.",
+                  "rationale": "Сопоставление с якорем 5: Структура по компонентам понятна и HTTP-клиент выделен, но запросы и обработка их состояний остаются внутри экранных компонентов.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/Todo/TodoList.tsx",
+                      "line_start": 19,
+                      "line_end": 31,
+                      "title": "Получение данных смешано с представлением",
+                      "explanation": "Компонент списка напрямую выполняет запрос и управляет его состоянием.",
+                      "suggestion": "Вынести запросы задач и их состояния в специализированный хук или слой API.",
+                      "link_status": "verified",
+                      "snippet": "  const fetchTodos = (): void =\u003e {\n    setLoading(true)\n    axiosInstance\n      .get('/todo/')\n      .then((res) =\u003e {\n        setTodos(res.data)\n      })\n      .catch((error) =\u003e {\n        console.error(error)\n      })\n      .finally(() =\u003e {\n        setLoading(false)\n      })",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoList.tsx#L19-L31"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "state_data_management",
+          "name": "Управление состоянием и данными",
+          "weight": 0.16,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "state",
+              "name": "Состояние",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "state_management",
+                  "name": "Размещение и предсказуемость состояния",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Состояние аутентификации централизовано через context и reducer, а состояние экранов локально; единый подход для серверных сущностей не сформирован.",
+                  "rationale": "Сопоставление с якорем 5: Состояние аутентификации централизовано через context и reducer, а состояние экранов локально; единый подход для серверных сущностей не сформирован.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/context/JWTAuthContext.tsx",
+                      "line_start": 22,
+                      "line_end": 73,
+                      "title": "Состояние аутентификации централизовано",
+                      "explanation": "Начальное состояние и переходы INITIALIZE, LOGIN и LOGOUT описаны одним reducer.",
+                      "link_status": "verified",
+                      "snippet": "const initialState: StateType = {\n  isAuthenticated: false,\n  isInitialized: false,\n  user: null,\n}\n\ntype ActionInitialize = { type: 'INITIALIZE'; payload: StateType }\ntype ActionLogin = { type: 'LOGIN'; payload: StateType }\ntype ActionLogout = { type: 'LOGOUT' }\n\ntype ActionType = ActionInitialize | ActionLogin | ActionLogout\n\nexport const AuthContext = createContext({\n  ...initialState,\n  login: (username: string, password: [REDACTED] =\u003e Promise.resolve(),\n  logout: () =\u003e Promise.resolve(),\n  reset: () =\u003e Promise.resolve(),\n})\n\nfunction reducer(state: StateType, action: ActionType): StateType {\n  switch (action.type) {\n    case 'INITIALIZE': {\n      const { isAuthenticated, user } = action.payload\n\n      return {\n        ...state,\n        isAuthenticated,\n        isInitialized: true,\n        user,\n      }\n    }\n    case 'LOGIN': {\n      const { user } = action.payload\n\n      return {\n        ...state,\n        isAuthenticated: true,\n        user,\n      }\n    }\n    case 'LOGOUT': {\n      return {\n        ...state,\n        isAuthenticated: false,\n        user: null,\n      }\n    }\n    default: {\n      return state\n    }\n  }\n}",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/context/JWTAuthContext.tsx#L22-L73"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "server_data",
+              "name": "Работа с сервером",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "data_fetching",
+                  "name": "Получение данных",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Есть единый экземпляр Axios, однако кэширование, инвалидация и общий слой запросов отсутствуют.",
+                  "rationale": "Сопоставление с якорем 5: Есть единый экземпляр Axios, однако кэширование, инвалидация и общий слой запросов отсутствуют.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/services/axios.ts",
+                      "line_start": 1,
+                      "line_end": 14,
+                      "title": "Клиент есть, стратегии данных нет",
+                      "explanation": "Файл задаёт только базовый Axios-клиент и пробрасывает ошибки без политики кэша или повторного получения.",
+                      "suggestion": "Добавить слой запросов с кэшированием и инвалидацией после мутаций, например на базе TanStack Query.",
+                      "link_status": "verified",
+                      "snippet": "import axios from 'axios'\n\nconst baseURL = 'http://localhost:8000/api/v1/'\n\nconst axiosInstance = axios.create({\n  baseURL,\n})\n\naxiosInstance.interceptors.response.use(\n  (response) =\u003e response,\n  (error) =\u003e {\n    return Promise.reject(error)\n  }\n)",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/services/axios.ts#L1-L14"
+                    }
+                  ]
+                },
+                {
+                  "id": "async_states",
+                  "name": "Асинхронные состояния",
+                  "weight": 0.4,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Загрузка отображается, а мутации дают toast-уведомления, но ошибки загрузки списка скрываются в console и нет состояния пустых данных.",
+                  "rationale": "Сопоставление с якорем 5: Загрузка отображается, а мутации дают toast-уведомления, но ошибки загрузки списка скрываются в console и нет состояния пустых данных.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/Todo/TodoList.tsx",
+                      "line_start": 19,
+                      "line_end": 31,
+                      "title": "Ошибка загрузки не видна пользователю",
+                      "explanation": "Обработчик ошибки только пишет её в консоль; после этого отображается пустой контейнер.",
+                      "suggestion": "Хранить ошибку запроса и показать доступное сообщение с действием повторить загрузку и отдельное empty-state.",
+                      "link_status": "verified",
+                      "snippet": "  const fetchTodos = (): void =\u003e {\n    setLoading(true)\n    axiosInstance\n      .get('/todo/')\n      .then((res) =\u003e {\n        setTodos(res.data)\n      })\n      .catch((error) =\u003e {\n        console.error(error)\n      })\n      .finally(() =\u003e {\n        setLoading(false)\n      })",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoList.tsx#L19-L31"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "typing_contracts",
+          "name": "Типизация и контракты",
+          "weight": 0.14,
+          "score": 4.28,
+          "subcategories": [
+            {
+              "id": "type_strictness",
+              "name": "Строгость типов",
+              "weight": 0.6,
+              "score": 3.8,
+              "metrics": [
+                {
+                  "id": "type_strictness",
+                  "name": "Строгость типов",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Включён strict-режим TypeScript и основные сущности типизированы, но публичный props AuthProvider использует any.",
+                  "rationale": "Сопоставление с якорем 5: Включён strict-режим TypeScript и основные сущности типизированы, но публичный props AuthProvider использует any.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/context/JWTAuthContext.tsx",
+                      "line_start": 75,
+                      "line_end": 79,
+                      "title": "Использован any для children",
+                      "explanation": "Тип AuthProviderType объявляет children как any, обходя проверку границы компонента.",
+                      "suggestion": "Заменить any на ReactNode или PropsWithChildren.",
+                      "link_status": "verified",
+                      "snippet": "type AuthProviderType = {\n  children: any\n}\n\nexport const AuthProvider = ({ children }: AuthProviderType) =\u003e {",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/context/JWTAuthContext.tsx#L75-L79"
+                    }
+                  ]
+                },
+                {
+                  "id": "api_types",
+                  "name": "Типы API",
+                  "weight": 0.4,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Типы API описаны вручную рядом с компонентами; связи с контрактом или автоматической проверки дрейфа не видно.",
+                  "rationale": "Сопоставление с якорем 2: Типы API описаны вручную рядом с компонентами; связи с контрактом или автоматической проверки дрейфа не видно.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/Todo/TodoDetail.tsx",
+                      "line_start": 15,
+                      "line_end": 20,
+                      "title": "Модель API объявлена вручную",
+                      "explanation": "TodoType локально описывает ответ API и не происходит из общего контракта.",
+                      "suggestion": "Генерировать типы клиента из OpenAPI/схемы backend и использовать их в API-слое.",
+                      "link_status": "verified",
+                      "snippet": "export type TodoType = {\n  id: string\n  title: string\n  status: boolean\n  description: string\n}",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoDetail.tsx#L15-L20"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "component_boundaries",
+              "name": "Границы компонентов",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "props_contracts",
+                  "name": "Контракты props",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Основные публичные компоненты имеют объявленные props, но контракты не везде строги и единообразны.",
+                  "rationale": "Сопоставление с якорем 5: Основные публичные компоненты имеют объявленные props, но контракты не везде строги и единообразны.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/Todo/AddUpdateTodoModal.tsx",
+                      "line_start": 28,
+                      "line_end": 40,
+                      "title": "Props формы задачи типизированы",
+                      "explanation": "Контракт задаёт режим, исходные данные, callback и параметры отображения.",
+                      "link_status": "verified",
+                      "snippet": "export type AddUpdateTodoModalProps = {\n  editable?: boolean\n  defaultValues?: TodoType\n  onSuccess: () =\u003e void\n  style?: BoxProps\n}\n\nexport const AddUpdateTodoModal = ({\n  editable = false,\n  defaultValues,\n  onSuccess,\n  style = {},\n}: AddUpdateTodoModalProps) =\u003e {",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/AddUpdateTodoModal.tsx#L28-L40"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "performance",
+          "name": "Производительность",
+          "weight": 0.12,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "rendering",
+              "name": "Рендеринг",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "render_efficiency",
+                  "name": "Эффективность рендеринга",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Явных тяжёлых вычислений или неконтролируемых обновлений в просмотренных экранах нет, но производительность не измеряется и мемоизация не обоснована.",
+                  "rationale": "Сопоставление с якорем 5: Явных тяжёлых вычислений или неконтролируемых обновлений в просмотренных экранах нет, но производительность не измеряется и мемоизация не обоснована.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/Todo/TodoList.tsx",
+                      "line_start": 8,
+                      "line_end": 17,
+                      "title": "Загрузка списка ограничена монтированием",
+                      "explanation": "Эффект имеет пустой массив зависимостей и защёлку useRef, поэтому повторный запрос не запускается при каждом рендере.",
+                      "link_status": "verified",
+                      "snippet": "export const TodoList = () =\u003e {\n  const [todos, setTodos] = useState\u003cTodoType[]\u003e([])\n  const [loading, setLoading] = useState(true)\n  const isMounted = useRef(false)\n\n  useEffect(() =\u003e {\n    if (isMounted.current) return\n    fetchTodos()\n    isMounted.current = true\n  }, [])",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoList.tsx#L8-L17"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "loading",
+              "name": "Загрузка",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "bundle_and_assets",
+                  "name": "Бандл и ассеты",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Используется Vite, но маршруты загружаются статическими импортами и код-сплиттинг для экранов не настроен.",
+                  "rationale": "Сопоставление с якорем 5: Используется Vite, но маршруты загружаются статическими импортами и код-сплиттинг для экранов не настроен.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/App.tsx",
+                      "line_start": 8,
+                      "line_end": 18,
+                      "title": "Экраны входят в начальный импорт",
+                      "explanation": "Все маршрутные компоненты импортируются синхронно в корневом модуле.",
+                      "suggestion": "Загружать неосновные маршруты через React.lazy и Suspense, оставив в стартовом бандле только критичный путь.",
+                      "link_status": "verified",
+                      "snippet": "import { Authenticated } from './components/Auth/Authenticated'\nimport { Login } from './components/Auth/Login'\nimport { PublicRoute } from './components/Auth/PublicRoute'\nimport { Register } from './components/Auth/Register'\nimport { SidebarWithHeader } from './components/Sidebar/Sidebar'\nimport { TodoDetail } from './components/Todo/TodoDetail'\nimport { TodoList } from './components/Todo/TodoList'\nimport { AuthConsumer, AuthProvider } from './context/JWTAuthContext'\nimport { UserProfile } from './components/User/Profile'\nimport { Home } from './components/Home/Home'\nimport { Users } from './components/User/Users'",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/App.tsx#L8-L18"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "accessibility",
+          "name": "Доступность",
+          "weight": 0.12,
+          "score": 4.19,
+          "subcategories": [
+            {
+              "id": "semantics",
+              "name": "Семантика",
+              "weight": 0.55,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "semantic_accessibility",
+                  "name": "Семантика и ARIA",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Формы используют FormControl, FormLabel и нативные input, но интерактивная карточка задачи реализована как Flex-контейнер.",
+                  "rationale": "Сопоставление с якорем 5: Формы используют FormControl, FormLabel и нативные input, но интерактивная карточка задачи реализована как Flex-контейнер.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/Todo/TodoCard.tsx",
+                      "line_start": 13,
+                      "line_end": 27,
+                      "title": "Карточка с действием не имеет семантики управления",
+                      "explanation": "Flex реагирует на onClick, но не является кнопкой или ссылкой.",
+                      "suggestion": "Использовать Link/Button либо добавить корректные role, tabIndex и обработку клавиатуры.",
+                      "link_status": "verified",
+                      "snippet": "    \u003cFlex\n      bg={useColorModeValue('gray.300', 'gray.600')}\n      minHeight=\"3rem\"\n      my={3}\n      p={3}\n      rounded=\"lg\"\n      alignItems=\"center\"\n      justifyContent=\"space-between\"\n      _hover={{\n        opacity: 0.9,\n        cursor: 'pointer',\n        transform: 'translateY(-3px)',\n      }}\n      onClick={() =\u003e navigate(`/todo/${todo.id}`, { replace: true })}\n    \u003e",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoCard.tsx#L13-L27"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "interaction",
+              "name": "Взаимодействие",
+              "weight": 0.45,
+              "score": 3.2,
+              "metrics": [
+                {
+                  "id": "keyboard_navigation",
+                  "name": "Навигация с клавиатуры",
+                  "weight": 0.6,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Основное действие открытия задачи доступно только через click на неинтерактивном Flex, поэтому клавиатурный сценарий нарушен.",
+                  "rationale": "Сопоставление с якорем 2: Основное действие открытия задачи доступно только через click на неинтерактивном Flex, поэтому клавиатурный сценарий нарушен.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/Todo/TodoCard.tsx",
+                      "line_start": 21,
+                      "line_end": 27,
+                      "title": "Открытие задачи недоступно с клавиатуры",
+                      "explanation": "У карточки есть onClick и курсор pointer, но нет фокуса и обработчика Enter/Space.",
+                      "suggestion": "Заменить контейнер на семантическую ссылку к маршруту задачи или нативную кнопку.",
+                      "link_status": "verified",
+                      "snippet": "      _hover={{\n        opacity: 0.9,\n        cursor: 'pointer',\n        transform: 'translateY(-3px)',\n      }}\n      onClick={() =\u003e navigate(`/todo/${todo.id}`, { replace: true })}\n    \u003e",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoCard.tsx#L21-L27"
+                    }
+                  ]
+                },
+                {
+                  "id": "contrast_and_focus",
+                  "name": "Контраст и фокус",
+                  "weight": 0.4,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Chakra UI предоставляет базовые состояния и цветовые схемы, но в навигации фокус намеренно скрыт.",
+                  "rationale": "Сопоставление с якорем 5: Chakra UI предоставляет базовые состояния и цветовые схемы, но в навигации фокус намеренно скрыт.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/Sidebar/Sidebar.tsx",
+                      "line_start": 121,
+                      "line_end": 127,
+                      "title": "Фокус навигации скрыт",
+                      "explanation": "Для Link задано _focus с boxShadow: none без альтернативного видимого индикатора.",
+                      "suggestion": "Вернуть заметный focus-visible стиль с достаточным контрастом.",
+                      "link_status": "verified",
+                      "snippet": "const NavItem = ({ icon, children, ...rest }: NavItemProps) =\u003e {\n  return (\n    \u003cLink\n      href=\"#\"\n      style={{ textDecoration: 'none' }}\n      _focus={{ boxShadow: 'none' }}\n    \u003e",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Sidebar/Sidebar.tsx#L121-L127"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ui_style_consistency",
+          "name": "Консистентность UI и стилей",
+          "weight": 0.12,
+          "score": 8,
+          "subcategories": [
+            {
+              "id": "style_system",
+              "name": "Система стилей",
+              "weight": 0.6,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "styling_consistency",
+                  "name": "Подход к стилям и консистентность",
+                  "weight": 1,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Интерфейс последовательно построен на Chakra UI с общими цветовыми схемами, размерами и компонентами.",
+                  "rationale": "Сопоставление с якорем 8: Интерфейс последовательно построен на Chakra UI с общими цветовыми схемами, размерами и компонентами.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/Todo/AddUpdateTodoModal.tsx",
+                      "line_start": 79,
+                      "line_end": 95,
+                      "title": "Использована единая система компонентов",
+                      "explanation": "Форма использует компоненты и токены Chakra UI вместо локальной разрозненной разметки.",
+                      "link_status": "verified",
+                      "snippet": "  return (\n    \u003cBox {...style}\u003e\n      \u003cButton w=\"100%\" colorScheme=\"orange\" onClick={onOpen}\u003e\n        {editable ? 'UPDATE TODO' : 'ADD TODO'}\n      \u003c/Button\u003e\n      \u003cModal\n        closeOnOverlayClick={false}\n        size=\"xl\"\n        onClose={onClose}\n        isOpen={isOpen}\n        isCentered\n      \u003e\n        \u003cModalOverlay /\u003e\n        \u003cform onSubmit={handleSubmit(onSubmit)}\u003e\n          \u003cModalContent\u003e\n            \u003cModalHeader\u003e{editable ? 'Update Todo' : 'ADD Todo'}\u003c/ModalHeader\u003e\n            \u003cModalCloseButton /\u003e",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/AddUpdateTodoModal.tsx#L79-L95"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "responsiveness",
+              "name": "Адаптивность",
+              "weight": 0.4,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "responsiveness",
+                  "name": "Адаптивность",
+                  "weight": 1,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "В основных экранах применены responsive props Chakra UI, включая разные раскладки и поведение боковой панели на малых экранах.",
+                  "rationale": "Сопоставление с якорем 8: В основных экранах применены responsive props Chakra UI, включая разные раскладки и поведение боковой панели на малых экранах.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/Sidebar/Sidebar.tsx",
+                      "line_start": 52,
+                      "line_end": 75,
+                      "title": "Навигация адаптирована для мобильного экрана",
+                      "explanation": "Боковая панель скрывается на base и открывается через полноэкранный Drawer; контент меняет отступ.",
+                      "link_status": "verified",
+                      "snippet": "export function SidebarWithHeader({ children }: { children: ReactNode }) {\n  const { isOpen, onOpen, onClose } = useDisclosure()\n  return (\n    \u003cBox minH=\"100vh\" bg={useColorModeValue('gray.100', 'gray.900')}\u003e\n      \u003cSidebarContent\n        onClose={() =\u003e onClose}\n        display={{ base: 'none', md: 'block' }}\n      /\u003e\n      \u003cDrawer\n        isOpen={isOpen}\n        placement=\"left\"\n        onClose={onClose}\n        returnFocusOnClose={false}\n        onOverlayClick={onClose}\n        size=\"full\"\n      \u003e\n        \u003cDrawerContent\u003e\n          \u003cSidebarContent onClose={onClose} /\u003e\n        \u003c/DrawerContent\u003e\n      \u003c/Drawer\u003e\n      {/* mobilenav */}\n      \u003cMobileNav onOpen={onOpen} /\u003e\n      \u003cBox ml={{ base: 0, md: 60 }} p=\"4\"\u003e\n        {children}",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Sidebar/Sidebar.tsx#L52-L75"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "testing",
+          "name": "Тестирование",
+          "weight": 0.14,
+          "score": 3.2,
+          "subcategories": [
+            {
+              "id": "test_content",
+              "name": "Содержание тестов",
+              "weight": 0.6,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "test_quality_and_coverage",
+                  "name": "Покрытие и качество тестов",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Есть только smoke-тест заголовка Home; ключевые сценарии аутентификации, запросов, форм и маршрутов не покрыты.",
+                  "rationale": "Сопоставление с якорем 2: Есть только smoke-тест заголовка Home; ключевые сценарии аутентификации, запросов, форм и маршрутов не покрыты.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/Home/Home.test.tsx",
+                      "line_start": 5,
+                      "line_end": 10,
+                      "title": "Тестируется только статический текст",
+                      "explanation": "Единственный тест проверяет наличие строки Todo app и не затрагивает пользовательские сценарии.",
+                      "suggestion": "Добавить тесты форм, защищённых маршрутов, загрузки/ошибок задач и CRUD-сценариев с замоканным API.",
+                      "link_status": "verified",
+                      "snippet": "describe('When rendering Home page', () =\u003e {\n  it('Should render with the text \"Todo app\"', () =\u003e {\n    render(\u003cHome /\u003e, { wrapper: BrowserRouter })\n    expect(screen.getByText('Todo app')).toBeInTheDocument()\n  })\n})",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Home/Home.test.tsx#L5-L10"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "test_runnability_area",
+              "name": "Запускаемость",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "test_runnability",
+                  "name": "Запускаемость тестов",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Скрипты Vitest и конфигурация jsdom определены, но воспроизводимость с чистого окружения не документирована и не проверялась в рамках ревью.",
+                  "rationale": "Сопоставление с якорем 5: Скрипты Vitest и конфигурация jsdom определены, но воспроизводимость с чистого окружения не документирована и не проверялась в рамках ревью.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "package.json",
+                      "line_start": 6,
+                      "line_end": 13,
+                      "title": "Команда тестов определена без документации запуска",
+                      "explanation": "Есть test и test:run, однако в области frontend не найдено описание установки зависимостей и запуска с чистого окружения.",
+                      "suggestion": "Добавить краткую документацию с требуемой версией Node, установкой зависимостей и командой CI-тестов.",
+                      "link_status": "verified",
+                      "snippet": "  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"tsc \u0026\u0026 vite build\",\n    \"preview\": \"vite preview\",\n    \"test\": \"vitest\",\n    \"coverage\": \"vitest run --coverage\",\n    \"test:ui\": \"vitest --ui\",\n    \"test:run\": \"vitest run\"",
+                      "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/package.json#L6-L13"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "component_design",
+          "name": "Декомпозиция и переиспользование",
+          "weight": 1,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Функции списка, карточки, деталей и создания/редактирования задач разделены; форма переиспользуется для двух сценариев.",
+          "rationale": "Сопоставление с якорем 8: Функции списка, карточки, деталей и создания/редактирования задач разделены; форма переиспользуется для двух сценариев.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/Todo/AddUpdateTodoModal.tsx",
+              "line_start": 28,
+              "line_end": 40,
+              "title": "Переиспользуемый компонент формы задачи",
+              "explanation": "Один компонент параметризован режимом editable, начальными значениями и callback успешного сохранения.",
+              "link_status": "verified",
+              "snippet": "export type AddUpdateTodoModalProps = {\n  editable?: boolean\n  defaultValues?: TodoType\n  onSuccess: () =\u003e void\n  style?: BoxProps\n}\n\nexport const AddUpdateTodoModal = ({\n  editable = false,\n  defaultValues,\n  onSuccess,\n  style = {},\n}: AddUpdateTodoModalProps) =\u003e {",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/AddUpdateTodoModal.tsx#L28-L40"
+            }
+          ]
+        },
+        {
+          "id": "code_structure_and_concerns",
+          "name": "Структура и разделение ответственности",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Структура по компонентам понятна и HTTP-клиент выделен, но запросы и обработка их состояний остаются внутри экранных компонентов.",
+          "rationale": "Сопоставление с якорем 5: Структура по компонентам понятна и HTTP-клиент выделен, но запросы и обработка их состояний остаются внутри экранных компонентов.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/Todo/TodoList.tsx",
+              "line_start": 19,
+              "line_end": 31,
+              "title": "Получение данных смешано с представлением",
+              "explanation": "Компонент списка напрямую выполняет запрос и управляет его состоянием.",
+              "suggestion": "Вынести запросы задач и их состояния в специализированный хук или слой API.",
+              "link_status": "verified",
+              "snippet": "  const fetchTodos = (): void =\u003e {\n    setLoading(true)\n    axiosInstance\n      .get('/todo/')\n      .then((res) =\u003e {\n        setTodos(res.data)\n      })\n      .catch((error) =\u003e {\n        console.error(error)\n      })\n      .finally(() =\u003e {\n        setLoading(false)\n      })",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoList.tsx#L19-L31"
+            }
+          ]
+        },
+        {
+          "id": "state_management",
+          "name": "Размещение и предсказуемость состояния",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Состояние аутентификации централизовано через context и reducer, а состояние экранов локально; единый подход для серверных сущностей не сформирован.",
+          "rationale": "Сопоставление с якорем 5: Состояние аутентификации централизовано через context и reducer, а состояние экранов локально; единый подход для серверных сущностей не сформирован.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/context/JWTAuthContext.tsx",
+              "line_start": 22,
+              "line_end": 73,
+              "title": "Состояние аутентификации централизовано",
+              "explanation": "Начальное состояние и переходы INITIALIZE, LOGIN и LOGOUT описаны одним reducer.",
+              "link_status": "verified",
+              "snippet": "const initialState: StateType = {\n  isAuthenticated: false,\n  isInitialized: false,\n  user: null,\n}\n\ntype ActionInitialize = { type: 'INITIALIZE'; payload: StateType }\ntype ActionLogin = { type: 'LOGIN'; payload: StateType }\ntype ActionLogout = { type: 'LOGOUT' }\n\ntype ActionType = ActionInitialize | ActionLogin | ActionLogout\n\nexport const AuthContext = createContext({\n  ...initialState,\n  login: (username: string, password: [REDACTED] =\u003e Promise.resolve(),\n  logout: () =\u003e Promise.resolve(),\n  reset: () =\u003e Promise.resolve(),\n})\n\nfunction reducer(state: StateType, action: ActionType): StateType {\n  switch (action.type) {\n    case 'INITIALIZE': {\n      const { isAuthenticated, user } = action.payload\n\n      return {\n        ...state,\n        isAuthenticated,\n        isInitialized: true,\n        user,\n      }\n    }\n    case 'LOGIN': {\n      const { user } = action.payload\n\n      return {\n        ...state,\n        isAuthenticated: true,\n        user,\n      }\n    }\n    case 'LOGOUT': {\n      return {\n        ...state,\n        isAuthenticated: false,\n        user: null,\n      }\n    }\n    default: {\n      return state\n    }\n  }\n}",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/context/JWTAuthContext.tsx#L22-L73"
+            }
+          ]
+        },
+        {
+          "id": "data_fetching",
+          "name": "Получение данных",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Есть единый экземпляр Axios, однако кэширование, инвалидация и общий слой запросов отсутствуют.",
+          "rationale": "Сопоставление с якорем 5: Есть единый экземпляр Axios, однако кэширование, инвалидация и общий слой запросов отсутствуют.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/services/axios.ts",
+              "line_start": 1,
+              "line_end": 14,
+              "title": "Клиент есть, стратегии данных нет",
+              "explanation": "Файл задаёт только базовый Axios-клиент и пробрасывает ошибки без политики кэша или повторного получения.",
+              "suggestion": "Добавить слой запросов с кэшированием и инвалидацией после мутаций, например на базе TanStack Query.",
+              "link_status": "verified",
+              "snippet": "import axios from 'axios'\n\nconst baseURL = 'http://localhost:8000/api/v1/'\n\nconst axiosInstance = axios.create({\n  baseURL,\n})\n\naxiosInstance.interceptors.response.use(\n  (response) =\u003e response,\n  (error) =\u003e {\n    return Promise.reject(error)\n  }\n)",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/services/axios.ts#L1-L14"
+            }
+          ]
+        },
+        {
+          "id": "async_states",
+          "name": "Асинхронные состояния",
+          "weight": 0.4,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Загрузка отображается, а мутации дают toast-уведомления, но ошибки загрузки списка скрываются в console и нет состояния пустых данных.",
+          "rationale": "Сопоставление с якорем 5: Загрузка отображается, а мутации дают toast-уведомления, но ошибки загрузки списка скрываются в console и нет состояния пустых данных.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/Todo/TodoList.tsx",
+              "line_start": 19,
+              "line_end": 31,
+              "title": "Ошибка загрузки не видна пользователю",
+              "explanation": "Обработчик ошибки только пишет её в консоль; после этого отображается пустой контейнер.",
+              "suggestion": "Хранить ошибку запроса и показать доступное сообщение с действием повторить загрузку и отдельное empty-state.",
+              "link_status": "verified",
+              "snippet": "  const fetchTodos = (): void =\u003e {\n    setLoading(true)\n    axiosInstance\n      .get('/todo/')\n      .then((res) =\u003e {\n        setTodos(res.data)\n      })\n      .catch((error) =\u003e {\n        console.error(error)\n      })\n      .finally(() =\u003e {\n        setLoading(false)\n      })",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoList.tsx#L19-L31"
+            }
+          ]
+        },
+        {
+          "id": "type_strictness",
+          "name": "Строгость типов",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Включён strict-режим TypeScript и основные сущности типизированы, но публичный props AuthProvider использует any.",
+          "rationale": "Сопоставление с якорем 5: Включён strict-режим TypeScript и основные сущности типизированы, но публичный props AuthProvider использует any.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/context/JWTAuthContext.tsx",
+              "line_start": 75,
+              "line_end": 79,
+              "title": "Использован any для children",
+              "explanation": "Тип AuthProviderType объявляет children как any, обходя проверку границы компонента.",
+              "suggestion": "Заменить any на ReactNode или PropsWithChildren.",
+              "link_status": "verified",
+              "snippet": "type AuthProviderType = {\n  children: any\n}\n\nexport const AuthProvider = ({ children }: AuthProviderType) =\u003e {",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/context/JWTAuthContext.tsx#L75-L79"
+            }
+          ]
+        },
+        {
+          "id": "api_types",
+          "name": "Типы API",
+          "weight": 0.4,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Типы API описаны вручную рядом с компонентами; связи с контрактом или автоматической проверки дрейфа не видно.",
+          "rationale": "Сопоставление с якорем 2: Типы API описаны вручную рядом с компонентами; связи с контрактом или автоматической проверки дрейфа не видно.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/Todo/TodoDetail.tsx",
+              "line_start": 15,
+              "line_end": 20,
+              "title": "Модель API объявлена вручную",
+              "explanation": "TodoType локально описывает ответ API и не происходит из общего контракта.",
+              "suggestion": "Генерировать типы клиента из OpenAPI/схемы backend и использовать их в API-слое.",
+              "link_status": "verified",
+              "snippet": "export type TodoType = {\n  id: string\n  title: string\n  status: boolean\n  description: string\n}",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoDetail.tsx#L15-L20"
+            }
+          ]
+        },
+        {
+          "id": "props_contracts",
+          "name": "Контракты props",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Основные публичные компоненты имеют объявленные props, но контракты не везде строги и единообразны.",
+          "rationale": "Сопоставление с якорем 5: Основные публичные компоненты имеют объявленные props, но контракты не везде строги и единообразны.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/Todo/AddUpdateTodoModal.tsx",
+              "line_start": 28,
+              "line_end": 40,
+              "title": "Props формы задачи типизированы",
+              "explanation": "Контракт задаёт режим, исходные данные, callback и параметры отображения.",
+              "link_status": "verified",
+              "snippet": "export type AddUpdateTodoModalProps = {\n  editable?: boolean\n  defaultValues?: TodoType\n  onSuccess: () =\u003e void\n  style?: BoxProps\n}\n\nexport const AddUpdateTodoModal = ({\n  editable = false,\n  defaultValues,\n  onSuccess,\n  style = {},\n}: AddUpdateTodoModalProps) =\u003e {",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/AddUpdateTodoModal.tsx#L28-L40"
+            }
+          ]
+        },
+        {
+          "id": "render_efficiency",
+          "name": "Эффективность рендеринга",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Явных тяжёлых вычислений или неконтролируемых обновлений в просмотренных экранах нет, но производительность не измеряется и мемоизация не обоснована.",
+          "rationale": "Сопоставление с якорем 5: Явных тяжёлых вычислений или неконтролируемых обновлений в просмотренных экранах нет, но производительность не измеряется и мемоизация не обоснована.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/Todo/TodoList.tsx",
+              "line_start": 8,
+              "line_end": 17,
+              "title": "Загрузка списка ограничена монтированием",
+              "explanation": "Эффект имеет пустой массив зависимостей и защёлку useRef, поэтому повторный запрос не запускается при каждом рендере.",
+              "link_status": "verified",
+              "snippet": "export const TodoList = () =\u003e {\n  const [todos, setTodos] = useState\u003cTodoType[]\u003e([])\n  const [loading, setLoading] = useState(true)\n  const isMounted = useRef(false)\n\n  useEffect(() =\u003e {\n    if (isMounted.current) return\n    fetchTodos()\n    isMounted.current = true\n  }, [])",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoList.tsx#L8-L17"
+            }
+          ]
+        },
+        {
+          "id": "bundle_and_assets",
+          "name": "Бандл и ассеты",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Используется Vite, но маршруты загружаются статическими импортами и код-сплиттинг для экранов не настроен.",
+          "rationale": "Сопоставление с якорем 5: Используется Vite, но маршруты загружаются статическими импортами и код-сплиттинг для экранов не настроен.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/App.tsx",
+              "line_start": 8,
+              "line_end": 18,
+              "title": "Экраны входят в начальный импорт",
+              "explanation": "Все маршрутные компоненты импортируются синхронно в корневом модуле.",
+              "suggestion": "Загружать неосновные маршруты через React.lazy и Suspense, оставив в стартовом бандле только критичный путь.",
+              "link_status": "verified",
+              "snippet": "import { Authenticated } from './components/Auth/Authenticated'\nimport { Login } from './components/Auth/Login'\nimport { PublicRoute } from './components/Auth/PublicRoute'\nimport { Register } from './components/Auth/Register'\nimport { SidebarWithHeader } from './components/Sidebar/Sidebar'\nimport { TodoDetail } from './components/Todo/TodoDetail'\nimport { TodoList } from './components/Todo/TodoList'\nimport { AuthConsumer, AuthProvider } from './context/JWTAuthContext'\nimport { UserProfile } from './components/User/Profile'\nimport { Home } from './components/Home/Home'\nimport { Users } from './components/User/Users'",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/App.tsx#L8-L18"
+            }
+          ]
+        },
+        {
+          "id": "semantic_accessibility",
+          "name": "Семантика и ARIA",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Формы используют FormControl, FormLabel и нативные input, но интерактивная карточка задачи реализована как Flex-контейнер.",
+          "rationale": "Сопоставление с якорем 5: Формы используют FormControl, FormLabel и нативные input, но интерактивная карточка задачи реализована как Flex-контейнер.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/Todo/TodoCard.tsx",
+              "line_start": 13,
+              "line_end": 27,
+              "title": "Карточка с действием не имеет семантики управления",
+              "explanation": "Flex реагирует на onClick, но не является кнопкой или ссылкой.",
+              "suggestion": "Использовать Link/Button либо добавить корректные role, tabIndex и обработку клавиатуры.",
+              "link_status": "verified",
+              "snippet": "    \u003cFlex\n      bg={useColorModeValue('gray.300', 'gray.600')}\n      minHeight=\"3rem\"\n      my={3}\n      p={3}\n      rounded=\"lg\"\n      alignItems=\"center\"\n      justifyContent=\"space-between\"\n      _hover={{\n        opacity: 0.9,\n        cursor: 'pointer',\n        transform: 'translateY(-3px)',\n      }}\n      onClick={() =\u003e navigate(`/todo/${todo.id}`, { replace: true })}\n    \u003e",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoCard.tsx#L13-L27"
+            }
+          ]
+        },
+        {
+          "id": "keyboard_navigation",
+          "name": "Навигация с клавиатуры",
+          "weight": 0.6,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Основное действие открытия задачи доступно только через click на неинтерактивном Flex, поэтому клавиатурный сценарий нарушен.",
+          "rationale": "Сопоставление с якорем 2: Основное действие открытия задачи доступно только через click на неинтерактивном Flex, поэтому клавиатурный сценарий нарушен.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/Todo/TodoCard.tsx",
+              "line_start": 21,
+              "line_end": 27,
+              "title": "Открытие задачи недоступно с клавиатуры",
+              "explanation": "У карточки есть onClick и курсор pointer, но нет фокуса и обработчика Enter/Space.",
+              "suggestion": "Заменить контейнер на семантическую ссылку к маршруту задачи или нативную кнопку.",
+              "link_status": "verified",
+              "snippet": "      _hover={{\n        opacity: 0.9,\n        cursor: 'pointer',\n        transform: 'translateY(-3px)',\n      }}\n      onClick={() =\u003e navigate(`/todo/${todo.id}`, { replace: true })}\n    \u003e",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/TodoCard.tsx#L21-L27"
+            }
+          ]
+        },
+        {
+          "id": "contrast_and_focus",
+          "name": "Контраст и фокус",
+          "weight": 0.4,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Chakra UI предоставляет базовые состояния и цветовые схемы, но в навигации фокус намеренно скрыт.",
+          "rationale": "Сопоставление с якорем 5: Chakra UI предоставляет базовые состояния и цветовые схемы, но в навигации фокус намеренно скрыт.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/Sidebar/Sidebar.tsx",
+              "line_start": 121,
+              "line_end": 127,
+              "title": "Фокус навигации скрыт",
+              "explanation": "Для Link задано _focus с boxShadow: none без альтернативного видимого индикатора.",
+              "suggestion": "Вернуть заметный focus-visible стиль с достаточным контрастом.",
+              "link_status": "verified",
+              "snippet": "const NavItem = ({ icon, children, ...rest }: NavItemProps) =\u003e {\n  return (\n    \u003cLink\n      href=\"#\"\n      style={{ textDecoration: 'none' }}\n      _focus={{ boxShadow: 'none' }}\n    \u003e",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Sidebar/Sidebar.tsx#L121-L127"
+            }
+          ]
+        },
+        {
+          "id": "styling_consistency",
+          "name": "Подход к стилям и консистентность",
+          "weight": 1,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Интерфейс последовательно построен на Chakra UI с общими цветовыми схемами, размерами и компонентами.",
+          "rationale": "Сопоставление с якорем 8: Интерфейс последовательно построен на Chakra UI с общими цветовыми схемами, размерами и компонентами.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/Todo/AddUpdateTodoModal.tsx",
+              "line_start": 79,
+              "line_end": 95,
+              "title": "Использована единая система компонентов",
+              "explanation": "Форма использует компоненты и токены Chakra UI вместо локальной разрозненной разметки.",
+              "link_status": "verified",
+              "snippet": "  return (\n    \u003cBox {...style}\u003e\n      \u003cButton w=\"100%\" colorScheme=\"orange\" onClick={onOpen}\u003e\n        {editable ? 'UPDATE TODO' : 'ADD TODO'}\n      \u003c/Button\u003e\n      \u003cModal\n        closeOnOverlayClick={false}\n        size=\"xl\"\n        onClose={onClose}\n        isOpen={isOpen}\n        isCentered\n      \u003e\n        \u003cModalOverlay /\u003e\n        \u003cform onSubmit={handleSubmit(onSubmit)}\u003e\n          \u003cModalContent\u003e\n            \u003cModalHeader\u003e{editable ? 'Update Todo' : 'ADD Todo'}\u003c/ModalHeader\u003e\n            \u003cModalCloseButton /\u003e",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Todo/AddUpdateTodoModal.tsx#L79-L95"
+            }
+          ]
+        },
+        {
+          "id": "responsiveness",
+          "name": "Адаптивность",
+          "weight": 1,
+          "score": 8,
+          "max": 10,
+          "confidence": "high",
+          "summary": "В основных экранах применены responsive props Chakra UI, включая разные раскладки и поведение боковой панели на малых экранах.",
+          "rationale": "Сопоставление с якорем 8: В основных экранах применены responsive props Chakra UI, включая разные раскладки и поведение боковой панели на малых экранах.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/Sidebar/Sidebar.tsx",
+              "line_start": 52,
+              "line_end": 75,
+              "title": "Навигация адаптирована для мобильного экрана",
+              "explanation": "Боковая панель скрывается на base и открывается через полноэкранный Drawer; контент меняет отступ.",
+              "link_status": "verified",
+              "snippet": "export function SidebarWithHeader({ children }: { children: ReactNode }) {\n  const { isOpen, onOpen, onClose } = useDisclosure()\n  return (\n    \u003cBox minH=\"100vh\" bg={useColorModeValue('gray.100', 'gray.900')}\u003e\n      \u003cSidebarContent\n        onClose={() =\u003e onClose}\n        display={{ base: 'none', md: 'block' }}\n      /\u003e\n      \u003cDrawer\n        isOpen={isOpen}\n        placement=\"left\"\n        onClose={onClose}\n        returnFocusOnClose={false}\n        onOverlayClick={onClose}\n        size=\"full\"\n      \u003e\n        \u003cDrawerContent\u003e\n          \u003cSidebarContent onClose={onClose} /\u003e\n        \u003c/DrawerContent\u003e\n      \u003c/Drawer\u003e\n      {/* mobilenav */}\n      \u003cMobileNav onOpen={onOpen} /\u003e\n      \u003cBox ml={{ base: 0, md: 60 }} p=\"4\"\u003e\n        {children}",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Sidebar/Sidebar.tsx#L52-L75"
+            }
+          ]
+        },
+        {
+          "id": "test_quality_and_coverage",
+          "name": "Покрытие и качество тестов",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Есть только smoke-тест заголовка Home; ключевые сценарии аутентификации, запросов, форм и маршрутов не покрыты.",
+          "rationale": "Сопоставление с якорем 2: Есть только smoke-тест заголовка Home; ключевые сценарии аутентификации, запросов, форм и маршрутов не покрыты.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/Home/Home.test.tsx",
+              "line_start": 5,
+              "line_end": 10,
+              "title": "Тестируется только статический текст",
+              "explanation": "Единственный тест проверяет наличие строки Todo app и не затрагивает пользовательские сценарии.",
+              "suggestion": "Добавить тесты форм, защищённых маршрутов, загрузки/ошибок задач и CRUD-сценариев с замоканным API.",
+              "link_status": "verified",
+              "snippet": "describe('When rendering Home page', () =\u003e {\n  it('Should render with the text \"Todo app\"', () =\u003e {\n    render(\u003cHome /\u003e, { wrapper: BrowserRouter })\n    expect(screen.getByText('Todo app')).toBeInTheDocument()\n  })\n})",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/src/components/Home/Home.test.tsx#L5-L10"
+            }
+          ]
+        },
+        {
+          "id": "test_runnability",
+          "name": "Запускаемость тестов",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Скрипты Vitest и конфигурация jsdom определены, но воспроизводимость с чистого окружения не документирована и не проверялась в рамках ревью.",
+          "rationale": "Сопоставление с якорем 5: Скрипты Vitest и конфигурация jsdom определены, но воспроизводимость с чистого окружения не документирована и не проверялась в рамках ревью.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "package.json",
+              "line_start": 6,
+              "line_end": 13,
+              "title": "Команда тестов определена без документации запуска",
+              "explanation": "Есть test и test:run, однако в области frontend не найдено описание установки зависимостей и запуска с чистого окружения.",
+              "suggestion": "Добавить краткую документацию с требуемой версией Node, установкой зависимостей и командой CI-тестов.",
+              "link_status": "verified",
+              "snippet": "  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"tsc \u0026\u0026 vite build\",\n    \"preview\": \"vite preview\",\n    \"test\": \"vitest\",\n    \"coverage\": \"vitest run --coverage\",\n    \"test:ui\": \"vitest --ui\",\n    \"test:run\": \"vitest run\"",
+              "permalink": "https://github.com/finsberg/fastapi-react-app/blob/988115cc2e69742739b17c13e8662e8e6c65dbac/frontend/package.json#L6-L13"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "warnings": [
+    "repo_too_large",
+    "secret_redacted"
+  ]
+}

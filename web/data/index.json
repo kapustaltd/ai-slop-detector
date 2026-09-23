@@ -1,53 +1,67 @@
 {
   "bundle_schema": "0.1",
-  "built_at": "2026-09-21T12:00:00Z",
+  "built_at": "2026-09-23T15:46:55Z",
   "meta": {
     "bundle_schema": "0.1",
-    "built_at": "2026-09-21T12:00:00Z",
+    "built_at": "2026-09-23T15:46:55Z",
     "report_schema": "1.0",
-    "rubric_versions": ["backend.v1", "frontend.v1"],
-    "skill_versions": ["1.0.0"],
-    "models": ["fixture-model"]
+    "rubric_versions": [
+      "backend.v1",
+      "frontend.v1"
+    ],
+    "skill_versions": [
+      "2.0.0"
+    ],
+    "models": [
+      "gpt-5.6-terra"
+    ]
   },
   "teams": [
     {
-      "team_id": "team-01",
-      "name": "Команда 01",
+      "team_id": "team-finsberg-fastapi-react",
+      "name": "FastAPI React App",
       "rank": 1,
-      "total": 7.8,
-      "areas": { "frontend": 8.2, "backend": 7.4 },
+      "total": 5.350437500000001,
+      "areas": {
+        "backend": 5.430875,
+        "frontend": 5.270000000000001
+      },
       "status": "done",
-      "warnings": [],
+      "warnings": [
+        "repo_too_large",
+        "secret_redacted"
+      ],
       "partial": false
     },
     {
-      "team_id": "team-02",
-      "name": "Команда 02",
+      "team_id": "team-fastapi-todo",
+      "name": "FastAPI + Next.js Todo",
       "rank": 2,
-      "total": 6.1,
-      "areas": { "frontend": 6.1 },
+      "total": 4.2729125,
+      "areas": {
+        "backend": 3.8506250000000004,
+        "frontend": 4.695200000000001
+      },
       "status": "done",
-      "warnings": ["repo_too_large"],
-      "partial": true
-    },
-    {
-      "team_id": "team-03",
-      "name": "Команда 03",
-      "rank": null,
-      "total": null,
-      "areas": {},
-      "status": "failed",
-      "warnings": ["provider_error"],
+      "warnings": [
+        "repo_too_large",
+        "secret_redacted"
+      ],
       "partial": false
     },
     {
-      "team_id": "team-04",
-      "name": "Команда 04",
-      "rank": null,
-      "total": null,
-      "areas": {},
-      "status": "no_data",
-      "warnings": [],
+      "team_id": "team-matsjfunke-react-fastapi",
+      "name": "React FastAPI Todo",
+      "rank": 3,
+      "total": 3.9072500000000003,
+      "areas": {
+        "backend": 4.1885,
+        "frontend": 3.6260000000000003
+      },
+      "status": "done",
+      "warnings": [
+        "incomplete_area"
+      ],
       "partial": false
     }
   ]

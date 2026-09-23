@@ -83,6 +83,7 @@ type savedEvaluation struct {
 	Area            string                `json:"area"`
 	CommitSHA       string                `json:"commit_sha"`
 	RepoURL         string                `json:"repo_url"`
+	AreaPath        string                `json:"area_path,omitempty"`
 	Report          contract.Report       `json:"report"`
 	Enriched        enrichment.Result     `json:"enriched"`
 	Aggregate       aggregation.AreaScore `json:"aggregate"`
@@ -201,9 +202,7 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 				result.Usage.InputTokens += item.usage.InputTokens
 				result.Usage.CachedInputTokens += item.usage.CachedInputTokens
 				result.Usage.OutputTokens += item.usage.OutputTokens
-				if item.meta != nil && result.Meta == nil {
-					result.Meta = item.meta
-				}
+				result.Meta = mergeTeamMeta(result.Meta, item.meta)
 				if item.area.Status == "done" {
 					result.Status = "done"
 				}
@@ -294,6 +293,11 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 				// Recompute from validated leaves, never trust cached aggregates.
 				if aggregate, err := aggregation.Area(rubricValue, saved.Report); err == nil {
 					saved.Aggregate = aggregate
+					saved.AreaPath = areaPath
+					enrichment.RefreshPermalinks(&saved.Enriched, enrichment.Options{AreaPath: areaPath, RepoURL: saved.RepoURL, CommitSHA: saved.CommitSHA, Templates: config.Templates})
+					if writeErr := writeJSON(filepath.Join(config.OutputDir, "state", team.ID, area+".json"), saved); writeErr != nil {
+						return failedArea(writeErr)
+					}
 					return areaRunResult{area: toBundleArea(saved), meta: metaFromReport(saved.Report), warnings: saved.Warnings}
 				}
 			}
@@ -391,14 +395,14 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 		logf(config.Logger, "team=%s area=%s: ПРОВАЛ после %d попыток за %s — %s", team.ID, area, attempts, duration.Round(time.Second), sanitizeError(lastErr))
 		return areaRunResult{area: bundle.Area{Status: "failed", Error: sanitizeError(lastErr), DurationMS: duration.Milliseconds(), Attempts: attempts}, costUSD: totalUsage.CostUSD, usage: totalUsage}
 	}
-	enriched := enrichment.Enrich(report, enrichment.Options{RepoRoot: root, RepoURL: prepared.RepoURL, CommitSHA: prepared.CommitSHA, Templates: config.Templates, MaxSnippetLines: config.MaxSnippetLines, MaxSnippetBytes: config.MaxSnippetBytes})
+	enriched := enrichment.Enrich(report, enrichment.Options{RepoRoot: root, AreaPath: areaPath, RepoURL: prepared.RepoURL, CommitSHA: prepared.CommitSHA, Templates: config.Templates, MaxSnippetLines: config.MaxSnippetLines, MaxSnippetBytes: config.MaxSnippetBytes})
 	aggregate, err := aggregation.Area(rubricValue, report)
 	if err != nil {
 		return failedArea(err)
 	}
 	warnings := append([]string{}, snapshot.Warnings...)
 	warnings = append(warnings, report.Warnings...)
-	saved := savedEvaluation{InputDigest: digest, RubricDigest: rubricDigest(rubricValue), TeamID: team.ID, Area: area, CommitSHA: prepared.CommitSHA, RepoURL: prepared.RepoURL, Report: report, Enriched: enriched, Aggregate: aggregate, Warnings: unique(warnings), DurationMS: duration.Milliseconds(), CostUSD: totalUsage.CostUSD, Usage: totalUsage, ReasoningEffort: config.ReasoningEffort, Attempts: attempts, Status: "done"}
+	saved := savedEvaluation{InputDigest: digest, RubricDigest: rubricDigest(rubricValue), TeamID: team.ID, Area: area, CommitSHA: prepared.CommitSHA, RepoURL: prepared.RepoURL, AreaPath: areaPath, Report: report, Enriched: enriched, Aggregate: aggregate, Warnings: unique(warnings), DurationMS: duration.Milliseconds(), CostUSD: totalUsage.CostUSD, Usage: totalUsage, ReasoningEffort: config.ReasoningEffort, Attempts: attempts, Status: "done"}
 	if err := writeJSON(filepath.Join(config.OutputDir, "state", team.ID, area+".json"), saved); err != nil {
 		return areaRunResult{area: bundle.Area{Status: "failed", Error: err.Error()}}
 	}
@@ -454,10 +458,28 @@ func recalculate(ctx context.Context, config Config, runID string, started time.
 					return Summary{}, aggregateErr
 				}
 				saved.Aggregate = aggregate
+				areaPath := saved.AreaPath
+				if areaPath == "" {
+					areaPath = "."
+					if configuredPath, ok := team.PathFor(area); ok {
+						areaPath = configuredPath
+					}
+				}
+				saved.AreaPath = areaPath
+				enrichment.RefreshPermalinks(&saved.Enriched, enrichment.Options{AreaPath: areaPath, RepoURL: saved.RepoURL, CommitSHA: saved.CommitSHA, Templates: config.Templates})
+				if writeErr := writeJSON(filepath.Join(config.OutputDir, "state", team.ID, area+".json"), saved); writeErr != nil {
+					return Summary{}, writeErr
+				}
 			}
-			if result.Meta == nil && saved.Status == "done" {
-				result.Meta = metaFromReport(saved.Report)
+			if saved.Status == "done" {
+				result.Meta = mergeTeamMeta(result.Meta, metaFromReport(saved.Report))
 			}
+			if result.CommitSHA == "" {
+				result.CommitSHA = saved.CommitSHA
+			} else if saved.CommitSHA != "" && result.CommitSHA != saved.CommitSHA {
+				return Summary{}, fmt.Errorf("recalculate %s: areas use different commit SHAs", team.ID)
+			}
+			result.Warnings = append(result.Warnings, saved.Warnings...)
 			result.Areas[area] = toBundleArea(saved)
 			if saved.Status == "done" {
 				result.Status = "done"
@@ -481,7 +503,7 @@ func recalculate(ctx context.Context, config Config, runID string, started time.
 		} else {
 			summary.TeamsFailed++
 		}
-		input = append(input, bundle.InputTeam{Registry: team, Status: result.Status, CommitSHA: "", Total: result.Total, Partial: result.Partial, Areas: result.Areas, Meta: result.Meta})
+		input = append(input, bundle.InputTeam{Registry: team, Status: result.Status, CommitSHA: result.CommitSHA, Total: result.Total, Partial: result.Partial, Areas: result.Areas, Warnings: unique(result.Warnings), Meta: result.Meta})
 	}
 	summary.TeamsTotal = len(input)
 	if err := bundle.Write(config.OutputDir, config.Now(), input, config.Rubrics); err != nil {
@@ -583,6 +605,39 @@ func metaFromReport(report contract.Report) *bundle.TeamMeta {
 		return nil
 	}
 	return &bundle.TeamMeta{SchemaVersion: report.Meta.SchemaVersion, SkillVersion: report.Meta.SkillVersion, RubricVersion: report.Meta.RubricVersion, Model: report.Meta.Model, EvaluatedAt: report.Meta.EvaluatedAt}
+}
+
+func mergeTeamMeta(current, next *bundle.TeamMeta) *bundle.TeamMeta {
+	if next == nil {
+		return current
+	}
+	if current == nil {
+		copy := *next
+		return &copy
+	}
+	merged := *current
+	merged.RubricVersion = joinMetaValues(current.RubricVersion, next.RubricVersion)
+	if next.EvaluatedAt > merged.EvaluatedAt {
+		merged.EvaluatedAt = next.EvaluatedAt
+	}
+	return &merged
+}
+
+func joinMetaValues(values ...string) string {
+	seen := map[string]struct{}{}
+	for _, value := range values {
+		for _, part := range strings.Split(value, " + ") {
+			if part = strings.TrimSpace(part); part != "" {
+				seen[part] = struct{}{}
+			}
+		}
+	}
+	result := make([]string, 0, len(seen))
+	for value := range seen {
+		result = append(result, value)
+	}
+	sort.Strings(result)
+	return strings.Join(result, " + ")
 }
 
 func loadState(output, team, area string) (savedEvaluation, error) {

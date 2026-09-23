@@ -18,7 +18,7 @@ web/CLAUDE.md п.6: `ui/`-файл держит только свой `Props`-и
 
 ## Phase 1: Setup
 
-- [X] T001 Завести срезы с барабанными `index.ts`: `entities/metric/index.ts`,
+- [x] T001 Завести срезы с барабанными `index.ts`: `entities/metric/index.ts`,
       `entities/finding/index.ts`, `widgets/team-header/index.ts`,
       `widgets/score-summary/index.ts`, `widgets/area-profile/index.ts`,
       `widgets/findings-summary/index.ts`, `widgets/taxonomy-tree/index.ts`,
@@ -35,78 +35,78 @@ web/CLAUDE.md п.6: `ui/`-файл держит только свой `Props`-и
 
 ### entities/metric
 
-- [X] T002 [P] `entities/metric/model/contribution.ts` — `anchorPosition(score): number`
+- [x] T002 [P] `entities/metric/model/contribution.ts` — `anchorPosition(score): number`
       (кусочно-линейно по `[0,2,5,8,10]`, см. research.md «AnchorScale: позиция балла»),
       `confidenceTone(confidence)` для пунктирной рамки/индикатора низкой уверенности
-- [X] T003 [P] `entities/metric/model/contribution.test.ts` — `anchorPosition` на границах
+- [x] T003 [P] `entities/metric/model/contribution.test.ts` — `anchorPosition` на границах
       сегментов (0, 2, 5, 8, 10) и в середине каждого сегмента
-- [X] T004 [US-foundation] `entities/metric/ui/taxonomy-row.tsx` — `TaxonomyRow`, пропсы по
+- [x] T004 [US-foundation] `entities/metric/ui/taxonomy-row.tsx` — `TaxonomyRow`, пропсы по
       `contracts/components.md#taxonomyrow`; один компонент, `level: 1|2|3`; использует
       `ScoreGauge` (005); зависит от T002
-- [X] T005 [P] `entities/metric/ui/taxonomy-row.test.tsx` — рендер на каждом `level`,
+- [x] T005 [P] `entities/metric/ui/taxonomy-row.test.tsx` — рендер на каждом `level`,
       `confidence: 'low'` даёт пунктирную рамку и индикатор
-- [X] T006 [US-foundation] `entities/metric/ui/anchor-scale.tsx` — `AnchorScale`, 4 якоря +
+- [x] T006 [US-foundation] `entities/metric/ui/anchor-scale.tsx` — `AnchorScale`, 4 якоря +
       отметка балла между ними через `anchorPosition`; зависит от T002
-- [X] T007 [P] `entities/metric/ui/anchor-scale.test.tsx` — отметка балла между правильной парой
+- [x] T007 [P] `entities/metric/ui/anchor-scale.test.tsx` — отметка балла между правильной парой
       якорей (проверить на значениях из каждого сегмента)
-- [X] T008 `entities/metric/index.ts` — экспорт `TaxonomyRow`, `AnchorScale`,
+- [x] T008 `entities/metric/index.ts` — экспорт `TaxonomyRow`, `AnchorScale`,
       `anchorPosition`/`confidenceTone` — зависит от T004, T006
 
 ### entities/finding
 
-- [X] T009 [P] `entities/finding/model/link-state.ts` — `linkState(finding): 'verified' |
-      'unverified' | 'no-permalink'` по правилу из research.md («Три состояния ссылки»:
+- [x] T009 [P] `entities/finding/model/link-state.ts` — `linkState(finding): 'verified' |
+    'unverified' | 'no-permalink'` по правилу из research.md («Три состояния ссылки»:
       `permalink` отсутствует → `no-permalink`; `permalink` есть и `link_status === 'verified'` →
       `verified`; `permalink` есть и любое другое значение `link_status` → `unverified`),
       `findingSlug(finding): string` (`${file}:${line_start}-${line_end}`)
-- [X] T010 [P] `entities/finding/model/link-state.test.ts` — все 5 значений `link_status` ×
+- [x] T010 [P] `entities/finding/model/link-state.test.ts` — все 5 значений `link_status` ×
       наличие/отсутствие `permalink`, таблица истинности из research.md
-- [X] T011 [P] `entities/finding/model/highlight-snippet.ts` — перенос Shiki-обвязки из
+- [x] T011 [P] `entities/finding/model/highlight-snippet.ts` — перенос Shiki-обвязки из
       текущего `pages/team/ui/team-page.tsx` (`languageLoaders`, `highlighterFactoryPromise`,
       `languageByExtension`, `snippetLanguage`) в хук `useHighlightedSnippet(finding)`; тема — из
       `document.documentElement.classList.contains('dark')`, без изменения поведения
-- [X] T012 [P] `entities/finding/model/highlight-snippet.test.ts` — известное расширение файла
+- [x] T012 [P] `entities/finding/model/highlight-snippet.test.ts` — известное расширение файла
       даёт токены нужного языка, неизвестное расширение не падает (fallback на обычный текст)
-- [X] T013 [US-foundation] `entities/finding/ui/severity-bar.tsx` — `SeverityBar`, сегменты —
+- [x] T013 [US-foundation] `entities/finding/ui/severity-bar.tsx` — `SeverityBar`, сегменты —
       `button` с `aria-label` (DESIGN.md: не canvas/svg), повторный клик по активному сегменту
       снимает фильтр; зависит от T009
-- [X] T014 [P] `entities/finding/ui/severity-bar.test.tsx` — клик по сегменту вызывает `onSelect`
+- [x] T014 [P] `entities/finding/ui/severity-bar.test.tsx` — клик по сегменту вызывает `onSelect`
       с нужной severity, повторный клик — `onSelect('all')`
-- [X] T015 [US-foundation] `entities/finding/ui/finding-card.tsx` — `FindingCard`, `density:
-      'summary'|'expanded'`, три состояния ссылки через `linkState()` (T009): `verified` — кнопка
+- [x] T015 [US-foundation] `entities/finding/ui/finding-card.tsx` — `FindingCard`, `density:
+    'summary'|'expanded'`, три состояния ссылки через `linkState()` (T009): `verified` — кнопка
       «Открыть на `<sha>`»; `unverified` — снипет НЕ показывается, пометка «ссылку не удалось
       проверить»; `no-permalink` — копируемый путь, снипет показывается если есть; рекомендация
       блоком с левой линейкой только для `kind === 'issue'` с непустым `suggestion`; снипет —
       через `useHighlightedSnippet` (T011), сворачивается при длинном фрагменте; зависит от T009,
       T011
-- [X] T016 [P] `entities/finding/ui/finding-card.test.tsx` — по одному тесту на каждое из трёх
+- [x] T016 [P] `entities/finding/ui/finding-card.test.tsx` — по одному тесту на каждое из трёх
       состояний ссылки (verified/unverified/no-permalink), рекомендация видна только у `issue` с
       `suggestion`, отсутствует у `strength`
-- [X] T017 `entities/finding/index.ts` — экспорт `SeverityBar`, `FindingCard`,
+- [x] T017 `entities/finding/index.ts` — экспорт `SeverityBar`, `FindingCard`,
       `linkState`/`findingSlug` — зависит от T013, T015
 
 ### Заголовок и состояния страницы
 
-- [X] T018 [P] `widgets/team-header/model/rank-context.ts` — `teamRankContext(teamId):
-      TeamRankContext` (data-model.md) из `getLeaderboardIndex()` (005): позиция в уже
+- [x] T018 [P] `widgets/team-header/model/rank-context.ts` — `teamRankContext(teamId):
+    TeamRankContext` (data-model.md) из `getLeaderboardIndex()` (005): позиция в уже
       отсортированном по `rank` списке, `tiedWith` — команды с тем же `rank`, `previousTeamId`/
       `nextTeamId` — соседи по порядку; при отсутствии индекса или команды в нём — все поля
       `null`/пустые, без исключения
-- [X] T019 [P] `widgets/team-header/model/rank-context.test.ts` — команда есть в индексе
+- [x] T019 [P] `widgets/team-header/model/rank-context.test.ts` — команда есть в индексе
       (включая случай с `tiedWith`), команда не найдена в индексе (пустой контекст, не исключение)
-- [X] T020 [US-foundation] `widgets/team-header/ui/team-header.tsx` — `TeamHeader`: хлебные
+- [x] T020 [US-foundation] `widgets/team-header/ui/team-header.tsx` — `TeamHeader`: хлебные
       крошки «Рейтинг / «Название команды»», `TeamStatusBadge` (005, `partial` из `team.partial`),
       ссылка на репозиторий + `commit_sha` + ветка, «место в рейтинге N из M (делит со «X»)» и
       prev/next по `rankContext` — блок скрыт целиком, если `rankContext` пуст; зависит от T018
-- [X] T021 [P] `widgets/team-header/ui/team-header.test.tsx` — хлебные крошки и статус видны
+- [x] T021 [P] `widgets/team-header/ui/team-header.test.tsx` — хлебные крошки и статус видны
       всегда; блок ранга/prev-next видим только когда `rankContext` не пуст
-- [X] T022 `widgets/team-header/index.ts` — экспорт `TeamHeader`, `teamRankContext` — зависит от
+- [x] T022 `widgets/team-header/index.ts` — экспорт `TeamHeader`, `teamRankContext` — зависит от
       T018, T020
-- [X] T023 Переписать `pages/team/ui/team-page.tsx`: состояния `loading`/`missing`/`error`
+- [x] T023 Переписать `pages/team/ui/team-page.tsx`: состояния `loading`/`missing`/`error`
       (FR-020, перенос текущей логики `PageState`) через `EmptyState` (005) вместо текущего
       `role="alert"` + `Button`; подключить `TeamHeader` + `DisclaimerBanner` (005); тело страницы
       (US1–US4) — заглушка до соответствующих фаз; зависит от T022
-- [X] T024 Обновить `pages/team/ui/team-page.test.tsx` под новую разметку: заголовок,
+- [x] T024 Обновить `pages/team/ui/team-page.test.tsx` под новую разметку: заголовок,
       `DisclaimerBanner`, состояние ошибки через `EmptyState`; зависит от T023
 
 **Checkpoint**: фундамент готов — можно начинать US1/US2.
@@ -122,10 +122,10 @@ web/CLAUDE.md п.6: `ui/`-файл держит только свой `Props`-и
 
 ### Tests for User Story 1
 
-- [X] T025 [P] [US1] `widgets/score-summary/ui/score-summary.test.tsx` — итог + по карточке на
+- [x] T025 [P] [US1] `widgets/score-summary/ui/score-summary.test.tsx` — итог + по карточке на
       присутствующую область; область со статусом `no_data`/`failed` — прочерк, не «0» (FR-006 из
       005, тот же принцип)
-- [X] T026 [P] [US1] `widgets/area-profile/ui/area-profile.test.tsx` — radar и bar рендерятся по
+- [x] T026 [P] [US1] `widgets/area-profile/ui/area-profile.test.tsx` — radar и bar рендерятся по
       категориям (не по метрикам — FR-003: метрики MUST NOT выводиться на обзорный график);
       **radar включает вторую серию — медиану** (FR-002); таблица-альтернатива содержит те же
       значения, что графики, включая колонку медианы (FR-006); при `stats.insufficient_data`
@@ -134,10 +134,10 @@ web/CLAUDE.md п.6: `ui/`-файл держит только свой `Props`-и
 
 ### Implementation for User Story 1
 
-- [X] T027 [P] [US1] `widgets/score-summary/ui/score-summary.tsx` — `ScoreSummary` по
+- [x] T027 [P] [US1] `widgets/score-summary/ui/score-summary.tsx` — `ScoreSummary` по
       `contracts/components.md#scoresummary`, `ScoreGauge` (005) размера `hero`/`large`
-- [X] T028 [US1] `widgets/score-summary/index.ts` — зависит от T027
-- [X] T029 [P] [US1] `widgets/area-profile/ui/area-profile.tsx` — `AreaProfile`: radar + bar
+- [x] T028 [US1] `widgets/score-summary/index.ts` — зависит от T027
+- [x] T029 [P] [US1] `widgets/area-profile/ui/area-profile.tsx` — `AreaProfile`: radar + bar
       (recharts, база — перенос текущей `AreaCharts` из `team-page.tsx`, но **не дословно**:
       текущая реализация вычисляет `median` в данные графика и нигде её не рисует (ни в
       `<Radar>`, ни в `<Bar>`) — это нарушение FR-002, найденное при анализе, а не расхождение
@@ -145,11 +145,11 @@ web/CLAUDE.md п.6: `ui/`-файл держит только свой `Props`-и
       линия медианы отличима от линии команды не только цветом) и колонку медианы в
       таблице-альтернативе; вёрстка/токены — по макету) + таблица-альтернатива, всегда
       развёрнутая (DESIGN.md: «не под кнопку»)
-- [X] T030 [US1] `widgets/area-profile/index.ts` — зависит от T029
-- [X] T031 [US1] Подключить `ScoreSummary` + `AreaProfile` (на каждую присутствующую область,
+- [x] T030 [US1] `widgets/area-profile/index.ts` — зависит от T029
+- [x] T031 [US1] Подключить `ScoreSummary` + `AreaProfile` (на каждую присутствующую область,
       `getStats()` уже синхронный — 005) в `pages/team/ui/team-page.tsx`; зависит от T023, T028,
       T030
-- [X] T032 [US1] Обновить `pages/team/ui/team-page.test.tsx`: значения radar/bar/таблицы
+- [x] T032 [US1] Обновить `pages/team/ui/team-page.test.tsx`: значения radar/bar/таблицы
       соответствуют фикстуре, недостаток данных для сравнения явно показан (quickstart.md,
       сценарий 2); зависит от T031
 
@@ -166,11 +166,11 @@ confidence/описание/якоря/находки с подсветкой к
 
 ### Tests for User Story 2
 
-- [X] T033 [P] [US2] `widgets/taxonomy-tree/model/taxonomy-path.test.ts` — разбор/сборка
+- [x] T033 [P] [US2] `widgets/taxonomy-tree/model/taxonomy-path.test.ts` — разбор/сборка
       `TaxonomyPath` ↔ `?area=&node=&finding=` по `contracts/url-params.md` (`node` без `area`
       игнорируется, `finding` без `node` до уровня метрики игнорируется, неизвестное значение →
       состояние по умолчанию)
-- [X] T034 [P] [US2] `widgets/taxonomy-tree/ui/taxonomy-tree.test.tsx` — путь категория →
+- [x] T034 [P] [US2] `widgets/taxonomy-tree/ui/taxonomy-tree.test.tsx` — путь категория →
       подкатегория → метрика показывает балл/`summary`/`rationale`/`confidence` (US2 #1),
       описание метрики и якоря нужной версии рубрики (US2 #2), находка со сниппетом — подсветка +
       номера строк + выделенный диапазон (US2 #3), клик по рабочей ссылке — `permalink` (US2 #4),
@@ -179,18 +179,18 @@ confidence/описание/якоря/находки с подсветкой к
 
 ### Implementation for User Story 2
 
-- [X] T035 [US2] `widgets/taxonomy-tree/model/taxonomy-path.ts` — парсинг/сериализация
+- [x] T035 [US2] `widgets/taxonomy-tree/model/taxonomy-path.ts` — парсинг/сериализация
       `TaxonomyPath` (data-model.md) из/в `URLSearchParams` по `contracts/url-params.md`
-- [X] T036 [US2] `widgets/taxonomy-tree/ui/taxonomy-tree.tsx` — `TaxonomyTree`: `TaxonomyRow`
+- [x] T036 [US2] `widgets/taxonomy-tree/ui/taxonomy-tree.tsx` — `TaxonomyTree`: `TaxonomyRow`
       (T004) на категории/подкатегории, на листе — `AnchorScale` (T006) + `FindingCard[]`
       (`density: 'expanded'` для первой/самой серьёзной находки, `'summary'` для остальных —
-      DESIGN.md); «одновременно раскрыта одна ветка» — раскрытие узла схлопывает братьев того же
-      уровня; зависит от T004, T006, T015, T035
-- [X] T037 [US2] `widgets/taxonomy-tree/index.ts` — зависит от T036
-- [X] T038 [US2] Подключить `TaxonomyTree` (на каждую область) в `pages/team/ui/team-page.tsx`,
+      DESIGN.md); все узлы раскрываются независимо, а `TaxonomyPath` хранит последнюю активную ветку
+      для deep-link; зависит от T004, T006, T015, T035
+- [x] T037 [US2] `widgets/taxonomy-tree/index.ts` — зависит от T036
+- [x] T038 [US2] Подключить `TaxonomyTree` (на каждую область) в `pages/team/ui/team-page.tsx`,
       состояние пути — в `useSearchParams` (единственное место чтения/записи `area`/`node`/
       `finding` для этой фичи, по аналогии с `useLeaderboardState` из 005); зависит от T031, T037
-- [X] T039 [US2] Обновить `pages/team/ui/team-page.test.tsx`: ссылка с `?area=backend&node=...`
+- [x] T039 [US2] Обновить `pages/team/ui/team-page.test.tsx`: ссылка с `?area=backend&node=...`
       открывает дерево на нужном месте при монтировании (quickstart.md, сценарий 13); зависит от
       T038
 
@@ -207,22 +207,22 @@ confidence/описание/якоря/находки с подсветкой к
 
 ### Tests for User Story 3
 
-- [X] T040 [P] [US3] `widgets/findings-summary/ui/findings-summary.test.tsx` — счётчики
+- [x] T040 [P] [US3] `widgets/findings-summary/ui/findings-summary.test.tsx` — счётчики
       совпадают с фикстурой, клик по сегменту серьёзности вызывает `onFilterChange`
 
 ### Implementation for User Story 3
 
-- [X] T041 [US3] `widgets/findings-summary/model/finding-counts.ts` — подсчёт находок по
+- [x] T041 [US3] `widgets/findings-summary/model/finding-counts.ts` — подсчёт находок по
       `kind`/`severity` по всем метрикам области (перенос текущего `findingCounts` из
       `team-page.tsx` без изменения логики)
-- [X] T042 [US3] `widgets/findings-summary/ui/findings-summary.tsx` — `FindingsSummary`:
+- [x] T042 [US3] `widgets/findings-summary/ui/findings-summary.tsx` — `FindingsSummary`:
       счётчики + `SeverityBar` (T013); зависит от T013, T041
-- [X] T043 [US3] `widgets/findings-summary/index.ts` — зависит от T042
-- [X] T044 [US3] Подключить `FindingsSummary` в `pages/team/ui/team-page.tsx`, связать её фильтр
+- [x] T043 [US3] `widgets/findings-summary/index.ts` — зависит от T042
+- [x] T044 [US3] Подключить `FindingsSummary` в `pages/team/ui/team-page.tsx`, связать её фильтр
       с `TaxonomyTree` (T036) через тот же `FindingsFilter` в URL (`kind`/`severity` —
       `contracts/url-params.md`, перенос текущей логики `kindFilter`/`severityFilter`); зависит от
       T038, T043
-- [X] T045 [US3] Обновить `pages/team/ui/team-page.test.tsx`: клик по сегменту `SeverityBar`
+- [x] T045 [US3] Обновить `pages/team/ui/team-page.test.tsx`: клик по сегменту `SeverityBar`
       фильтрует список находок в дереве (quickstart.md, сценарий 9); зависит от T044
 
 **Checkpoint**: US1+US2+US3 — распределение находок работает и управляет деревом.
@@ -237,19 +237,19 @@ confidence/описание/якоря/находки с подсветкой к
 
 ### Tests for User Story 4
 
-- [X] T046 [P] [US4] `widgets/evaluation-meta/ui/evaluation-meta.test.tsx` — все поля метаданных
+- [x] T046 [P] [US4] `widgets/evaluation-meta/ui/evaluation-meta.test.tsx` — все поля метаданных
       видны (US4 #1), SHA — рабочая ссылка на коммит (US4 #2), `warnings[]` показаны с пояснением
       (US4 #3, тот же словарь `warningLabel`, что 005)
 
 ### Implementation for User Story 4
 
-- [X] T047 [US4] `widgets/evaluation-meta/ui/evaluation-meta.tsx` — `EvaluationMeta`:
+- [x] T047 [US4] `widgets/evaluation-meta/ui/evaluation-meta.tsx` — `EvaluationMeta`:
       commit/рубрика/модель/время + `warnings[]` через `warningLabel`/`warningIcon`
       (`entities/team`, 005 — существующий срез, без новой зависимости внутри 006)
-- [X] T048 [US4] `widgets/evaluation-meta/index.ts` — зависит от T047
-- [X] T049 [US4] Подключить `EvaluationMeta` в `pages/team/ui/team-page.tsx`; зависит от T038,
+- [x] T048 [US4] `widgets/evaluation-meta/index.ts` — зависит от T047
+- [x] T049 [US4] Подключить `EvaluationMeta` в `pages/team/ui/team-page.tsx`; зависит от T038,
       T048
-- [X] T050 [US4] Обновить `pages/team/ui/team-page.test.tsx`: метаданные и предупреждения видны
+- [x] T050 [US4] Обновить `pages/team/ui/team-page.test.tsx`: метаданные и предупреждения видны
       (quickstart.md, сценарии 10–11); зависит от T049
 
 **Checkpoint**: все 4 user story работают вместе — SC-001/SC-005 закрыты.
@@ -258,26 +258,26 @@ confidence/описание/якоря/находки с подсветкой к
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [X] T051 [P] Проверить все новые файлы (`entities/metric/**`, `entities/finding/**`,
+- [x] T051 [P] Проверить все новые файлы (`entities/metric/**`, `entities/finding/**`,
       `widgets/team-header/**`, `widgets/score-summary/**`, `widgets/area-profile/**`,
       `widgets/findings-summary/**`, `widgets/taxonomy-tree/**`, `widgets/evaluation-meta/**`,
       `pages/team/**`) на отсутствие литеральных цветов/кеглей вне токенов `--ds-*`. Проверено
       `grep` на hex-цвета и дефолтную палитру Tailwind — ни одного совпадения
-- [X] T052 [P] `npx eslint ...` — чисто; заодно найдена и исправлена реальная ошибка
+- [x] T052 [P] `npx eslint ...` — чисто; заодно найдена и исправлена реальная ошибка
       (`react-hooks/set-state-in-effect`): синхронный `setState` в теле эффекта при смене
       `:teamId` через prev/next — исправлено сбросом состояния во время рендера
       (react.dev: «Adjusting state when a prop changes»), не в эффекте
-- [X] T053 [P] `npx steiger ./src` (через `npm run lint:fsd` — прямой `npx steiger` падает на
+- [x] T053 [P] `npx steiger ./src` (через `npm run lint:fsd` — прямой `npx steiger` падает на
       интерактивном промпте в этом окружении). Границы `entities → widgets → pages` не нарушены.
       Предсказание из 005 подтвердилось: `entities/team` и `widgets/disclaimer-banner` пропали из
       списка `fsd/insignificant-slice` — получили второго потребителя (`pages/team`). Новые 6
       виджетов (`team-header`, `score-summary`, `area-profile`, `findings-summary`,
       `taxonomy-tree`, `evaluation-meta`) в списке — ожидаемо, специфичны для этой одной страницы,
       как `widgets/leaderboard-table` в 005
-- [X] T054 Проверено визуально (Playwright, см. T055) на 360 px: полос горизонтальной прокрутки
+- [x] T054 Проверено визуально (Playwright, см. T055) на 360 px: полос горизонтальной прокрутки
       страницы нет, таблица-альтернатива скроллится в своём контейнере (правило web/CLAUDE.md),
       дерево и раскрытая метрика читаемы
-- [X] T055 Пройдено визуально (Playwright, светлая/тёмная тема, 1280px и 360px) — 0 ошибок
+- [x] T055 Пройдено визуально (Playwright, светлая/тёмная тема, 1280px и 360px) — 0 ошибок
       консоли. Найдено и исправлено 2 реальных бага: (1) SHA команды наезжал на соседнюю колонку
       метаданных (`EvaluationMeta` — нет `break-all`/`min-w-0` на длинном значении); (2) шапка
       страницы (хлебные крошки + prev/next) не переносилась опрятно на 360px (добавлен
@@ -285,7 +285,7 @@ confidence/описание/якоря/находки с подсветкой к
       вручную — эти пути покрыты интеграционными тестами `taxonomy-tree.test.tsx`/
       `team-page.test.tsx`, но не проверялись глазами в браузере из-за объёма сценариев;
       рекомендую точечный проход перед демо
-- [X] T056 `npm run check` — зелено, кроме `lint:fsd` (см. T053, тот же осознанный компромисс,
+- [x] T056 `npm run check` — зелено, кроме `lint:fsd` (см. T053, тот же осознанный компромисс,
       что в 005 T039)
 
 ---
@@ -298,20 +298,20 @@ confidence/описание/якоря/находки с подсветкой к
 - **Foundational (Phase 2)**: зависит от Phase 1 — блокирует все user story
 - **US1 (Phase 3)**: зависит от Phase 2
 - **US2 (Phase 4)**: зависит от Phase 2; физически независима от US1 (разные виджеты), но обе
-      подключаются в один и тот же `pages/team/ui/team-page.tsx` — T031 (US1) и T038 (US2)
-      трогают один файл последовательно, не параллельно
+  подключаются в один и тот же `pages/team/ui/team-page.tsx` — T031 (US1) и T038 (US2)
+  трогают один файл последовательно, не параллельно
 - **US3 (Phase 5)**: зависит от Phase 4 (T044 связывает фильтр с `TaxonomyTree` из US2) — в
-      отличие от шаблонной независимости user story, здесь US3 физически достраивает US2
+  отличие от шаблонной независимости user story, здесь US3 физически достраивает US2
 - **US4 (Phase 6)**: зависит от Phase 2 напрямую (не от US1/US2/US3) — метаданные не пересекаются
-      ни с графиками, ни с деревом; можно реализовать сразу после Foundational, если US2/US3
-      откладываются
+  ни с графиками, ни с деревом; можно реализовать сразу после Foundational, если US2/US3
+  откладываются
 - **Polish (Phase 7)**: после всех выполняемых user story
 
 ### Parallel Opportunities
 
 - Phase 2: T002/T003, T004/T005 (после T002), T006/T007 (после T002), T009/T010, T011/T012,
-      T013/T014 (после T009), T015/T016 (после T009,T011), T018/T019 — тесты и независимые файлы
-      параллельно
+  T013/T014 (после T009), T015/T016 (после T009,T011), T018/T019 — тесты и независимые файлы
+  параллельно
 - Phase 3: T025/T026 (тесты), T027/T029 (реализация) — разные файлы
 - Phase 7: T051–T053 — независимые проверки параллельно
 

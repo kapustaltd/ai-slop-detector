@@ -1,20 +1,11 @@
 {
-  "schema_version": "rubric.v1",
-  "rubric_version": "frontend.v1",
   "area": "frontend",
-  "scale": {
-    "max": 10,
-    "anchors": [
-      2,
-      5,
-      8,
-      10
-    ]
-  },
   "area_weights": {
     "backend": 0.5,
     "frontend": 0.5
   },
+  "built_at": "2026-09-23T15:46:55Z",
+  "bundle_schema": "0.1",
   "categories": [
     {
       "id": "component_architecture",
@@ -368,6 +359,16 @@
       ]
     }
   ],
-  "bundle_schema": "0.1",
-  "built_at": "2026-09-21T12:00:00Z"
+  "rubric_version": "frontend.v1",
+  "scale": {
+    "min": 0,
+    "max": 10,
+    "anchors": [
+      2,
+      5,
+      8,
+      10
+    ]
+  },
+  "schema_version": "rubric.v1"
 }

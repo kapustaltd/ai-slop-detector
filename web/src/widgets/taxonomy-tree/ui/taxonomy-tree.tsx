@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { AnchorScale, isLowConfidence, nodeContribution, TaxonomyRow } from '@/entities/metric'
 import { findingSlug, FindingCard, SEVERITY_ORDER } from '@/entities/finding'
 import type { RubricBundle, TeamArea, TeamMetric } from '@/shared/api'
@@ -7,9 +9,9 @@ import { rubricMetricMap } from '../model/rubric-lookup'
 import type { TaxonomyPath } from '../model/taxonomy-path'
 
 /**
- * Категория → подкатегория → метрика на `TaxonomyRow` (005/006 инвентарь), лист — `AnchorScale` +
- * `FindingCard[]`. «Одновременно раскрыта одна ветка» (DESIGN.md) — `TaxonomyPath` хранит ровно
- * один путь, раскрытие узла заменяет путь целиком, а не добавляет к нему.
+ * Категория → подкатегория → метрика на `TaxonomyRow`, лист — `AnchorScale` + `FindingCard[]`.
+ * URL-путь хранит активную ветку, а независимые наборы ниже позволяют оставить
+ * открытыми сразу несколько узлов каждого уровня.
  */
 
 export interface TaxonomyTreeProps {
@@ -42,15 +44,40 @@ export function TaxonomyTree({
 }: TaxonomyTreeProps) {
   const rubricMetrics = rubricMetricMap(rubric)
   const isActiveArea = path.area === areaName
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    () => new Set(isActiveArea && path.categoryId ? [path.categoryId] : []),
+  )
+  const [expandedSubcategories, setExpandedSubcategories] = useState<Set<string>>(
+    () =>
+      new Set(
+        isActiveArea && path.categoryId && path.subcategoryId
+          ? [`${path.categoryId}/${path.subcategoryId}`]
+          : [],
+      ),
+  )
+  const [expandedMetrics, setExpandedMetrics] = useState<Set<string>>(
+    () =>
+      new Set(
+        isActiveArea && path.categoryId && path.subcategoryId && path.metricId
+          ? [`${path.categoryId}/${path.subcategoryId}/${path.metricId}`]
+          : [],
+      ),
+  )
 
-  const collapseAll = () =>
-    onPathChange({
-      area: areaName,
-      categoryId: null,
-      subcategoryId: null,
-      metricId: null,
-      findingSlug: null,
-    })
+  const collapseAll = () => {
+    setExpandedCategories(new Set())
+    setExpandedSubcategories(new Set())
+    setExpandedMetrics(new Set())
+    if (isActiveArea) {
+      onPathChange({
+        area: areaName,
+        categoryId: null,
+        subcategoryId: null,
+        metricId: null,
+        findingSlug: null,
+      })
+    }
+  }
 
   return (
     <section aria-label={`Разбор по рубрике · ${areaName}`} className="flex flex-col gap-3">
@@ -71,7 +98,9 @@ export function TaxonomyTree({
       <div className="overflow-x-auto rounded-card border border-line">
         <div className="min-w-[1100px]">
           {area.categories.map((category) => {
-            const categoryExpanded = isActiveArea && path.categoryId === category.id
+            const categoryExpanded =
+              expandedCategories.has(category.id) ||
+              (isActiveArea && path.categoryId === category.id)
             return (
               <div key={category.id}>
                 <TaxonomyRow
@@ -89,30 +118,41 @@ export function TaxonomyTree({
                   }}
                   trailing={`${category.subcategories.reduce((sum, sub) => sum + sub.metrics.reduce((s, m) => s + metricFindingsCount(m), 0), 0)} находок`}
                   expanded={categoryExpanded}
-                  onToggle={() =>
-                    onPathChange(
-                      categoryExpanded
-                        ? {
-                            area: areaName,
-                            categoryId: null,
-                            subcategoryId: null,
-                            metricId: null,
-                            findingSlug: null,
-                          }
-                        : {
-                            area: areaName,
-                            categoryId: category.id,
-                            subcategoryId: null,
-                            metricId: null,
-                            findingSlug: null,
-                          },
-                    )
-                  }
+                  onToggle={() => {
+                    setExpandedCategories((current) => {
+                      const next = new Set(current)
+                      if (categoryExpanded) next.delete(category.id)
+                      else next.add(category.id)
+                      return next
+                    })
+                    if (!categoryExpanded) {
+                      onPathChange({
+                        area: areaName,
+                        categoryId: category.id,
+                        subcategoryId: null,
+                        metricId: null,
+                        findingSlug: null,
+                      })
+                    } else if (isActiveArea && path.categoryId === category.id) {
+                      onPathChange({
+                        area: areaName,
+                        categoryId: null,
+                        subcategoryId: null,
+                        metricId: null,
+                        findingSlug: null,
+                      })
+                    }
+                  }}
                 />
 
                 {categoryExpanded
                   ? category.subcategories.map((subcategory) => {
-                      const subcategoryExpanded = path.subcategoryId === subcategory.id
+                      const subcategoryKey = `${category.id}/${subcategory.id}`
+                      const subcategoryExpanded =
+                        expandedSubcategories.has(subcategoryKey) ||
+                        (isActiveArea &&
+                          path.categoryId === category.id &&
+                          path.subcategoryId === subcategory.id)
                       return (
                         <div key={subcategory.id}>
                           <TaxonomyRow
@@ -128,30 +168,46 @@ export function TaxonomyTree({
                             }}
                             trailing={`${subcategory.metrics.length} ${metricSubcategoriesLabel(subcategory.metrics.length)}`}
                             expanded={subcategoryExpanded}
-                            onToggle={() =>
-                              onPathChange(
-                                subcategoryExpanded
-                                  ? {
-                                      area: areaName,
-                                      categoryId: category.id,
-                                      subcategoryId: null,
-                                      metricId: null,
-                                      findingSlug: null,
-                                    }
-                                  : {
-                                      area: areaName,
-                                      categoryId: category.id,
-                                      subcategoryId: subcategory.id,
-                                      metricId: null,
-                                      findingSlug: null,
-                                    },
-                              )
-                            }
+                            onToggle={() => {
+                              setExpandedSubcategories((current) => {
+                                const next = new Set(current)
+                                if (subcategoryExpanded) next.delete(subcategoryKey)
+                                else next.add(subcategoryKey)
+                                return next
+                              })
+                              if (!subcategoryExpanded) {
+                                onPathChange({
+                                  area: areaName,
+                                  categoryId: category.id,
+                                  subcategoryId: subcategory.id,
+                                  metricId: null,
+                                  findingSlug: null,
+                                })
+                              } else if (
+                                isActiveArea &&
+                                path.categoryId === category.id &&
+                                path.subcategoryId === subcategory.id
+                              ) {
+                                onPathChange({
+                                  area: areaName,
+                                  categoryId: category.id,
+                                  subcategoryId: null,
+                                  metricId: null,
+                                  findingSlug: null,
+                                })
+                              }
+                            }}
                           />
 
                           {subcategoryExpanded
                             ? subcategory.metrics.map((metric) => {
-                                const metricExpanded = path.metricId === metric.id
+                                const metricKey = `${category.id}/${subcategory.id}/${metric.id}`
+                                const metricExpanded =
+                                  expandedMetrics.has(metricKey) ||
+                                  (isActiveArea &&
+                                    path.categoryId === category.id &&
+                                    path.subcategoryId === subcategory.id &&
+                                    path.metricId === metric.id)
                                 return (
                                   <div key={metric.id}>
                                     <TaxonomyRow
@@ -169,25 +225,36 @@ export function TaxonomyTree({
                                       confidence={metric.confidence}
                                       trailing={`${metricFindingsCount(metric)} находок`}
                                       expanded={metricExpanded}
-                                      onToggle={() =>
-                                        onPathChange(
-                                          metricExpanded
-                                            ? {
-                                                area: areaName,
-                                                categoryId: category.id,
-                                                subcategoryId: subcategory.id,
-                                                metricId: null,
-                                                findingSlug: null,
-                                              }
-                                            : {
-                                                area: areaName,
-                                                categoryId: category.id,
-                                                subcategoryId: subcategory.id,
-                                                metricId: metric.id,
-                                                findingSlug: null,
-                                              },
-                                        )
-                                      }
+                                      onToggle={() => {
+                                        setExpandedMetrics((current) => {
+                                          const next = new Set(current)
+                                          if (metricExpanded) next.delete(metricKey)
+                                          else next.add(metricKey)
+                                          return next
+                                        })
+                                        if (!metricExpanded) {
+                                          onPathChange({
+                                            area: areaName,
+                                            categoryId: category.id,
+                                            subcategoryId: subcategory.id,
+                                            metricId: metric.id,
+                                            findingSlug: null,
+                                          })
+                                        } else if (
+                                          isActiveArea &&
+                                          path.categoryId === category.id &&
+                                          path.subcategoryId === subcategory.id &&
+                                          path.metricId === metric.id
+                                        ) {
+                                          onPathChange({
+                                            area: areaName,
+                                            categoryId: category.id,
+                                            subcategoryId: subcategory.id,
+                                            metricId: null,
+                                            findingSlug: null,
+                                          })
+                                        }
+                                      }}
                                     />
                                     {metricExpanded ? (
                                       <MetricPanel
@@ -195,10 +262,23 @@ export function TaxonomyTree({
                                         metric={metric}
                                         rubricMetric={rubricMetrics.get(metric.id)}
                                         findingsFilter={findingsFilter}
-                                        activeFindingSlug={path.findingSlug}
+                                        activeFindingSlug={
+                                          isActiveArea &&
+                                          path.categoryId === category.id &&
+                                          path.subcategoryId === subcategory.id &&
+                                          path.metricId === metric.id
+                                            ? path.findingSlug
+                                            : null
+                                        }
                                         commitSha={commitSha}
                                         onActivateFinding={(slug) =>
-                                          onPathChange({ ...path, findingSlug: slug })
+                                          onPathChange({
+                                            area: areaName,
+                                            categoryId: category.id,
+                                            subcategoryId: subcategory.id,
+                                            metricId: metric.id,
+                                            findingSlug: slug,
+                                          })
                                         }
                                       />
                                     ) : null}

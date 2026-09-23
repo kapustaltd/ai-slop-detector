@@ -36,3 +36,34 @@ func TestEnrichesValidAndPreservesInvalidFindings(t *testing.T) {
 		t.Fatalf("invalid range: %#v", result.Metrics[0].Findings[2])
 	}
 }
+
+func TestPermalinkIncludesAreaPathFromRepositoryRoot(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "main.go"), []byte("package main\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	sha := strings.Repeat("b", 40)
+	report := contract.Report{Metrics: []contract.Metric{{
+		ID: "metric",
+		Findings: []contract.Finding{{
+			Kind: "strength", Severity: "info", File: "main.go", LineStart: 1, LineEnd: 1,
+			Title: "valid", Explanation: "valid",
+		}},
+	}}}
+	options := Options{
+		RepoRoot: root, AreaPath: "backend", RepoURL: "https://github.com/acme/repo",
+		CommitSHA: sha, Templates: TemplateConfig{GitHub: "{base}/blob/{sha}/{path}#L{start}-L{end}"},
+	}
+
+	result := Enrich(report, options)
+	want := "https://github.com/acme/repo/blob/" + sha + "/backend/main.go#L1-L1"
+	if got := result.Metrics[0].Findings[0].Permalink; got != want {
+		t.Fatalf("permalink = %q, want %q", got, want)
+	}
+
+	result.Metrics[0].Findings[0].Permalink = "https://github.com/acme/repo/blob/old/main.go"
+	RefreshPermalinks(&result, options)
+	if got := result.Metrics[0].Findings[0].Permalink; got != want {
+		t.Fatalf("refreshed permalink = %q, want %q", got, want)
+	}
+}

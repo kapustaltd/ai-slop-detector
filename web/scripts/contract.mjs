@@ -421,15 +421,21 @@ async function compareGenerated() {
 
 function validateBundleFixtures(validators, rubricSchemaValidator) {
   const index = readJson(join(WEB_DIR, 'data', 'index.json'))
-  const team = readJson(join(WEB_DIR, 'data', 'teams', 'team-01.json'))
   const stats = readJson(join(WEB_DIR, 'data', 'stats.json'))
   for (const [name, value] of [
     ['index', index],
-    ['team-01', team],
     ['stats', stats],
   ]) {
-    const validator = validators[name === 'team-01' ? 'team' : name]
+    const validator = validators[name]
     if (!validator(value)) fail(`bundle ${name}: ${formatErrors(validator.errors)}`)
+  }
+  assert(index.teams.length > 0, 'bundle index must contain at least one team')
+  for (const item of index.teams) {
+    const team = readJson(join(WEB_DIR, 'data', 'teams', `${item.team_id}.json`))
+    if (!validators.team(team)) {
+      fail(`bundle team ${item.team_id}: ${formatErrors(validators.team.errors)}`)
+    }
+    assert(team.team_id === item.team_id, `bundle team ${item.team_id}: mismatched team_id`)
   }
   const indexText = JSON.stringify(index)
   assert(

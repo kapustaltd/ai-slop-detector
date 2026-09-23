@@ -1,10 +1,19 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
+
+import { getLeaderboardIndex, loadTeam, type TeamBundle } from '@/shared/api'
 
 import { TeamPage } from './team-page'
 
-function renderTeam(initialEntry = '/team/team-01') {
+const firstTeam = getLeaderboardIndex().teams[0]!
+let teamBundle: TeamBundle
+
+beforeAll(async () => {
+  teamBundle = await loadTeam(firstTeam.team_id)
+})
+
+function renderTeam(initialEntry = `/team/${firstTeam.team_id}`) {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
@@ -19,7 +28,7 @@ describe('TeamPage', () => {
     renderTeam()
 
     await waitFor(
-      () => expect(screen.getByRole('heading', { name: 'Команда 01' })).toBeInTheDocument(),
+      () => expect(screen.getByRole('heading', { name: firstTeam.name })).toBeInTheDocument(),
       { timeout: 10_000 },
     )
     expect(screen.getByText('Это вспомогательная метрика, а не вердикт')).toBeInTheDocument()
@@ -29,8 +38,13 @@ describe('TeamPage', () => {
   it('показывает разбор по рубрике для каждой оценённой области', async () => {
     renderTeam()
 
+    const doneArea = Object.entries(teamBundle.areas).find(
+      ([, area]) => area.status === 'done',
+    )?.[0]
+    expect(doneArea).toBeDefined()
+
     await waitFor(
-      () => expect(screen.getByText('Разбор по рубрике · backend')).toBeInTheDocument(),
+      () => expect(screen.getByText(`Разбор по рубрике · ${doneArea}`)).toBeInTheDocument(),
       { timeout: 10_000 },
     )
   })

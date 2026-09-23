@@ -1,28 +1,345 @@
 {
   "bundle_schema": "0.1",
-  "built_at": "2026-09-21T12:00:00Z",
+  "built_at": "2026-09-23T15:46:55Z",
   "meta": {
     "bundle_schema": "0.1",
-    "built_at": "2026-09-21T12:00:00Z",
+    "built_at": "2026-09-23T15:46:55Z",
     "report_schema": "1.0",
-    "rubric_versions": ["backend.v1", "frontend.v1"],
-    "skill_versions": ["2.0.0"],
-    "models": ["fixture-model"]
+    "rubric_versions": [
+      "backend.v1",
+      "frontend.v1"
+    ],
+    "skill_versions": [
+      "2.0.0"
+    ],
+    "models": [
+      "gpt-5.6-terra"
+    ]
   },
   "areas": [
     {
       "area": "backend",
-      "sample_size": 1,
-      "insufficient_data": true,
-      "categories": [],
-      "metrics": []
+      "sample_size": 3,
+      "insufficient_data": false,
+      "metrics": [
+        {
+          "id": "api_contract_quality",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "authn_authz",
+          "mean": 2,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "data_access_efficiency",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "data_model_design",
+          "mean": 2,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "dependency_direction",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "duplication",
+          "mean": 6,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "error_propagation",
+          "mean": 3,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "failure_messages",
+          "mean": 3,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "function_complexity",
+          "mean": 6,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "injection_protection",
+          "mean": 8,
+          "median": 8,
+          "count": 3
+        },
+        {
+          "id": "input_validation",
+          "mean": 6,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "layer_separation",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "logging",
+          "mean": 2,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "module_boundaries",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "naming_clarity",
+          "mean": 6,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "project_structure",
+          "mean": 6,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "query_correctness",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "secrets_handling",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "test_quality_and_coverage",
+          "mean": 3,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "test_runnability",
+          "mean": 4,
+          "median": 5,
+          "count": 3
+        }
+      ],
+      "categories": [
+        {
+          "id": "api_design",
+          "mean": 5.45,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "architecture_structure",
+          "mean": 5.2,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "code_quality_readability",
+          "mean": 6,
+          "median": 6.2,
+          "count": 3
+        },
+        {
+          "id": "data_work",
+          "mean": 3.5,
+          "median": 3.5,
+          "count": 3
+        },
+        {
+          "id": "reliability_error_handling",
+          "mean": 2.65,
+          "median": 2.8775,
+          "count": 3
+        },
+        {
+          "id": "security",
+          "mean": 4.475,
+          "median": 4.475,
+          "count": 3
+        },
+        {
+          "id": "testing",
+          "mean": 3.35,
+          "median": 3.05,
+          "count": 3
+        }
+      ]
     },
     {
       "area": "frontend",
-      "sample_size": 1,
-      "insufficient_data": true,
-      "categories": [],
-      "metrics": []
+      "sample_size": 3,
+      "insufficient_data": false,
+      "metrics": [
+        {
+          "id": "api_types",
+          "mean": 2,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "async_states",
+          "mean": 4,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "bundle_and_assets",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "code_structure_and_concerns",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "component_design",
+          "mean": 6,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "contrast_and_focus",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "data_fetching",
+          "mean": 4,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "keyboard_navigation",
+          "mean": 4,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "props_contracts",
+          "mean": 4,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "render_efficiency",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "responsiveness",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "semantic_accessibility",
+          "mean": 4,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "state_management",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "styling_consistency",
+          "mean": 7,
+          "median": 8,
+          "count": 3
+        },
+        {
+          "id": "test_quality_and_coverage",
+          "mean": 2,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "test_runnability",
+          "mean": 3,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "type_strictness",
+          "mean": 4,
+          "median": 5,
+          "count": 3
+        }
+      ],
+      "categories": [
+        {
+          "id": "accessibility",
+          "mean": 4.18,
+          "median": 4.19,
+          "count": 3
+        },
+        {
+          "id": "component_architecture",
+          "mean": 5.6,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "performance",
+          "mean": 5,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "state_data_management",
+          "mean": 4.6,
+          "median": 5,
+          "count": 3
+        },
+        {
+          "id": "testing",
+          "mean": 2.4,
+          "median": 2,
+          "count": 3
+        },
+        {
+          "id": "typing_contracts",
+          "mean": 3.52,
+          "median": 4.28,
+          "count": 3
+        },
+        {
+          "id": "ui_style_consistency",
+          "mean": 6.2,
+          "median": 6.8,
+          "count": 3
+        }
+      ]
     }
   ]
 }

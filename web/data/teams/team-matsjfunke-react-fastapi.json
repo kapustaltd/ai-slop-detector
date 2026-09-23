@@ -1,0 +1,2494 @@
+{
+  "bundle_schema": "0.1",
+  "built_at": "2026-09-23T15:46:55Z",
+  "team_id": "team-matsjfunke-react-fastapi",
+  "name": "React FastAPI Todo",
+  "status": "done",
+  "commit_sha": "22745e87a108c53a8470866c8585dbf2a17730b1",
+  "total": 3.9072500000000003,
+  "partial": false,
+  "meta": {
+    "schema_version": "evaluation.v1",
+    "skill_version": "2.0.0",
+    "rubric_version": "backend.v1 + frontend.v1",
+    "model": "gpt-5.6-terra",
+    "evaluated_at": "2026-09-23T15:20:13Z"
+  },
+  "areas": {
+    "backend": {
+      "status": "done",
+      "score": 4.1885,
+      "max": 10,
+      "categories": [
+        {
+          "id": "architecture_structure",
+          "name": "Архитектура и структура",
+          "weight": 0.19,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "layers_boundaries",
+              "name": "Слои и границы",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "layer_separation",
+                  "name": "Разделение слоёв",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Транспорт, ORM-модель и подключение к БД вынесены по файлам, но обработчики напрямую содержат запросы и транзакции.",
+                  "rationale": "Сопоставление с якорем 5: Транспорт, ORM-модель и подключение к БД вынесены по файлам, но обработчики напрямую содержат запросы и транзакции.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "main.py",
+                      "line_start": 68,
+                      "line_end": 74,
+                      "title": "Обработчик совмещает API и доступ к данным",
+                      "explanation": "Маршрут создаёт ORM-сущность и самостоятельно управляет commit/refresh.",
+                      "suggestion": "Вынести операции с todo в сервис или репозиторий, оставив обработчику HTTP-слой.",
+                      "link_status": "verified",
+                      "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L74"
+                    }
+                  ]
+                },
+                {
+                  "id": "module_boundaries",
+                  "name": "Границы модулей",
+                  "weight": 0.4,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Есть отдельные модули для БД и моделей, однако основной модуль напрямую связан с обоими и содержит большую часть прикладной логики.",
+                  "rationale": "Сопоставление с якорем 5: Есть отдельные модули для БД и моделей, однако основной модуль напрямую связан с обоими и содержит большую часть прикладной логики.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "main.py",
+                      "line_start": 12,
+                      "line_end": 14,
+                      "title": "Основной модуль зависит от деталей хранения",
+                      "explanation": "API-модуль импортирует SessionLocal, engine и ORM-модели напрямую.",
+                      "suggestion": "Добавить слой сервиса или репозитория и зависеть в API от его интерфейса.",
+                      "link_status": "verified",
+                      "snippet": "from database import SessionLocal, engine\n\nimport models",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L12-L14"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "project_organization",
+              "name": "Организация проекта",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "project_structure",
+                  "name": "Структура проекта",
+                  "weight": 0.5,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Назначение трёх Python-модулей понятно, но проект не разделяет схемы, маршруты, сервисы и тесты.",
+                  "rationale": "Сопоставление с якорем 5: Назначение трёх Python-модулей понятно, но проект не разделяет схемы, маршруты, сервисы и тесты.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "main.py",
+                      "line_start": 35,
+                      "line_end": 91,
+                      "title": "Разнородные части собраны в одном модуле",
+                      "explanation": "В main.py одновременно определены Pydantic-схемы, зависимость БД, инициализация схемы и маршруты.",
+                      "suggestion": "Разнести схемы, зависимости, маршруты и прикладную логику по предсказуемым пакетам.",
+                      "link_status": "verified",
+                      "snippet": "class TodosBase(BaseModel):\n    priority: str\n    task: str\n    description: str\n    completion_status: bool\n    date: str\n\n\nclass TodosModel(TodosBase):\n    # adds ID field\n    id: int\n\n    # Set orm_mode to True to allow using this model with ORMs (Object Relational Mappers) like SQLAlchemy\n    class Config:\n        orm_mode = True\n\n\n# connects to database / provides a database session to the endpoint.\ndef get_db():\n    db = SessionLocal()\n    try:\n        yield db\n    finally:\n        db.close()\n\n\n# Dependency to inject the database session into the endpoint\ndb_dependency = Annotated[Session, Depends(get_db)]\n\n# creates sqlite tables if main.py is run\nmodels.Base.metadata.create_all(bind=engine)\n\n\n@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L35-L91"
+                    }
+                  ]
+                },
+                {
+                  "id": "dependency_direction",
+                  "name": "Направление зависимостей",
+                  "weight": 0.5,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Зависимости направлены от API к моделям и БД без видимого цикла, но правило направления архитектурно не защищено.",
+                  "rationale": "Сопоставление с якорем 5: Зависимости направлены от API к моделям и БД без видимого цикла, но правило направления архитектурно не защищено.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "main.py",
+                      "line_start": 12,
+                      "line_end": 14,
+                      "title": "API привязан к инфраструктуре",
+                      "explanation": "Модуль транспорта напрямую импортирует движок, сессии и ORM-модели.",
+                      "suggestion": "Инвертировать зависимость через сервисный слой и добавить проверку архитектурных границ.",
+                      "link_status": "verified",
+                      "snippet": "from database import SessionLocal, engine\n\nimport models",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L12-L14"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "code_quality_readability",
+          "name": "Качество кода и читаемость",
+          "weight": 0.16,
+          "score": 6.2,
+          "subcategories": [
+            {
+              "id": "readability",
+              "name": "Читаемость",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "naming_clarity",
+                  "name": "Ясность имён",
+                  "weight": 0.5,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Имена маршрутов и полей в основном понятны, но TodosBase и TodosModel используют неестественное множественное число для одной сущности.",
+                  "rationale": "Сопоставление с якорем 5: Имена маршрутов и полей в основном понятны, но TodosBase и TodosModel используют неестественное множественное число для одной сущности.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "main.py",
+                      "line_start": 35,
+                      "line_end": 45,
+                      "title": "Имена схем не согласованы с сущностью",
+                      "explanation": "Схемы, описывающие один todo, названы во множественном числе.",
+                      "suggestion": "Переименовать схемы в TodoBase и TodoResponse либо выбрать единый доменный словарь.",
+                      "link_status": "verified",
+                      "snippet": "class TodosBase(BaseModel):\n    priority: str\n    task: str\n    description: str\n    completion_status: bool\n    date: str\n\n\nclass TodosModel(TodosBase):\n    # adds ID field\n    id: int",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L35-L45"
+                    }
+                  ]
+                },
+                {
+                  "id": "function_complexity",
+                  "name": "Сложность функций",
+                  "weight": 0.5,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Обработчики короткие, но create_todo содержит длинное ручное сопоставление полей и смешивает несколько обязанностей.",
+                  "rationale": "Сопоставление с якорем 5: Обработчики короткие, но create_todo содержит длинное ручное сопоставление полей и смешивает несколько обязанностей.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "main.py",
+                      "line_start": 68,
+                      "line_end": 74,
+                      "title": "Создание сущности вручную сопоставляет поля",
+                      "explanation": "Конструктор ORM-модели содержит пять повторяющихся обращений к полям входной схемы.",
+                      "suggestion": "Выделить преобразование схемы в сущность в отдельную функцию или сервис.",
+                      "link_status": "verified",
+                      "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L74"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "maintainability",
+              "name": "Сопровождаемость",
+              "weight": 0.4,
+              "score": 8,
+              "metrics": [
+                {
+                  "id": "duplication",
+                  "name": "Дублирование",
+                  "weight": 1,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "В небольшом наборе исходников существенного копипаста не видно; повторение ограничено явным сопоставлением полей при создании todo.",
+                  "rationale": "Сопоставление с якорем 8: В небольшом наборе исходников существенного копипаста не видно; повторение ограничено явным сопоставлением полей при создании todo.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "main.py",
+                      "line_start": 68,
+                      "line_end": 91,
+                      "title": "CRUD-пути не дублируют крупные блоки логики",
+                      "explanation": "Создание, чтение и удаление реализованы отдельными короткими обработчиками.",
+                      "link_status": "verified",
+                      "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reliability_error_handling",
+          "name": "Надёжность и обработка ошибок",
+          "weight": 0.15,
+          "score": 2,
+          "subcategories": [
+            {
+              "id": "error_handling",
+              "name": "Обработка ошибок",
+              "weight": 0.65,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "error_propagation",
+                  "name": "Распространение ошибок",
+                  "weight": 0.55,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Ошибки commit и других операций БД не обрабатываются, а отсутствие записи при удалении преобразуется в обычный ответ без HTTP-ошибки.",
+                  "rationale": "Сопоставление с якорем 2: Ошибки commit и других операций БД не обрабатываются, а отсутствие записи при удалении преобразуется в обычный ответ без HTTP-ошибки.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "main.py",
+                      "line_start": 83,
+                      "line_end": 91,
+                      "title": "Ошибка удаления не передаётся как HTTP-ошибка",
+                      "explanation": "NoResultFound возвращает JSON с полем status, но фактический статус ответа остаётся успешным; ошибки транзакции не перехватываются.",
+                      "suggestion": "Преобразовывать ожидаемое отсутствие записи в HTTPException(404), а ошибки транзакций откатывать и обрабатывать централизованно.",
+                      "link_status": "verified",
+                      "snippet": "@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L83-L91"
+                    }
+                  ]
+                },
+                {
+                  "id": "failure_messages",
+                  "name": "Сообщения об ошибках",
+                  "weight": 0.45,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Сообщение об ошибке удаления не содержит полезного контекста, а его код 400 передаётся только в теле успешного HTTP-ответа.",
+                  "rationale": "Сопоставление с якорем 2: Сообщение об ошибке удаления не содержит полезного контекста, а его код 400 передаётся только в теле успешного HTTP-ответа.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "main.py",
+                      "line_start": 89,
+                      "line_end": 91,
+                      "title": "Контракт ошибки не соответствует HTTP-статусу",
+                      "explanation": "Клиент получает status/detail в JSON вместо установленного HTTPException со статусом и безопасной причиной.",
+                      "suggestion": "Использовать HTTPException с корректным кодом и нейтральным detail, например 404 для отсутствующего todo.",
+                      "link_status": "verified",
+                      "snippet": "        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L89-L91"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "observability",
+              "name": "Наблюдаемость",
+              "weight": 0.35,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "logging",
+                  "name": "Логирование",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "В исходниках нет логирования запросов, изменений данных или сбоев.",
+                  "rationale": "Сопоставление с якорем 2: В исходниках нет логирования запросов, изменений данных или сбоев.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "main.py",
+                      "line_start": 68,
+                      "line_end": 91,
+                      "title": "Операции с todo не журналируются",
+                      "explanation": "Маршруты создания и удаления выполняют изменения БД без записи успеха или ошибки в лог.",
+                      "suggestion": "Настроить структурированное логирование и писать безопасные события для изменений и исключений.",
+                      "link_status": "verified",
+                      "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "api_design",
+          "name": "Дизайн API",
+          "weight": 0.14,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "api_contract",
+              "name": "Контракт",
+              "weight": 0.55,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "api_contract_quality",
+                  "name": "Качество контракта",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Для создания и чтения заданы пути и response_model, но удаление оформлено как POST с неформальным полем status, а успешные коды не определены явно.",
+                  "rationale": "Сопоставление с якорем 5: Для создания и чтения заданы пути и response_model, но удаление оформлено как POST с неформальным полем status, а успешные коды не определены явно.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "main.py",
+                      "line_start": 68,
+                      "line_end": 91,
+                      "title": "Контракт удаления непоследователен",
+                      "explanation": "Удаление использует POST /delete_todo/{id} и возвращает статус в теле, тогда как создание и чтение используют ресурс /todos.",
+                      "suggestion": "Сделать DELETE /todos/{id}, задать status_code и описать ответы успеха и ошибок в декораторах FastAPI.",
+                      "link_status": "verified",
+                      "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "api_behavior",
+              "name": "Поведение",
+              "weight": 0.45,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "input_validation",
+                  "name": "Валидация входа",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Pydantic проверяет базовые типы входного тела и FastAPI преобразует path/query-параметры, но ограничения длины, допустимых значений и границ пагинации отсутствуют.",
+                  "rationale": "Сопоставление с якорем 5: Pydantic проверяет базовые типы входного тела и FastAPI преобразует path/query-параметры, но ограничения длины, допустимых значений и границ пагинации отсутствуют.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "main.py",
+                      "line_start": 35,
+                      "line_end": 40,
+                      "title": "Поля todo не имеют доменных ограничений",
+                      "explanation": "Строковые поля и дата принимаются без длины, формата или набора допустимых значений; priority и date остаются произвольными строками.",
+                      "suggestion": "Добавить Field-ограничения и типы домена, например enum для priority, date/datetime для даты и пределы длины строк.",
+                      "link_status": "verified",
+                      "snippet": "class TodosBase(BaseModel):\n    priority: str\n    task: str\n    description: str\n    completion_status: bool\n    date: str",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L35-L40"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "data_work",
+          "name": "Работа с данными",
+          "weight": 0.12,
+          "score": 3.5,
+          "subcategories": [
+            {
+              "id": "data_model",
+              "name": "Модель данных",
+              "weight": 0.5,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "data_model_design",
+                  "name": "Схема данных и миграции",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Модель имеет первичный ключ, но прикладные поля nullable по умолчанию, имя таблицы не соответствует сущности, а миграций нет; схема создаётся при импорте приложения.",
+                  "rationale": "Сопоставление с якорем 2: Модель имеет первичный ключ, но прикладные поля nullable по умолчанию, имя таблицы не соответствует сущности, а миграций нет; схема создаётся при импорте приложения.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "models.py",
+                      "line_start": 11,
+                      "line_end": 19,
+                      "title": "Целостность данных почти не выражена в модели",
+                      "explanation": "Только id имеет ограничение; task, priority, completion_status и date не отмечены nullable=False и не имеют доменных ограничений.",
+                      "suggestion": "Задать обязательность и нужные ограничения полей, согласовать имя таблицы и добавить версионируемые миграции.",
+                      "link_status": "verified",
+                      "snippet": "class Todos(Base):\n    __tablename__ = 'transactions'\n\n    id = Column(Integer, primary_key=True, index=True)\n    priority = Column(String)\n    task = Column(String)\n    description = Column(String)\n    completion_status = Column(Boolean)\n    date = Column(String)",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/models.py#L11-L19"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "main.py",
+                      "line_start": 64,
+                      "line_end": 65,
+                      "title": "Схема создаётся из кода приложения",
+                      "explanation": "create_all не даёт истории и воспроизводимого управления изменениями схемы.",
+                      "suggestion": "Перенести создание и изменение схемы в миграции, например Alembic.",
+                      "link_status": "verified",
+                      "snippet": "# creates sqlite tables if main.py is run\nmodels.Base.metadata.create_all(bind=engine)",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L64-L65"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "data_access",
+              "name": "Доступ к данным",
+              "weight": 0.5,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "query_correctness",
+                  "name": "Корректность запросов",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Запросы ORM для основного CRUD-сценария параметризованы и коммитятся, но границы транзакций и откат при ошибке не определены.",
+                  "rationale": "Сопоставление с якорем 5: Запросы ORM для основного CRUD-сценария параметризованы и коммитятся, но границы транзакций и откат при ошибке не определены.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "main.py",
+                      "line_start": 69,
+                      "line_end": 73,
+                      "title": "Транзакция не откатывается при сбое",
+                      "explanation": "После add выполняется commit без обработки исключений и rollback.",
+                      "suggestion": "Обернуть запись в обработку SQLAlchemy-ошибок, выполнять rollback и возвращать согласованную ошибку.",
+                      "link_status": "verified",
+                      "snippet": "async def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L69-L73"
+                    }
+                  ]
+                },
+                {
+                  "id": "data_access_efficiency",
+                  "name": "Эффективность доступа",
+                  "weight": 0.4,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Список использует offset/limit, а первичный ключ индексирован, но limit не ограничен и нет свидетельств оценки запросов на большом объёме.",
+                  "rationale": "Сопоставление с якорем 5: Список использует offset/limit, а первичный ключ индексирован, но limit не ограничен и нет свидетельств оценки запросов на большом объёме.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "main.py",
+                      "line_start": 77,
+                      "line_end": 80,
+                      "title": "Пагинация не ограничивает объём выборки",
+                      "explanation": "Клиент может передать произвольно большой limit, несмотря на значение по умолчанию 100.",
+                      "suggestion": "Задать допустимый диапазон limit через Query и выбрать стратегию пагинации для больших наборов данных.",
+                      "link_status": "verified",
+                      "snippet": "@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L77-L80"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "security",
+          "name": "Безопасность",
+          "weight": 0.14,
+          "score": 4.4750000000000005,
+          "subcategories": [
+            {
+              "id": "access_control",
+              "name": "Контроль доступа",
+              "weight": 0.45,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "authn_authz",
+                  "name": "Аутентификация и авторизация",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Все маршруты изменения и чтения todo доступны без аутентификации и проверки прав.",
+                  "rationale": "Сопоставление с якорем 2: Все маршруты изменения и чтения todo доступны без аутентификации и проверки прав.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "critical",
+                      "file": "main.py",
+                      "line_start": 68,
+                      "line_end": 91,
+                      "title": "Маршруты не защищены контролем доступа",
+                      "explanation": "create_todo, get_todos и delete_todo не требуют идентификации пользователя и не проверяют владение ресурсом.",
+                      "suggestion": "Добавить аутентификацию, привязку todo к владельцу и авторизационную проверку на каждом маршруте.",
+                      "link_status": "verified",
+                      "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "data_input_protection",
+              "name": "Защита данных и ввода",
+              "weight": 0.55,
+              "score": 6.5,
+              "metrics": [
+                {
+                  "id": "secrets_handling",
+                  "name": "Работа с секретами",
+                  "weight": 0.5,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "В коде нет явных учётных данных, но строка подключения к БД жёстко задана и не конфигурируется через окружение.",
+                  "rationale": "Сопоставление с якорем 5: В коде нет явных учётных данных, но строка подключения к БД жёстко задана и не конфигурируется через окружение.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "database.py",
+                      "line_start": 11,
+                      "line_end": 13,
+                      "title": "Конфигурация БД зашита в исходник",
+                      "explanation": "URL_DATABASE задан литералом вместо внешней конфигурации.",
+                      "suggestion": "Читать URL БД из переменной окружения и добавить value-free .env.example с её именем.",
+                      "link_status": "verified",
+                      "snippet": "URL_DATABASE = 'sqlite:///./todolist.db'\n\nengine = create_engine(URL_DATABASE, connect_args={'check_same_thread': False})",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/database.py#L11-L13"
+                    }
+                  ]
+                },
+                {
+                  "id": "injection_protection",
+                  "name": "Защита от инъекций",
+                  "weight": 0.5,
+                  "score": 8,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Доступ к данным использует SQLAlchemy ORM с filter_by, а тело запроса проходит типизацию Pydantic; опасного исполнения строк не обнаружено.",
+                  "rationale": "Сопоставление с якорем 8: Доступ к данным использует SQLAlchemy ORM с filter_by, а тело запроса проходит типизацию Pydantic; опасного исполнения строк не обнаружено.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "main.py",
+                      "line_start": 83,
+                      "line_end": 87,
+                      "title": "Идентификатор передаётся в ORM-запрос",
+                      "explanation": "Удаление использует filter_by(id=id), а не конкатенацию пользовательского ввода в SQL.",
+                      "link_status": "verified",
+                      "snippet": "@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L83-L87"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "testing",
+          "name": "Тестирование",
+          "weight": 0.1,
+          "score": 2,
+          "subcategories": [
+            {
+              "id": "test_content",
+              "name": "Содержание тестов",
+              "weight": 0.65,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "test_quality_and_coverage",
+                  "name": "Покрытие и качество тестов",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "В предоставленной рабочей копии нет авторских файлов тестов для API, модели, ошибок или доступа.",
+                  "rationale": "Сопоставление с якорем 2: В предоставленной рабочей копии нет авторских файлов тестов для API, модели, ошибок или доступа.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "main.py",
+                      "line_start": 68,
+                      "line_end": 91,
+                      "title": "Критичные API-пути не подтверждены тестами",
+                      "explanation": "Реализованные создание, список и удаление не имеют сопоставимых тестовых файлов в области репозитория.",
+                      "suggestion": "Добавить изолированные тесты FastAPI для успешных сценариев, валидации, 404 и сбоев транзакций.",
+                      "link_status": "verified",
+                      "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "test_runnability_area",
+              "name": "Запускаемость",
+              "weight": 0.35,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "test_runnability",
+                  "name": "Запускаемость тестов",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Нет тестовых файлов и конфигурации тестового запуска; Dockerfile также не содержит команды запуска приложения.",
+                  "rationale": "Сопоставление с якорем 2: Нет тестовых файлов и конфигурации тестового запуска; Dockerfile также не содержит команды запуска приложения.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "Dockerfile",
+                      "line_start": 1,
+                      "line_end": 11,
+                      "title": "Конфигурация контейнера не задаёт запуск или тесты",
+                      "explanation": "Dockerfile устанавливает зависимости, но не содержит CMD/ENTRYPOINT и не описывает тестовую команду.",
+                      "suggestion": "Добавить тестовый набор и документированную команду запуска; при использовании контейнера задать CMD и отдельную команду тестов.",
+                      "link_status": "verified",
+                      "snippet": "FROM python:3.11.6-slim-bookworm\n\nWORKDIR /app\n\n\n# Copy the rest of the application code into the container\nCOPY . .\nRUN apt update --fix-missing \u0026\u0026 apt upgrade -y \nRUN pip install --upgrade pip\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/Dockerfile#L1-L11"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "layer_separation",
+          "name": "Разделение слоёв",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Транспорт, ORM-модель и подключение к БД вынесены по файлам, но обработчики напрямую содержат запросы и транзакции.",
+          "rationale": "Сопоставление с якорем 5: Транспорт, ORM-модель и подключение к БД вынесены по файлам, но обработчики напрямую содержат запросы и транзакции.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "main.py",
+              "line_start": 68,
+              "line_end": 74,
+              "title": "Обработчик совмещает API и доступ к данным",
+              "explanation": "Маршрут создаёт ORM-сущность и самостоятельно управляет commit/refresh.",
+              "suggestion": "Вынести операции с todo в сервис или репозиторий, оставив обработчику HTTP-слой.",
+              "link_status": "verified",
+              "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L74"
+            }
+          ]
+        },
+        {
+          "id": "module_boundaries",
+          "name": "Границы модулей",
+          "weight": 0.4,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Есть отдельные модули для БД и моделей, однако основной модуль напрямую связан с обоими и содержит большую часть прикладной логики.",
+          "rationale": "Сопоставление с якорем 5: Есть отдельные модули для БД и моделей, однако основной модуль напрямую связан с обоими и содержит большую часть прикладной логики.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "main.py",
+              "line_start": 12,
+              "line_end": 14,
+              "title": "Основной модуль зависит от деталей хранения",
+              "explanation": "API-модуль импортирует SessionLocal, engine и ORM-модели напрямую.",
+              "suggestion": "Добавить слой сервиса или репозитория и зависеть в API от его интерфейса.",
+              "link_status": "verified",
+              "snippet": "from database import SessionLocal, engine\n\nimport models",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L12-L14"
+            }
+          ]
+        },
+        {
+          "id": "project_structure",
+          "name": "Структура проекта",
+          "weight": 0.5,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Назначение трёх Python-модулей понятно, но проект не разделяет схемы, маршруты, сервисы и тесты.",
+          "rationale": "Сопоставление с якорем 5: Назначение трёх Python-модулей понятно, но проект не разделяет схемы, маршруты, сервисы и тесты.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "main.py",
+              "line_start": 35,
+              "line_end": 91,
+              "title": "Разнородные части собраны в одном модуле",
+              "explanation": "В main.py одновременно определены Pydantic-схемы, зависимость БД, инициализация схемы и маршруты.",
+              "suggestion": "Разнести схемы, зависимости, маршруты и прикладную логику по предсказуемым пакетам.",
+              "link_status": "verified",
+              "snippet": "class TodosBase(BaseModel):\n    priority: str\n    task: str\n    description: str\n    completion_status: bool\n    date: str\n\n\nclass TodosModel(TodosBase):\n    # adds ID field\n    id: int\n\n    # Set orm_mode to True to allow using this model with ORMs (Object Relational Mappers) like SQLAlchemy\n    class Config:\n        orm_mode = True\n\n\n# connects to database / provides a database session to the endpoint.\ndef get_db():\n    db = SessionLocal()\n    try:\n        yield db\n    finally:\n        db.close()\n\n\n# Dependency to inject the database session into the endpoint\ndb_dependency = Annotated[Session, Depends(get_db)]\n\n# creates sqlite tables if main.py is run\nmodels.Base.metadata.create_all(bind=engine)\n\n\n@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L35-L91"
+            }
+          ]
+        },
+        {
+          "id": "dependency_direction",
+          "name": "Направление зависимостей",
+          "weight": 0.5,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Зависимости направлены от API к моделям и БД без видимого цикла, но правило направления архитектурно не защищено.",
+          "rationale": "Сопоставление с якорем 5: Зависимости направлены от API к моделям и БД без видимого цикла, но правило направления архитектурно не защищено.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "main.py",
+              "line_start": 12,
+              "line_end": 14,
+              "title": "API привязан к инфраструктуре",
+              "explanation": "Модуль транспорта напрямую импортирует движок, сессии и ORM-модели.",
+              "suggestion": "Инвертировать зависимость через сервисный слой и добавить проверку архитектурных границ.",
+              "link_status": "verified",
+              "snippet": "from database import SessionLocal, engine\n\nimport models",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L12-L14"
+            }
+          ]
+        },
+        {
+          "id": "naming_clarity",
+          "name": "Ясность имён",
+          "weight": 0.5,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Имена маршрутов и полей в основном понятны, но TodosBase и TodosModel используют неестественное множественное число для одной сущности.",
+          "rationale": "Сопоставление с якорем 5: Имена маршрутов и полей в основном понятны, но TodosBase и TodosModel используют неестественное множественное число для одной сущности.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "main.py",
+              "line_start": 35,
+              "line_end": 45,
+              "title": "Имена схем не согласованы с сущностью",
+              "explanation": "Схемы, описывающие один todo, названы во множественном числе.",
+              "suggestion": "Переименовать схемы в TodoBase и TodoResponse либо выбрать единый доменный словарь.",
+              "link_status": "verified",
+              "snippet": "class TodosBase(BaseModel):\n    priority: str\n    task: str\n    description: str\n    completion_status: bool\n    date: str\n\n\nclass TodosModel(TodosBase):\n    # adds ID field\n    id: int",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L35-L45"
+            }
+          ]
+        },
+        {
+          "id": "function_complexity",
+          "name": "Сложность функций",
+          "weight": 0.5,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Обработчики короткие, но create_todo содержит длинное ручное сопоставление полей и смешивает несколько обязанностей.",
+          "rationale": "Сопоставление с якорем 5: Обработчики короткие, но create_todo содержит длинное ручное сопоставление полей и смешивает несколько обязанностей.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "main.py",
+              "line_start": 68,
+              "line_end": 74,
+              "title": "Создание сущности вручную сопоставляет поля",
+              "explanation": "Конструктор ORM-модели содержит пять повторяющихся обращений к полям входной схемы.",
+              "suggestion": "Выделить преобразование схемы в сущность в отдельную функцию или сервис.",
+              "link_status": "verified",
+              "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L74"
+            }
+          ]
+        },
+        {
+          "id": "duplication",
+          "name": "Дублирование",
+          "weight": 1,
+          "score": 8,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "В небольшом наборе исходников существенного копипаста не видно; повторение ограничено явным сопоставлением полей при создании todo.",
+          "rationale": "Сопоставление с якорем 8: В небольшом наборе исходников существенного копипаста не видно; повторение ограничено явным сопоставлением полей при создании todo.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "main.py",
+              "line_start": 68,
+              "line_end": 91,
+              "title": "CRUD-пути не дублируют крупные блоки логики",
+              "explanation": "Создание, чтение и удаление реализованы отдельными короткими обработчиками.",
+              "link_status": "verified",
+              "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+            }
+          ]
+        },
+        {
+          "id": "error_propagation",
+          "name": "Распространение ошибок",
+          "weight": 0.55,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Ошибки commit и других операций БД не обрабатываются, а отсутствие записи при удалении преобразуется в обычный ответ без HTTP-ошибки.",
+          "rationale": "Сопоставление с якорем 2: Ошибки commit и других операций БД не обрабатываются, а отсутствие записи при удалении преобразуется в обычный ответ без HTTP-ошибки.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "main.py",
+              "line_start": 83,
+              "line_end": 91,
+              "title": "Ошибка удаления не передаётся как HTTP-ошибка",
+              "explanation": "NoResultFound возвращает JSON с полем status, но фактический статус ответа остаётся успешным; ошибки транзакции не перехватываются.",
+              "suggestion": "Преобразовывать ожидаемое отсутствие записи в HTTPException(404), а ошибки транзакций откатывать и обрабатывать централизованно.",
+              "link_status": "verified",
+              "snippet": "@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L83-L91"
+            }
+          ]
+        },
+        {
+          "id": "failure_messages",
+          "name": "Сообщения об ошибках",
+          "weight": 0.45,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Сообщение об ошибке удаления не содержит полезного контекста, а его код 400 передаётся только в теле успешного HTTP-ответа.",
+          "rationale": "Сопоставление с якорем 2: Сообщение об ошибке удаления не содержит полезного контекста, а его код 400 передаётся только в теле успешного HTTP-ответа.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "main.py",
+              "line_start": 89,
+              "line_end": 91,
+              "title": "Контракт ошибки не соответствует HTTP-статусу",
+              "explanation": "Клиент получает status/detail в JSON вместо установленного HTTPException со статусом и безопасной причиной.",
+              "suggestion": "Использовать HTTPException с корректным кодом и нейтральным detail, например 404 для отсутствующего todo.",
+              "link_status": "verified",
+              "snippet": "        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L89-L91"
+            }
+          ]
+        },
+        {
+          "id": "logging",
+          "name": "Логирование",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "В исходниках нет логирования запросов, изменений данных или сбоев.",
+          "rationale": "Сопоставление с якорем 2: В исходниках нет логирования запросов, изменений данных или сбоев.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "main.py",
+              "line_start": 68,
+              "line_end": 91,
+              "title": "Операции с todo не журналируются",
+              "explanation": "Маршруты создания и удаления выполняют изменения БД без записи успеха или ошибки в лог.",
+              "suggestion": "Настроить структурированное логирование и писать безопасные события для изменений и исключений.",
+              "link_status": "verified",
+              "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+            }
+          ]
+        },
+        {
+          "id": "api_contract_quality",
+          "name": "Качество контракта",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Для создания и чтения заданы пути и response_model, но удаление оформлено как POST с неформальным полем status, а успешные коды не определены явно.",
+          "rationale": "Сопоставление с якорем 5: Для создания и чтения заданы пути и response_model, но удаление оформлено как POST с неформальным полем status, а успешные коды не определены явно.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "main.py",
+              "line_start": 68,
+              "line_end": 91,
+              "title": "Контракт удаления непоследователен",
+              "explanation": "Удаление использует POST /delete_todo/{id} и возвращает статус в теле, тогда как создание и чтение используют ресурс /todos.",
+              "suggestion": "Сделать DELETE /todos/{id}, задать status_code и описать ответы успеха и ошибок в декораторах FastAPI.",
+              "link_status": "verified",
+              "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+            }
+          ]
+        },
+        {
+          "id": "input_validation",
+          "name": "Валидация входа",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Pydantic проверяет базовые типы входного тела и FastAPI преобразует path/query-параметры, но ограничения длины, допустимых значений и границ пагинации отсутствуют.",
+          "rationale": "Сопоставление с якорем 5: Pydantic проверяет базовые типы входного тела и FastAPI преобразует path/query-параметры, но ограничения длины, допустимых значений и границ пагинации отсутствуют.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "main.py",
+              "line_start": 35,
+              "line_end": 40,
+              "title": "Поля todo не имеют доменных ограничений",
+              "explanation": "Строковые поля и дата принимаются без длины, формата или набора допустимых значений; priority и date остаются произвольными строками.",
+              "suggestion": "Добавить Field-ограничения и типы домена, например enum для priority, date/datetime для даты и пределы длины строк.",
+              "link_status": "verified",
+              "snippet": "class TodosBase(BaseModel):\n    priority: str\n    task: str\n    description: str\n    completion_status: bool\n    date: str",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L35-L40"
+            }
+          ]
+        },
+        {
+          "id": "data_model_design",
+          "name": "Схема данных и миграции",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Модель имеет первичный ключ, но прикладные поля nullable по умолчанию, имя таблицы не соответствует сущности, а миграций нет; схема создаётся при импорте приложения.",
+          "rationale": "Сопоставление с якорем 2: Модель имеет первичный ключ, но прикладные поля nullable по умолчанию, имя таблицы не соответствует сущности, а миграций нет; схема создаётся при импорте приложения.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "models.py",
+              "line_start": 11,
+              "line_end": 19,
+              "title": "Целостность данных почти не выражена в модели",
+              "explanation": "Только id имеет ограничение; task, priority, completion_status и date не отмечены nullable=False и не имеют доменных ограничений.",
+              "suggestion": "Задать обязательность и нужные ограничения полей, согласовать имя таблицы и добавить версионируемые миграции.",
+              "link_status": "verified",
+              "snippet": "class Todos(Base):\n    __tablename__ = 'transactions'\n\n    id = Column(Integer, primary_key=True, index=True)\n    priority = Column(String)\n    task = Column(String)\n    description = Column(String)\n    completion_status = Column(Boolean)\n    date = Column(String)",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/models.py#L11-L19"
+            },
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "main.py",
+              "line_start": 64,
+              "line_end": 65,
+              "title": "Схема создаётся из кода приложения",
+              "explanation": "create_all не даёт истории и воспроизводимого управления изменениями схемы.",
+              "suggestion": "Перенести создание и изменение схемы в миграции, например Alembic.",
+              "link_status": "verified",
+              "snippet": "# creates sqlite tables if main.py is run\nmodels.Base.metadata.create_all(bind=engine)",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L64-L65"
+            }
+          ]
+        },
+        {
+          "id": "query_correctness",
+          "name": "Корректность запросов",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Запросы ORM для основного CRUD-сценария параметризованы и коммитятся, но границы транзакций и откат при ошибке не определены.",
+          "rationale": "Сопоставление с якорем 5: Запросы ORM для основного CRUD-сценария параметризованы и коммитятся, но границы транзакций и откат при ошибке не определены.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "main.py",
+              "line_start": 69,
+              "line_end": 73,
+              "title": "Транзакция не откатывается при сбое",
+              "explanation": "После add выполняется commit без обработки исключений и rollback.",
+              "suggestion": "Обернуть запись в обработку SQLAlchemy-ошибок, выполнять rollback и возвращать согласованную ошибку.",
+              "link_status": "verified",
+              "snippet": "async def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L69-L73"
+            }
+          ]
+        },
+        {
+          "id": "data_access_efficiency",
+          "name": "Эффективность доступа",
+          "weight": 0.4,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Список использует offset/limit, а первичный ключ индексирован, но limit не ограничен и нет свидетельств оценки запросов на большом объёме.",
+          "rationale": "Сопоставление с якорем 5: Список использует offset/limit, а первичный ключ индексирован, но limit не ограничен и нет свидетельств оценки запросов на большом объёме.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "main.py",
+              "line_start": 77,
+              "line_end": 80,
+              "title": "Пагинация не ограничивает объём выборки",
+              "explanation": "Клиент может передать произвольно большой limit, несмотря на значение по умолчанию 100.",
+              "suggestion": "Задать допустимый диапазон limit через Query и выбрать стратегию пагинации для больших наборов данных.",
+              "link_status": "verified",
+              "snippet": "@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L77-L80"
+            }
+          ]
+        },
+        {
+          "id": "authn_authz",
+          "name": "Аутентификация и авторизация",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Все маршруты изменения и чтения todo доступны без аутентификации и проверки прав.",
+          "rationale": "Сопоставление с якорем 2: Все маршруты изменения и чтения todo доступны без аутентификации и проверки прав.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "critical",
+              "file": "main.py",
+              "line_start": 68,
+              "line_end": 91,
+              "title": "Маршруты не защищены контролем доступа",
+              "explanation": "create_todo, get_todos и delete_todo не требуют идентификации пользователя и не проверяют владение ресурсом.",
+              "suggestion": "Добавить аутентификацию, привязку todo к владельцу и авторизационную проверку на каждом маршруте.",
+              "link_status": "verified",
+              "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+            }
+          ]
+        },
+        {
+          "id": "secrets_handling",
+          "name": "Работа с секретами",
+          "weight": 0.5,
+          "score": 5,
+          "max": 10,
+          "confidence": "high",
+          "summary": "В коде нет явных учётных данных, но строка подключения к БД жёстко задана и не конфигурируется через окружение.",
+          "rationale": "Сопоставление с якорем 5: В коде нет явных учётных данных, но строка подключения к БД жёстко задана и не конфигурируется через окружение.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "database.py",
+              "line_start": 11,
+              "line_end": 13,
+              "title": "Конфигурация БД зашита в исходник",
+              "explanation": "URL_DATABASE задан литералом вместо внешней конфигурации.",
+              "suggestion": "Читать URL БД из переменной окружения и добавить value-free .env.example с её именем.",
+              "link_status": "verified",
+              "snippet": "URL_DATABASE = 'sqlite:///./todolist.db'\n\nengine = create_engine(URL_DATABASE, connect_args={'check_same_thread': False})",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/database.py#L11-L13"
+            }
+          ]
+        },
+        {
+          "id": "injection_protection",
+          "name": "Защита от инъекций",
+          "weight": 0.5,
+          "score": 8,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Доступ к данным использует SQLAlchemy ORM с filter_by, а тело запроса проходит типизацию Pydantic; опасного исполнения строк не обнаружено.",
+          "rationale": "Сопоставление с якорем 8: Доступ к данным использует SQLAlchemy ORM с filter_by, а тело запроса проходит типизацию Pydantic; опасного исполнения строк не обнаружено.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "main.py",
+              "line_start": 83,
+              "line_end": 87,
+              "title": "Идентификатор передаётся в ORM-запрос",
+              "explanation": "Удаление использует filter_by(id=id), а не конкатенацию пользовательского ввода в SQL.",
+              "link_status": "verified",
+              "snippet": "@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L83-L87"
+            }
+          ]
+        },
+        {
+          "id": "test_quality_and_coverage",
+          "name": "Покрытие и качество тестов",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "В предоставленной рабочей копии нет авторских файлов тестов для API, модели, ошибок или доступа.",
+          "rationale": "Сопоставление с якорем 2: В предоставленной рабочей копии нет авторских файлов тестов для API, модели, ошибок или доступа.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "main.py",
+              "line_start": 68,
+              "line_end": 91,
+              "title": "Критичные API-пути не подтверждены тестами",
+              "explanation": "Реализованные создание, список и удаление не имеют сопоставимых тестовых файлов в области репозитория.",
+              "suggestion": "Добавить изолированные тесты FastAPI для успешных сценариев, валидации, 404 и сбоев транзакций.",
+              "link_status": "verified",
+              "snippet": "@app.post(\"/todos\", response_model=TodosModel)\nasync def create_todo(todo: TodosBase, db: db_dependency):\n    db_todo = models.Todos(priority=todo.priority, task=todo.task, description=todo.description, completion_status=todo.completion_status, date=todo.date)\n    db.add(db_todo)\n    db.commit()\n    db.refresh(db_todo)\n    return db_todo\n\n\n@app.get(\"/todos\", response_model=List[TodosModel])\nasync def get_todos(db: db_dependency, skip: int = 0, limit: int = 100):\n    todos = db.query(models.Todos).offset(skip).limit(limit).all()\n    return todos\n\n\n@app.post(\"/delete_todo/{id}\")\nasync def delete_todo(id: int, db: db_dependency):\n    try:\n        todo_to_delete = db.query(models.Todos).filter_by(id=id).one()\n        db.delete(todo_to_delete)\n        db.commit()\n        return {\"status\": 200, \"detail\": \"todo was deleted\"}\n    except NoResultFound:\n        return {\"status\": 400, \"detail\": \"failed to delete todo\"}",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/main.py#L68-L91"
+            }
+          ]
+        },
+        {
+          "id": "test_runnability",
+          "name": "Запускаемость тестов",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Нет тестовых файлов и конфигурации тестового запуска; Dockerfile также не содержит команды запуска приложения.",
+          "rationale": "Сопоставление с якорем 2: Нет тестовых файлов и конфигурации тестового запуска; Dockerfile также не содержит команды запуска приложения.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "Dockerfile",
+              "line_start": 1,
+              "line_end": 11,
+              "title": "Конфигурация контейнера не задаёт запуск или тесты",
+              "explanation": "Dockerfile устанавливает зависимости, но не содержит CMD/ENTRYPOINT и не описывает тестовую команду.",
+              "suggestion": "Добавить тестовый набор и документированную команду запуска; при использовании контейнера задать CMD и отдельную команду тестов.",
+              "link_status": "verified",
+              "snippet": "FROM python:3.11.6-slim-bookworm\n\nWORKDIR /app\n\n\n# Copy the rest of the application code into the container\nCOPY . .\nRUN apt update --fix-missing \u0026\u0026 apt upgrade -y \nRUN pip install --upgrade pip\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/fastapi-backend/Dockerfile#L1-L11"
+            }
+          ]
+        }
+      ]
+    },
+    "frontend": {
+      "status": "done",
+      "score": 3.6260000000000003,
+      "max": 10,
+      "categories": [
+        {
+          "id": "component_architecture",
+          "name": "Компонентная архитектура",
+          "weight": 0.2,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "decomposition",
+              "name": "Декомпозиция",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "component_design",
+                  "name": "Декомпозиция и переиспользование",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Основные части интерфейса вынесены в форму и список, но обработка запросов остаётся внутри компонентов.",
+                  "rationale": "Сопоставление с якорем 5: Основные части интерфейса вынесены в форму и список, но обработка запросов остаётся внутри компонентов.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/App.js",
+                      "line_start": 1,
+                      "line_end": 4,
+                      "title": "Выделены компоненты формы и списка",
+                      "explanation": "App собирает отдельные TodoForm и TodoList.",
+                      "link_status": "verified",
+                      "snippet": "import React, { useState, useEffect } from 'react';\nimport api from './api';\nimport TodoForm from './components/TodoForm';\nimport TodoList from './components/TodoList';",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L1-L4"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/TodoForm.js",
+                      "line_start": 21,
+                      "line_end": 31,
+                      "title": "Логика отправки связана с UI",
+                      "explanation": "Компонент формы сам выполняет POST-запрос и обновляет список.",
+                      "suggestion": "Вынести операции с todo в отдельный слой или хук и передавать форме намерение сохранения.",
+                      "link_status": "verified",
+                      "snippet": "  const handleFormSubmit = async (event) =\u003e {\n    event.preventDefault();\n    await api.post('/todos', formData);\n    fetchTodos();\n    setFormData({\n      priority: '',\n      task: '',\n      description: '',\n      completion_status: false,\n      date: ''\n    });",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L21-L31"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "code_organization",
+              "name": "Организация кода",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "code_structure_and_concerns",
+                  "name": "Структура и разделение ответственности",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Структура небольшого приложения понятна, а базовый API-клиент выделен, однако доступ к данным и представление смешаны.",
+                  "rationale": "Сопоставление с якорем 5: Структура небольшого приложения понятна, а базовый API-клиент выделен, однако доступ к данным и представление смешаны.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/api.js",
+                      "line_start": 6,
+                      "line_end": 12,
+                      "title": "Общий API-клиент выделен",
+                      "explanation": "Axios-инстанс с базовым URL экспортируется из отдельного модуля.",
+                      "link_status": "verified",
+                      "snippet": "import axios from 'axios'\n\nconst api = axios.create({\n    baseURL: 'http://localhost:8000',\n})\n\nexport default api;",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/api.js#L6-L12"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/TodoList.js",
+                      "line_start": 4,
+                      "line_end": 12,
+                      "title": "Запрос удаления находится в компоненте списка",
+                      "explanation": "TodoList одновременно отображает таблицу и управляет сетевой операцией.",
+                      "suggestion": "Перенести мутацию удаления в хук или модуль операций с todo.",
+                      "link_status": "verified",
+                      "snippet": "const TodoList = ({ todos, fetchTodos }) =\u003e {\n  const handleDeleteTodo = async (id) =\u003e {\n    try {\n      await api.post(`/delete_todo/${id}`);\n      fetchTodos();\n    } catch (error) {\n      console.error(\"Failed to delete todo:\", error);\n    }\n  };",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L4-L12"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "state_data_management",
+          "name": "Управление состоянием и данными",
+          "weight": 0.16,
+          "score": 3.8,
+          "subcategories": [
+            {
+              "id": "state",
+              "name": "Состояние",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "state_management",
+                  "name": "Размещение и предсказуемость состояния",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Список хранится в App, а данные формы — локально; основные источники состояния видимы, но обновление строится на передаче callback между компонентами.",
+                  "rationale": "Сопоставление с якорем 5: Список хранится в App, а данные формы — локально; основные источники состояния видимы, но обновление строится на передаче callback между компонентами.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/App.js",
+                      "line_start": 6,
+                      "line_end": 16,
+                      "title": "Список имеет единый источник состояния",
+                      "explanation": "todos хранится в App и устанавливается после получения ответа.",
+                      "link_status": "verified",
+                      "snippet": "const App = () =\u003e {\n  const [todos, setTodos] = useState([]);\n\n  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };\n\n  useEffect(() =\u003e {\n    fetchTodos();\n  }, []);",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L6-L16"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/App.js",
+                      "line_start": 28,
+                      "line_end": 30,
+                      "title": "Обновление передаётся через props",
+                      "explanation": "Один fetchTodos передаётся и форме, и списку для управления общим состоянием.",
+                      "suggestion": "Инкапсулировать загрузку и мутации в специализированном хуке, возвращающем данные и действия.",
+                      "link_status": "verified",
+                      "snippet": "      \u003cdiv className='container'\u003e\n        \u003cTodoForm fetchTodos={fetchTodos} /\u003e\n        \u003cTodoList todos={todos} fetchTodos={fetchTodos} /\u003e",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L28-L30"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "server_data",
+              "name": "Работа с сервером",
+              "weight": 0.4,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "data_fetching",
+                  "name": "Получение данных",
+                  "weight": 0.6,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Запросы выполняются непосредственно в нескольких компонентах, без кеша, инвалидации или общего слоя запросов.",
+                  "rationale": "Сопоставление с якорем 2: Запросы выполняются непосредственно в нескольких компонентах, без кеша, инвалидации или общего слоя запросов.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/App.js",
+                      "line_start": 9,
+                      "line_end": 16,
+                      "title": "Загрузка без обработки и кеширования",
+                      "explanation": "GET-запрос вызывается в effect напрямую и всегда полностью заменяет список.",
+                      "suggestion": "Использовать единый хук данных или библиотеку запросов с кешем и явной инвалидацией после мутаций.",
+                      "link_status": "verified",
+                      "snippet": "  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };\n\n  useEffect(() =\u003e {\n    fetchTodos();\n  }, []);",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L9-L16"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/TodoList.js",
+                      "line_start": 5,
+                      "line_end": 10,
+                      "title": "Мутация запроса разбросана по UI",
+                      "explanation": "Удаление выполняется напрямую в компоненте списка.",
+                      "suggestion": "Централизовать запросы и мутации todo в слое данных.",
+                      "link_status": "verified",
+                      "snippet": "  const handleDeleteTodo = async (id) =\u003e {\n    try {\n      await api.post(`/delete_todo/${id}`);\n      fetchTodos();\n    } catch (error) {\n      console.error(\"Failed to delete todo:\", error);",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L5-L10"
+                    }
+                  ]
+                },
+                {
+                  "id": "async_states",
+                  "name": "Асинхронные состояния",
+                  "weight": 0.4,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Для загрузки, ошибки GET/POST и пустого списка пользовательские состояния не отображаются.",
+                  "rationale": "Сопоставление с якорем 2: Для загрузки, ошибки GET/POST и пустого списка пользовательские состояния не отображаются.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/App.js",
+                      "line_start": 9,
+                      "line_end": 16,
+                      "title": "Нет состояния загрузки и ошибки списка",
+                      "explanation": "Асинхронная загрузка меняет только todos; исключения и ожидание не представлены в UI.",
+                      "suggestion": "Добавить состояния loading и error с доступным отображением и возможностью повторить загрузку.",
+                      "link_status": "verified",
+                      "snippet": "  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };\n\n  useEffect(() =\u003e {\n    fetchTodos();\n  }, []);",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L9-L16"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/TodoForm.js",
+                      "line_start": 21,
+                      "line_end": 31,
+                      "title": "Ошибка создания не показывается пользователю",
+                      "explanation": "POST выполняется без try/catch и без состояния отправки.",
+                      "suggestion": "Показывать ошибку и состояние отправки, не очищая форму при неуспешном запросе.",
+                      "link_status": "verified",
+                      "snippet": "  const handleFormSubmit = async (event) =\u003e {\n    event.preventDefault();\n    await api.post('/todos', formData);\n    fetchTodos();\n    setFormData({\n      priority: '',\n      task: '',\n      description: '',\n      completion_status: false,\n      date: ''\n    });",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L21-L31"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "typing_contracts",
+          "name": "Типизация и контракты",
+          "weight": 0.14,
+          "score": 2,
+          "subcategories": [
+            {
+              "id": "type_strictness",
+              "name": "Строгость типов",
+              "weight": 0.6,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "type_strictness",
+                  "name": "Строгость типов",
+                  "weight": 0.6,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Исходный код написан на JavaScript и не содержит строгих типов для данных или компонентов.",
+                  "rationale": "Сопоставление с якорем 2: Исходный код написан на JavaScript и не содержит строгих типов для данных или компонентов.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/TodoList.js",
+                      "line_start": 4,
+                      "line_end": 32,
+                      "title": "Структура todo не типизирована",
+                      "explanation": "Props и поля todo используются без декларации контрактов.",
+                      "suggestion": "Перевести исходники на TypeScript или добавить проверяемые контракты данных и props.",
+                      "link_status": "verified",
+                      "snippet": "const TodoList = ({ todos, fetchTodos }) =\u003e {\n  const handleDeleteTodo = async (id) =\u003e {\n    try {\n      await api.post(`/delete_todo/${id}`);\n      fetchTodos();\n    } catch (error) {\n      console.error(\"Failed to delete todo:\", error);\n    }\n  };\n\n  return (\n    \u003ctable className='table table-striped table-bordered table-hover'\u003e\n      \u003cthead\u003e\n        \u003ctr\u003e\n          \u003cth\u003ePriority\u003c/th\u003e\n          \u003cth\u003eTask\u003c/th\u003e\n          \u003cth\u003eDescription\u003c/th\u003e\n          \u003cth\u003eCompletion Status?\u003c/th\u003e\n          \u003cth\u003eDate?\u003c/th\u003e\n        \u003c/tr\u003e\n      \u003c/thead\u003e\n      \u003ctbody\u003e\n        {todos.map((todo) =\u003e(\n          \u003ctr key={todo.id}\u003e\n            \u003ctd\u003e{todo.priority}\u003c/td\u003e\n            \u003ctd\u003e{todo.task}\u003c/td\u003e\n            \u003ctd\u003e{todo.description}\u003c/td\u003e\n            \u003ctd\u003e{todo.completion_status? 'Yes' : 'No'}\u003c/td\u003e\n            \u003ctd\u003e{todo.date}\u003c/td\u003e",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L4-L32"
+                    }
+                  ]
+                },
+                {
+                  "id": "api_types",
+                  "name": "Типы API",
+                  "weight": 0.4,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Ответы API используются как неструктурированные данные; типов, происходящих из серверного контракта, нет.",
+                  "rationale": "Сопоставление с якорем 2: Ответы API используются как неструктурированные данные; типов, происходящих из серверного контракта, нет.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/App.js",
+                      "line_start": 9,
+                      "line_end": 12,
+                      "title": "Ответ API принимается без контракта",
+                      "explanation": "response.data сразу записывается в состояние без проверки формы данных.",
+                      "suggestion": "Определить типы или схему Todo из API-контракта и валидировать либо типизировать ответы на границе клиента.",
+                      "link_status": "verified",
+                      "snippet": "  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L9-L12"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "component_boundaries",
+              "name": "Границы компонентов",
+              "weight": 0.4,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "props_contracts",
+                  "name": "Контракты props",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Публичные props TodoForm и TodoList не описаны и не проверяются.",
+                  "rationale": "Сопоставление с якорем 2: Публичные props TodoForm и TodoList не описаны и не проверяются.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/TodoForm.js",
+                      "line_start": 4,
+                      "line_end": 4,
+                      "title": "Контракт формы не объявлен",
+                      "explanation": "fetchTodos принимается без типа или runtime-проверки.",
+                      "suggestion": "Описать интерфейс props через TypeScript или добавить согласованную проверку props.",
+                      "link_status": "verified",
+                      "snippet": "const TodoForm = ({ fetchTodos }) =\u003e {",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L4-L4"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/TodoList.js",
+                      "line_start": 4,
+                      "line_end": 4,
+                      "title": "Контракт списка не объявлен",
+                      "explanation": "todos и fetchTodos используются без определения ожидаемой структуры.",
+                      "suggestion": "Объявить контракт props, включая форму элемента todo и callback обновления.",
+                      "link_status": "verified",
+                      "snippet": "const TodoList = ({ todos, fetchTodos }) =\u003e {",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L4-L4"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "performance",
+          "name": "Производительность",
+          "weight": 0.12,
+          "score": 5,
+          "subcategories": [
+            {
+              "id": "rendering",
+              "name": "Рендеринг",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "render_efficiency",
+                  "name": "Эффективность рендеринга",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Явно избыточного рендеринга в малом дереве не видно, но обновление всего списка повторно рендерит оба дочерних компонента.",
+                  "rationale": "Сопоставление с якорем 5: Явно избыточного рендеринга в малом дереве не видно, но обновление всего списка повторно рендерит оба дочерних компонента.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/App.js",
+                      "line_start": 7,
+                      "line_end": 15,
+                      "title": "Обновление заменяет весь список",
+                      "explanation": "После загрузки setTodos вызывает повторный рендер App, формы и таблицы.",
+                      "suggestion": "При росте списка локализовать обновления и мемоизировать тяжёлые дочерние компоненты только после измерения.",
+                      "link_status": "verified",
+                      "snippet": "  const [todos, setTodos] = useState([]);\n\n  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };\n\n  useEffect(() =\u003e {\n    fetchTodos();",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L7-L15"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "loading",
+              "name": "Загрузка",
+              "weight": 0.4,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "bundle_and_assets",
+                  "name": "Бандл и ассеты",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Стандартная production-сборка CRA задана, но код-сплиттинга и контроля ассетов нет, а Bootstrap подключён внешним полным бандлом.",
+                  "rationale": "Сопоставление с якорем 5: Стандартная production-сборка CRA задана, но код-сплиттинга и контроля ассетов нет, а Bootstrap подключён внешним полным бандлом.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "package.json",
+                      "line_start": 15,
+                      "line_end": 19,
+                      "title": "Определена production-сборка",
+                      "explanation": "Проект использует стандартный скрипт build react-scripts.",
+                      "link_status": "verified",
+                      "snippet": "  \"scripts\": {\n    \"start\": \"react-scripts start\",\n    \"build\": \"react-scripts build\",\n    \"test\": \"react-scripts test\",\n    \"eject\": \"react-scripts eject\"",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/package.json#L15-L19"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "public/index.html",
+                      "line_start": 13,
+                      "line_end": 14,
+                      "title": "Полный CSS Bootstrap загружается извне",
+                      "explanation": "Стили подключаются целиком через CDN, без контроля используемой части.",
+                      "suggestion": "Подключать только необходимые стили локально или внедрить контролируемую стратегию загрузки и оптимизации ассетов.",
+                      "link_status": "verified",
+                      "snippet": "    \u003c!-- bootstrap --\u003e\n    \u003clink href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\" crossorigin=\"anonymous\"\u003e",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/public/index.html#L13-L14"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "accessibility",
+          "name": "Доступность",
+          "weight": 0.12,
+          "score": 3.35,
+          "subcategories": [
+            {
+              "id": "semantics",
+              "name": "Семантика",
+              "weight": 0.55,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "semantic_accessibility",
+                  "name": "Семантика и ARIA",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Есть nav, form, table и нативные кнопки, но labels формы не связаны с соответствующими полями, а у таблицы отсутствует заголовок колонки действий.",
+                  "rationale": "Сопоставление с якорем 2: Есть nav, form, table и нативные кнопки, но labels формы не связаны с соответствующими полями, а у таблицы отсутствует заголовок колонки действий.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/TodoForm.js",
+                      "line_start": 35,
+                      "line_end": 47,
+                      "title": "Метки не связаны с полями",
+                      "explanation": "htmlFor='amount' и htmlFor='category' не совпадают с id полей priority и task.",
+                      "suggestion": "Сопоставить каждому label htmlFor с id соответствующего input; исправить все пять полей формы.",
+                      "link_status": "verified",
+                      "snippet": "    \u003cform onSubmit={handleFormSubmit}\u003e\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='amount' className='form-label'\u003e\n          Priority\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='priority' name='priority' onChange={handleInputChange} value={formData.priority}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='category' className='form-label'\u003e\n          Task\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='task' name='task' onChange={handleInputChange} value={formData.task}/\u003e",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L35-L47"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/TodoList.js",
+                      "line_start": 16,
+                      "line_end": 41,
+                      "title": "У колонки удаления нет заголовка",
+                      "explanation": "Строки содержат ячейку с Delete, но thead содержит только пять заголовков.",
+                      "suggestion": "Добавить заголовок колонки действий, например th scope='col'\u003eДействия\u003c/th\u003e.",
+                      "link_status": "verified",
+                      "snippet": "      \u003cthead\u003e\n        \u003ctr\u003e\n          \u003cth\u003ePriority\u003c/th\u003e\n          \u003cth\u003eTask\u003c/th\u003e\n          \u003cth\u003eDescription\u003c/th\u003e\n          \u003cth\u003eCompletion Status?\u003c/th\u003e\n          \u003cth\u003eDate?\u003c/th\u003e\n        \u003c/tr\u003e\n      \u003c/thead\u003e\n      \u003ctbody\u003e\n        {todos.map((todo) =\u003e(\n          \u003ctr key={todo.id}\u003e\n            \u003ctd\u003e{todo.priority}\u003c/td\u003e\n            \u003ctd\u003e{todo.task}\u003c/td\u003e\n            \u003ctd\u003e{todo.description}\u003c/td\u003e\n            \u003ctd\u003e{todo.completion_status? 'Yes' : 'No'}\u003c/td\u003e\n            \u003ctd\u003e{todo.date}\u003c/td\u003e\n            \u003ctd\u003e\n              \u003cbutton\n                type='button'\n                className='btn btn-danger'\n                onClick={() =\u003e handleDeleteTodo(todo.id)}\n              \u003e\n                Delete\n              \u003c/button\u003e\n            \u003c/td\u003e",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L16-L41"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "interaction",
+              "name": "Взаимодействие",
+              "weight": 0.45,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "keyboard_navigation",
+                  "name": "Навигация с клавиатуры",
+                  "weight": 0.6,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Основные действия выполнены нативными input и button, поэтому базовые сценарии доступны с клавиатуры; специальная логика фокуса не реализована.",
+                  "rationale": "Сопоставление с якорем 5: Основные действия выполнены нативными input и button, поэтому базовые сценарии доступны с клавиатуры; специальная логика фокуса не реализована.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/TodoForm.js",
+                      "line_start": 35,
+                      "line_end": 74,
+                      "title": "Форма использует нативные элементы",
+                      "explanation": "Поля ввода и submit-кнопка поддерживают стандартную клавиатурную навигацию браузера.",
+                      "link_status": "verified",
+                      "snippet": "    \u003cform onSubmit={handleFormSubmit}\u003e\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='amount' className='form-label'\u003e\n          Priority\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='priority' name='priority' onChange={handleInputChange} value={formData.priority}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='category' className='form-label'\u003e\n          Task\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='task' name='task' onChange={handleInputChange} value={formData.task}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='description' className='form-label'\u003e\n          Description\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='description' name='description' onChange={handleInputChange} value={formData.description}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='is_income' className='form-label'\u003e\n          Completion Status?\n        \u003c/label\u003e\n        \u003cinput type='checkbox' id='completion_status' name='completion_status' onChange={handleInputChange} checked={formData.completion_status}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='date' className='form-label'\u003e\n          Date\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='date' name='date' onChange={handleInputChange} value={formData.date}/\u003e\n      \u003c/div\u003e\n\n      \u003cbutton type='submit' className='btn btn-primary'\u003e\n        Submit\n      \u003c/button\u003e\n    \u003c/form\u003e",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L35-L74"
+                    },
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/TodoList.js",
+                      "line_start": 33,
+                      "line_end": 40,
+                      "title": "Удаление реализовано кнопкой",
+                      "explanation": "Действие не привязано к неклавиатурному div или ссылке.",
+                      "link_status": "verified",
+                      "snippet": "            \u003ctd\u003e\n              \u003cbutton\n                type='button'\n                className='btn btn-danger'\n                onClick={() =\u003e handleDeleteTodo(todo.id)}\n              \u003e\n                Delete\n              \u003c/button\u003e",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L33-L40"
+                    }
+                  ]
+                },
+                {
+                  "id": "contrast_and_focus",
+                  "name": "Контраст и фокус",
+                  "weight": 0.4,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "low",
+                  "summary": "Интерфейс использует стандартные классы Bootstrap, но собственные правила контраста и видимого фокуса в исходниках не определены.",
+                  "rationale": "Сопоставление с якорем 5: Интерфейс использует стандартные классы Bootstrap, но собственные правила контраста и видимого фокуса в исходниках не определены.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/components/TodoForm.js",
+                      "line_start": 40,
+                      "line_end": 72,
+                      "title": "Визуальная доступность делегирована внешним стилям",
+                      "explanation": "Классы form-control и btn-primary применены, но локальных правил focus/contrast нет.",
+                      "suggestion": "Проверить контраст состояний и задать явные стили :focus-visible для интерактивных элементов.",
+                      "link_status": "verified",
+                      "snippet": "        \u003cinput type='text' className='form-control' id='priority' name='priority' onChange={handleInputChange} value={formData.priority}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='category' className='form-label'\u003e\n          Task\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='task' name='task' onChange={handleInputChange} value={formData.task}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='description' className='form-label'\u003e\n          Description\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='description' name='description' onChange={handleInputChange} value={formData.description}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='is_income' className='form-label'\u003e\n          Completion Status?\n        \u003c/label\u003e\n        \u003cinput type='checkbox' id='completion_status' name='completion_status' onChange={handleInputChange} checked={formData.completion_status}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='date' className='form-label'\u003e\n          Date\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='date' name='date' onChange={handleInputChange} value={formData.date}/\u003e\n      \u003c/div\u003e\n\n      \u003cbutton type='submit' className='btn btn-primary'\u003e\n        Submit",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L40-L72"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ui_style_consistency",
+          "name": "Консистентность UI и стилей",
+          "weight": 0.12,
+          "score": 3.8,
+          "subcategories": [
+            {
+              "id": "style_system",
+              "name": "Система стилей",
+              "weight": 0.6,
+              "score": 5,
+              "metrics": [
+                {
+                  "id": "styling_consistency",
+                  "name": "Подход к стилям и консистентность",
+                  "weight": 1,
+                  "score": 5,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Для формы, таблицы и кнопок последовательно применяются классы Bootstrap, но собственной системы токенов или компонентов стилей нет.",
+                  "rationale": "Сопоставление с якорем 5: Для формы, таблицы и кнопок последовательно применяются классы Bootstrap, но собственной системы токенов или компонентов стилей нет.",
+                  "findings": [
+                    {
+                      "kind": "strength",
+                      "severity": "info",
+                      "file": "src/components/TodoList.js",
+                      "line_start": 15,
+                      "line_end": 40,
+                      "title": "Единый подход на основе Bootstrap",
+                      "explanation": "Таблица и кнопка используют согласованные utility/component-классы.",
+                      "link_status": "verified",
+                      "snippet": "    \u003ctable className='table table-striped table-bordered table-hover'\u003e\n      \u003cthead\u003e\n        \u003ctr\u003e\n          \u003cth\u003ePriority\u003c/th\u003e\n          \u003cth\u003eTask\u003c/th\u003e\n          \u003cth\u003eDescription\u003c/th\u003e\n          \u003cth\u003eCompletion Status?\u003c/th\u003e\n          \u003cth\u003eDate?\u003c/th\u003e\n        \u003c/tr\u003e\n      \u003c/thead\u003e\n      \u003ctbody\u003e\n        {todos.map((todo) =\u003e(\n          \u003ctr key={todo.id}\u003e\n            \u003ctd\u003e{todo.priority}\u003c/td\u003e\n            \u003ctd\u003e{todo.task}\u003c/td\u003e\n            \u003ctd\u003e{todo.description}\u003c/td\u003e\n            \u003ctd\u003e{todo.completion_status? 'Yes' : 'No'}\u003c/td\u003e\n            \u003ctd\u003e{todo.date}\u003c/td\u003e\n            \u003ctd\u003e\n              \u003cbutton\n                type='button'\n                className='btn btn-danger'\n                onClick={() =\u003e handleDeleteTodo(todo.id)}\n              \u003e\n                Delete\n              \u003c/button\u003e",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L15-L40"
+                    },
+                    {
+                      "kind": "issue",
+                      "severity": "minor",
+                      "file": "src/index.css",
+                      "line_start": 1,
+                      "line_end": 12,
+                      "title": "Локальная система стилей отсутствует",
+                      "explanation": "Файл содержит только базовые стили body и code.",
+                      "suggestion": "Определить локальные токены или слой компонентов для общих визуальных решений приложения.",
+                      "link_status": "verified",
+                      "snippet": "body {\n  margin: 0;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',\n    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',\n    sans-serif;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\n\ncode {\n  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',\n    monospace;",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/index.css#L1-L12"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "responsiveness",
+              "name": "Адаптивность",
+              "weight": 0.4,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "responsiveness",
+                  "name": "Адаптивность",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "medium",
+                  "summary": "Адаптивное поведение для таблицы и формы не задано; широкая таблица не помещена в responsive-контейнер.",
+                  "rationale": "Сопоставление с якорем 2: Адаптивное поведение для таблицы и формы не задано; широкая таблица не помещена в responsive-контейнер.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/components/TodoList.js",
+                      "line_start": 15,
+                      "line_end": 45,
+                      "title": "Таблица не адаптирована для узкого экрана",
+                      "explanation": "Обычная table содержит шесть колонок без responsive-обёртки или альтернативного представления.",
+                      "suggestion": "Добавить адаптивный контейнер либо компактное карточное представление строк для узких экранов.",
+                      "link_status": "verified",
+                      "snippet": "    \u003ctable className='table table-striped table-bordered table-hover'\u003e\n      \u003cthead\u003e\n        \u003ctr\u003e\n          \u003cth\u003ePriority\u003c/th\u003e\n          \u003cth\u003eTask\u003c/th\u003e\n          \u003cth\u003eDescription\u003c/th\u003e\n          \u003cth\u003eCompletion Status?\u003c/th\u003e\n          \u003cth\u003eDate?\u003c/th\u003e\n        \u003c/tr\u003e\n      \u003c/thead\u003e\n      \u003ctbody\u003e\n        {todos.map((todo) =\u003e(\n          \u003ctr key={todo.id}\u003e\n            \u003ctd\u003e{todo.priority}\u003c/td\u003e\n            \u003ctd\u003e{todo.task}\u003c/td\u003e\n            \u003ctd\u003e{todo.description}\u003c/td\u003e\n            \u003ctd\u003e{todo.completion_status? 'Yes' : 'No'}\u003c/td\u003e\n            \u003ctd\u003e{todo.date}\u003c/td\u003e\n            \u003ctd\u003e\n              \u003cbutton\n                type='button'\n                className='btn btn-danger'\n                onClick={() =\u003e handleDeleteTodo(todo.id)}\n              \u003e\n                Delete\n              \u003c/button\u003e\n            \u003c/td\u003e\n          \u003c/tr\u003e\n        ))}\n      \u003c/tbody\u003e\n    \u003c/table\u003e",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L15-L45"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "testing",
+          "name": "Тестирование",
+          "weight": 0.14,
+          "score": 2,
+          "subcategories": [
+            {
+              "id": "test_content",
+              "name": "Содержание тестов",
+              "weight": 0.6,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "test_quality_and_coverage",
+                  "name": "Покрытие и качество тестов",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Есть только шаблонный тест, который проверяет отсутствующий текст вместо сценариев todo.",
+                  "rationale": "Сопоставление с якорем 2: Есть только шаблонный тест, который проверяет отсутствующий текст вместо сценариев todo.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "src/App.test.js",
+                      "line_start": 4,
+                      "line_end": 7,
+                      "title": "Тест не соответствует интерфейсу",
+                      "explanation": "Тест ищет 'learn react', которого App не рендерит.",
+                      "suggestion": "Заменить шаблонный тест на сценарии загрузки, создания, удаления, ошибок и пустого списка с моками API.",
+                      "link_status": "verified",
+                      "snippet": "test('renders learn react link', () =\u003e {\n  render(\u003cApp /\u003e);\n  const linkElement = screen.getByText(/learn react/i);\n  expect(linkElement).toBeInTheDocument();",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.test.js#L4-L7"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "test_runnability_area",
+              "name": "Запускаемость",
+              "weight": 0.4,
+              "score": 2,
+              "metrics": [
+                {
+                  "id": "test_runnability",
+                  "name": "Запускаемость тестов",
+                  "weight": 1,
+                  "score": 2,
+                  "max": 10,
+                  "confidence": "high",
+                  "summary": "Стандартная команда тестов определена, но существующий единственный тест статически несовместим с текущим App и должен завершаться ошибкой.",
+                  "rationale": "Сопоставление с якорем 2: Стандартная команда тестов определена, но существующий единственный тест статически несовместим с текущим App и должен завершаться ошибкой.",
+                  "findings": [
+                    {
+                      "kind": "issue",
+                      "severity": "major",
+                      "file": "package.json",
+                      "line_start": 15,
+                      "line_end": 19,
+                      "title": "Команда есть, но тестовый набор некорректен",
+                      "explanation": "Скрипт test запускает react-scripts, однако App.test.js ожидает несуществующий элемент.",
+                      "suggestion": "Исправить App.test.js под текущий интерфейс и поддерживать проходящий набор тестов в чистом окружении.",
+                      "link_status": "verified",
+                      "snippet": "  \"scripts\": {\n    \"start\": \"react-scripts start\",\n    \"build\": \"react-scripts build\",\n    \"test\": \"react-scripts test\",\n    \"eject\": \"react-scripts eject\"",
+                      "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/package.json#L15-L19"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "component_design",
+          "name": "Декомпозиция и переиспользование",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Основные части интерфейса вынесены в форму и список, но обработка запросов остаётся внутри компонентов.",
+          "rationale": "Сопоставление с якорем 5: Основные части интерфейса вынесены в форму и список, но обработка запросов остаётся внутри компонентов.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/App.js",
+              "line_start": 1,
+              "line_end": 4,
+              "title": "Выделены компоненты формы и списка",
+              "explanation": "App собирает отдельные TodoForm и TodoList.",
+              "link_status": "verified",
+              "snippet": "import React, { useState, useEffect } from 'react';\nimport api from './api';\nimport TodoForm from './components/TodoForm';\nimport TodoList from './components/TodoList';",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L1-L4"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/TodoForm.js",
+              "line_start": 21,
+              "line_end": 31,
+              "title": "Логика отправки связана с UI",
+              "explanation": "Компонент формы сам выполняет POST-запрос и обновляет список.",
+              "suggestion": "Вынести операции с todo в отдельный слой или хук и передавать форме намерение сохранения.",
+              "link_status": "verified",
+              "snippet": "  const handleFormSubmit = async (event) =\u003e {\n    event.preventDefault();\n    await api.post('/todos', formData);\n    fetchTodos();\n    setFormData({\n      priority: '',\n      task: '',\n      description: '',\n      completion_status: false,\n      date: ''\n    });",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L21-L31"
+            }
+          ]
+        },
+        {
+          "id": "code_structure_and_concerns",
+          "name": "Структура и разделение ответственности",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Структура небольшого приложения понятна, а базовый API-клиент выделен, однако доступ к данным и представление смешаны.",
+          "rationale": "Сопоставление с якорем 5: Структура небольшого приложения понятна, а базовый API-клиент выделен, однако доступ к данным и представление смешаны.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/api.js",
+              "line_start": 6,
+              "line_end": 12,
+              "title": "Общий API-клиент выделен",
+              "explanation": "Axios-инстанс с базовым URL экспортируется из отдельного модуля.",
+              "link_status": "verified",
+              "snippet": "import axios from 'axios'\n\nconst api = axios.create({\n    baseURL: 'http://localhost:8000',\n})\n\nexport default api;",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/api.js#L6-L12"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/TodoList.js",
+              "line_start": 4,
+              "line_end": 12,
+              "title": "Запрос удаления находится в компоненте списка",
+              "explanation": "TodoList одновременно отображает таблицу и управляет сетевой операцией.",
+              "suggestion": "Перенести мутацию удаления в хук или модуль операций с todo.",
+              "link_status": "verified",
+              "snippet": "const TodoList = ({ todos, fetchTodos }) =\u003e {\n  const handleDeleteTodo = async (id) =\u003e {\n    try {\n      await api.post(`/delete_todo/${id}`);\n      fetchTodos();\n    } catch (error) {\n      console.error(\"Failed to delete todo:\", error);\n    }\n  };",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L4-L12"
+            }
+          ]
+        },
+        {
+          "id": "state_management",
+          "name": "Размещение и предсказуемость состояния",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Список хранится в App, а данные формы — локально; основные источники состояния видимы, но обновление строится на передаче callback между компонентами.",
+          "rationale": "Сопоставление с якорем 5: Список хранится в App, а данные формы — локально; основные источники состояния видимы, но обновление строится на передаче callback между компонентами.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/App.js",
+              "line_start": 6,
+              "line_end": 16,
+              "title": "Список имеет единый источник состояния",
+              "explanation": "todos хранится в App и устанавливается после получения ответа.",
+              "link_status": "verified",
+              "snippet": "const App = () =\u003e {\n  const [todos, setTodos] = useState([]);\n\n  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };\n\n  useEffect(() =\u003e {\n    fetchTodos();\n  }, []);",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L6-L16"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/App.js",
+              "line_start": 28,
+              "line_end": 30,
+              "title": "Обновление передаётся через props",
+              "explanation": "Один fetchTodos передаётся и форме, и списку для управления общим состоянием.",
+              "suggestion": "Инкапсулировать загрузку и мутации в специализированном хуке, возвращающем данные и действия.",
+              "link_status": "verified",
+              "snippet": "      \u003cdiv className='container'\u003e\n        \u003cTodoForm fetchTodos={fetchTodos} /\u003e\n        \u003cTodoList todos={todos} fetchTodos={fetchTodos} /\u003e",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L28-L30"
+            }
+          ]
+        },
+        {
+          "id": "data_fetching",
+          "name": "Получение данных",
+          "weight": 0.6,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Запросы выполняются непосредственно в нескольких компонентах, без кеша, инвалидации или общего слоя запросов.",
+          "rationale": "Сопоставление с якорем 2: Запросы выполняются непосредственно в нескольких компонентах, без кеша, инвалидации или общего слоя запросов.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/App.js",
+              "line_start": 9,
+              "line_end": 16,
+              "title": "Загрузка без обработки и кеширования",
+              "explanation": "GET-запрос вызывается в effect напрямую и всегда полностью заменяет список.",
+              "suggestion": "Использовать единый хук данных или библиотеку запросов с кешем и явной инвалидацией после мутаций.",
+              "link_status": "verified",
+              "snippet": "  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };\n\n  useEffect(() =\u003e {\n    fetchTodos();\n  }, []);",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L9-L16"
+            },
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/TodoList.js",
+              "line_start": 5,
+              "line_end": 10,
+              "title": "Мутация запроса разбросана по UI",
+              "explanation": "Удаление выполняется напрямую в компоненте списка.",
+              "suggestion": "Централизовать запросы и мутации todo в слое данных.",
+              "link_status": "verified",
+              "snippet": "  const handleDeleteTodo = async (id) =\u003e {\n    try {\n      await api.post(`/delete_todo/${id}`);\n      fetchTodos();\n    } catch (error) {\n      console.error(\"Failed to delete todo:\", error);",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L5-L10"
+            }
+          ]
+        },
+        {
+          "id": "async_states",
+          "name": "Асинхронные состояния",
+          "weight": 0.4,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Для загрузки, ошибки GET/POST и пустого списка пользовательские состояния не отображаются.",
+          "rationale": "Сопоставление с якорем 2: Для загрузки, ошибки GET/POST и пустого списка пользовательские состояния не отображаются.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/App.js",
+              "line_start": 9,
+              "line_end": 16,
+              "title": "Нет состояния загрузки и ошибки списка",
+              "explanation": "Асинхронная загрузка меняет только todos; исключения и ожидание не представлены в UI.",
+              "suggestion": "Добавить состояния loading и error с доступным отображением и возможностью повторить загрузку.",
+              "link_status": "verified",
+              "snippet": "  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };\n\n  useEffect(() =\u003e {\n    fetchTodos();\n  }, []);",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L9-L16"
+            },
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/TodoForm.js",
+              "line_start": 21,
+              "line_end": 31,
+              "title": "Ошибка создания не показывается пользователю",
+              "explanation": "POST выполняется без try/catch и без состояния отправки.",
+              "suggestion": "Показывать ошибку и состояние отправки, не очищая форму при неуспешном запросе.",
+              "link_status": "verified",
+              "snippet": "  const handleFormSubmit = async (event) =\u003e {\n    event.preventDefault();\n    await api.post('/todos', formData);\n    fetchTodos();\n    setFormData({\n      priority: '',\n      task: '',\n      description: '',\n      completion_status: false,\n      date: ''\n    });",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L21-L31"
+            }
+          ]
+        },
+        {
+          "id": "type_strictness",
+          "name": "Строгость типов",
+          "weight": 0.6,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Исходный код написан на JavaScript и не содержит строгих типов для данных или компонентов.",
+          "rationale": "Сопоставление с якорем 2: Исходный код написан на JavaScript и не содержит строгих типов для данных или компонентов.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/TodoList.js",
+              "line_start": 4,
+              "line_end": 32,
+              "title": "Структура todo не типизирована",
+              "explanation": "Props и поля todo используются без декларации контрактов.",
+              "suggestion": "Перевести исходники на TypeScript или добавить проверяемые контракты данных и props.",
+              "link_status": "verified",
+              "snippet": "const TodoList = ({ todos, fetchTodos }) =\u003e {\n  const handleDeleteTodo = async (id) =\u003e {\n    try {\n      await api.post(`/delete_todo/${id}`);\n      fetchTodos();\n    } catch (error) {\n      console.error(\"Failed to delete todo:\", error);\n    }\n  };\n\n  return (\n    \u003ctable className='table table-striped table-bordered table-hover'\u003e\n      \u003cthead\u003e\n        \u003ctr\u003e\n          \u003cth\u003ePriority\u003c/th\u003e\n          \u003cth\u003eTask\u003c/th\u003e\n          \u003cth\u003eDescription\u003c/th\u003e\n          \u003cth\u003eCompletion Status?\u003c/th\u003e\n          \u003cth\u003eDate?\u003c/th\u003e\n        \u003c/tr\u003e\n      \u003c/thead\u003e\n      \u003ctbody\u003e\n        {todos.map((todo) =\u003e(\n          \u003ctr key={todo.id}\u003e\n            \u003ctd\u003e{todo.priority}\u003c/td\u003e\n            \u003ctd\u003e{todo.task}\u003c/td\u003e\n            \u003ctd\u003e{todo.description}\u003c/td\u003e\n            \u003ctd\u003e{todo.completion_status? 'Yes' : 'No'}\u003c/td\u003e\n            \u003ctd\u003e{todo.date}\u003c/td\u003e",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L4-L32"
+            }
+          ]
+        },
+        {
+          "id": "api_types",
+          "name": "Типы API",
+          "weight": 0.4,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Ответы API используются как неструктурированные данные; типов, происходящих из серверного контракта, нет.",
+          "rationale": "Сопоставление с якорем 2: Ответы API используются как неструктурированные данные; типов, происходящих из серверного контракта, нет.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/App.js",
+              "line_start": 9,
+              "line_end": 12,
+              "title": "Ответ API принимается без контракта",
+              "explanation": "response.data сразу записывается в состояние без проверки формы данных.",
+              "suggestion": "Определить типы или схему Todo из API-контракта и валидировать либо типизировать ответы на границе клиента.",
+              "link_status": "verified",
+              "snippet": "  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L9-L12"
+            }
+          ]
+        },
+        {
+          "id": "props_contracts",
+          "name": "Контракты props",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Публичные props TodoForm и TodoList не описаны и не проверяются.",
+          "rationale": "Сопоставление с якорем 2: Публичные props TodoForm и TodoList не описаны и не проверяются.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/TodoForm.js",
+              "line_start": 4,
+              "line_end": 4,
+              "title": "Контракт формы не объявлен",
+              "explanation": "fetchTodos принимается без типа или runtime-проверки.",
+              "suggestion": "Описать интерфейс props через TypeScript или добавить согласованную проверку props.",
+              "link_status": "verified",
+              "snippet": "const TodoForm = ({ fetchTodos }) =\u003e {",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L4-L4"
+            },
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/TodoList.js",
+              "line_start": 4,
+              "line_end": 4,
+              "title": "Контракт списка не объявлен",
+              "explanation": "todos и fetchTodos используются без определения ожидаемой структуры.",
+              "suggestion": "Объявить контракт props, включая форму элемента todo и callback обновления.",
+              "link_status": "verified",
+              "snippet": "const TodoList = ({ todos, fetchTodos }) =\u003e {",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L4-L4"
+            }
+          ]
+        },
+        {
+          "id": "render_efficiency",
+          "name": "Эффективность рендеринга",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Явно избыточного рендеринга в малом дереве не видно, но обновление всего списка повторно рендерит оба дочерних компонента.",
+          "rationale": "Сопоставление с якорем 5: Явно избыточного рендеринга в малом дереве не видно, но обновление всего списка повторно рендерит оба дочерних компонента.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/App.js",
+              "line_start": 7,
+              "line_end": 15,
+              "title": "Обновление заменяет весь список",
+              "explanation": "После загрузки setTodos вызывает повторный рендер App, формы и таблицы.",
+              "suggestion": "При росте списка локализовать обновления и мемоизировать тяжёлые дочерние компоненты только после измерения.",
+              "link_status": "verified",
+              "snippet": "  const [todos, setTodos] = useState([]);\n\n  const fetchTodos = async () =\u003e {\n    const response = await api.get('/todos');\n    setTodos(response.data);\n  };\n\n  useEffect(() =\u003e {\n    fetchTodos();",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.js#L7-L15"
+            }
+          ]
+        },
+        {
+          "id": "bundle_and_assets",
+          "name": "Бандл и ассеты",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Стандартная production-сборка CRA задана, но код-сплиттинга и контроля ассетов нет, а Bootstrap подключён внешним полным бандлом.",
+          "rationale": "Сопоставление с якорем 5: Стандартная production-сборка CRA задана, но код-сплиттинга и контроля ассетов нет, а Bootstrap подключён внешним полным бандлом.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "package.json",
+              "line_start": 15,
+              "line_end": 19,
+              "title": "Определена production-сборка",
+              "explanation": "Проект использует стандартный скрипт build react-scripts.",
+              "link_status": "verified",
+              "snippet": "  \"scripts\": {\n    \"start\": \"react-scripts start\",\n    \"build\": \"react-scripts build\",\n    \"test\": \"react-scripts test\",\n    \"eject\": \"react-scripts eject\"",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/package.json#L15-L19"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "public/index.html",
+              "line_start": 13,
+              "line_end": 14,
+              "title": "Полный CSS Bootstrap загружается извне",
+              "explanation": "Стили подключаются целиком через CDN, без контроля используемой части.",
+              "suggestion": "Подключать только необходимые стили локально или внедрить контролируемую стратегию загрузки и оптимизации ассетов.",
+              "link_status": "verified",
+              "snippet": "    \u003c!-- bootstrap --\u003e\n    \u003clink href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\" crossorigin=\"anonymous\"\u003e",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/public/index.html#L13-L14"
+            }
+          ]
+        },
+        {
+          "id": "semantic_accessibility",
+          "name": "Семантика и ARIA",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Есть nav, form, table и нативные кнопки, но labels формы не связаны с соответствующими полями, а у таблицы отсутствует заголовок колонки действий.",
+          "rationale": "Сопоставление с якорем 2: Есть nav, form, table и нативные кнопки, но labels формы не связаны с соответствующими полями, а у таблицы отсутствует заголовок колонки действий.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/TodoForm.js",
+              "line_start": 35,
+              "line_end": 47,
+              "title": "Метки не связаны с полями",
+              "explanation": "htmlFor='amount' и htmlFor='category' не совпадают с id полей priority и task.",
+              "suggestion": "Сопоставить каждому label htmlFor с id соответствующего input; исправить все пять полей формы.",
+              "link_status": "verified",
+              "snippet": "    \u003cform onSubmit={handleFormSubmit}\u003e\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='amount' className='form-label'\u003e\n          Priority\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='priority' name='priority' onChange={handleInputChange} value={formData.priority}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='category' className='form-label'\u003e\n          Task\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='task' name='task' onChange={handleInputChange} value={formData.task}/\u003e",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L35-L47"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/TodoList.js",
+              "line_start": 16,
+              "line_end": 41,
+              "title": "У колонки удаления нет заголовка",
+              "explanation": "Строки содержат ячейку с Delete, но thead содержит только пять заголовков.",
+              "suggestion": "Добавить заголовок колонки действий, например th scope='col'\u003eДействия\u003c/th\u003e.",
+              "link_status": "verified",
+              "snippet": "      \u003cthead\u003e\n        \u003ctr\u003e\n          \u003cth\u003ePriority\u003c/th\u003e\n          \u003cth\u003eTask\u003c/th\u003e\n          \u003cth\u003eDescription\u003c/th\u003e\n          \u003cth\u003eCompletion Status?\u003c/th\u003e\n          \u003cth\u003eDate?\u003c/th\u003e\n        \u003c/tr\u003e\n      \u003c/thead\u003e\n      \u003ctbody\u003e\n        {todos.map((todo) =\u003e(\n          \u003ctr key={todo.id}\u003e\n            \u003ctd\u003e{todo.priority}\u003c/td\u003e\n            \u003ctd\u003e{todo.task}\u003c/td\u003e\n            \u003ctd\u003e{todo.description}\u003c/td\u003e\n            \u003ctd\u003e{todo.completion_status? 'Yes' : 'No'}\u003c/td\u003e\n            \u003ctd\u003e{todo.date}\u003c/td\u003e\n            \u003ctd\u003e\n              \u003cbutton\n                type='button'\n                className='btn btn-danger'\n                onClick={() =\u003e handleDeleteTodo(todo.id)}\n              \u003e\n                Delete\n              \u003c/button\u003e\n            \u003c/td\u003e",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L16-L41"
+            }
+          ]
+        },
+        {
+          "id": "keyboard_navigation",
+          "name": "Навигация с клавиатуры",
+          "weight": 0.6,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Основные действия выполнены нативными input и button, поэтому базовые сценарии доступны с клавиатуры; специальная логика фокуса не реализована.",
+          "rationale": "Сопоставление с якорем 5: Основные действия выполнены нативными input и button, поэтому базовые сценарии доступны с клавиатуры; специальная логика фокуса не реализована.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/TodoForm.js",
+              "line_start": 35,
+              "line_end": 74,
+              "title": "Форма использует нативные элементы",
+              "explanation": "Поля ввода и submit-кнопка поддерживают стандартную клавиатурную навигацию браузера.",
+              "link_status": "verified",
+              "snippet": "    \u003cform onSubmit={handleFormSubmit}\u003e\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='amount' className='form-label'\u003e\n          Priority\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='priority' name='priority' onChange={handleInputChange} value={formData.priority}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='category' className='form-label'\u003e\n          Task\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='task' name='task' onChange={handleInputChange} value={formData.task}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='description' className='form-label'\u003e\n          Description\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='description' name='description' onChange={handleInputChange} value={formData.description}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='is_income' className='form-label'\u003e\n          Completion Status?\n        \u003c/label\u003e\n        \u003cinput type='checkbox' id='completion_status' name='completion_status' onChange={handleInputChange} checked={formData.completion_status}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='date' className='form-label'\u003e\n          Date\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='date' name='date' onChange={handleInputChange} value={formData.date}/\u003e\n      \u003c/div\u003e\n\n      \u003cbutton type='submit' className='btn btn-primary'\u003e\n        Submit\n      \u003c/button\u003e\n    \u003c/form\u003e",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L35-L74"
+            },
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/TodoList.js",
+              "line_start": 33,
+              "line_end": 40,
+              "title": "Удаление реализовано кнопкой",
+              "explanation": "Действие не привязано к неклавиатурному div или ссылке.",
+              "link_status": "verified",
+              "snippet": "            \u003ctd\u003e\n              \u003cbutton\n                type='button'\n                className='btn btn-danger'\n                onClick={() =\u003e handleDeleteTodo(todo.id)}\n              \u003e\n                Delete\n              \u003c/button\u003e",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L33-L40"
+            }
+          ]
+        },
+        {
+          "id": "contrast_and_focus",
+          "name": "Контраст и фокус",
+          "weight": 0.4,
+          "score": 5,
+          "max": 10,
+          "confidence": "low",
+          "summary": "Интерфейс использует стандартные классы Bootstrap, но собственные правила контраста и видимого фокуса в исходниках не определены.",
+          "rationale": "Сопоставление с якорем 5: Интерфейс использует стандартные классы Bootstrap, но собственные правила контраста и видимого фокуса в исходниках не определены.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/components/TodoForm.js",
+              "line_start": 40,
+              "line_end": 72,
+              "title": "Визуальная доступность делегирована внешним стилям",
+              "explanation": "Классы form-control и btn-primary применены, но локальных правил focus/contrast нет.",
+              "suggestion": "Проверить контраст состояний и задать явные стили :focus-visible для интерактивных элементов.",
+              "link_status": "verified",
+              "snippet": "        \u003cinput type='text' className='form-control' id='priority' name='priority' onChange={handleInputChange} value={formData.priority}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='category' className='form-label'\u003e\n          Task\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='task' name='task' onChange={handleInputChange} value={formData.task}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='description' className='form-label'\u003e\n          Description\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='description' name='description' onChange={handleInputChange} value={formData.description}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='is_income' className='form-label'\u003e\n          Completion Status?\n        \u003c/label\u003e\n        \u003cinput type='checkbox' id='completion_status' name='completion_status' onChange={handleInputChange} checked={formData.completion_status}/\u003e\n      \u003c/div\u003e\n\n      \u003cdiv className='mb-3 mt-3'\u003e\n        \u003clabel htmlFor='date' className='form-label'\u003e\n          Date\n        \u003c/label\u003e\n        \u003cinput type='text' className='form-control' id='date' name='date' onChange={handleInputChange} value={formData.date}/\u003e\n      \u003c/div\u003e\n\n      \u003cbutton type='submit' className='btn btn-primary'\u003e\n        Submit",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoForm.js#L40-L72"
+            }
+          ]
+        },
+        {
+          "id": "styling_consistency",
+          "name": "Подход к стилям и консистентность",
+          "weight": 1,
+          "score": 5,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Для формы, таблицы и кнопок последовательно применяются классы Bootstrap, но собственной системы токенов или компонентов стилей нет.",
+          "rationale": "Сопоставление с якорем 5: Для формы, таблицы и кнопок последовательно применяются классы Bootstrap, но собственной системы токенов или компонентов стилей нет.",
+          "findings": [
+            {
+              "kind": "strength",
+              "severity": "info",
+              "file": "src/components/TodoList.js",
+              "line_start": 15,
+              "line_end": 40,
+              "title": "Единый подход на основе Bootstrap",
+              "explanation": "Таблица и кнопка используют согласованные utility/component-классы.",
+              "link_status": "verified",
+              "snippet": "    \u003ctable className='table table-striped table-bordered table-hover'\u003e\n      \u003cthead\u003e\n        \u003ctr\u003e\n          \u003cth\u003ePriority\u003c/th\u003e\n          \u003cth\u003eTask\u003c/th\u003e\n          \u003cth\u003eDescription\u003c/th\u003e\n          \u003cth\u003eCompletion Status?\u003c/th\u003e\n          \u003cth\u003eDate?\u003c/th\u003e\n        \u003c/tr\u003e\n      \u003c/thead\u003e\n      \u003ctbody\u003e\n        {todos.map((todo) =\u003e(\n          \u003ctr key={todo.id}\u003e\n            \u003ctd\u003e{todo.priority}\u003c/td\u003e\n            \u003ctd\u003e{todo.task}\u003c/td\u003e\n            \u003ctd\u003e{todo.description}\u003c/td\u003e\n            \u003ctd\u003e{todo.completion_status? 'Yes' : 'No'}\u003c/td\u003e\n            \u003ctd\u003e{todo.date}\u003c/td\u003e\n            \u003ctd\u003e\n              \u003cbutton\n                type='button'\n                className='btn btn-danger'\n                onClick={() =\u003e handleDeleteTodo(todo.id)}\n              \u003e\n                Delete\n              \u003c/button\u003e",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L15-L40"
+            },
+            {
+              "kind": "issue",
+              "severity": "minor",
+              "file": "src/index.css",
+              "line_start": 1,
+              "line_end": 12,
+              "title": "Локальная система стилей отсутствует",
+              "explanation": "Файл содержит только базовые стили body и code.",
+              "suggestion": "Определить локальные токены или слой компонентов для общих визуальных решений приложения.",
+              "link_status": "verified",
+              "snippet": "body {\n  margin: 0;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',\n    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',\n    sans-serif;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\n\ncode {\n  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',\n    monospace;",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/index.css#L1-L12"
+            }
+          ]
+        },
+        {
+          "id": "responsiveness",
+          "name": "Адаптивность",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "medium",
+          "summary": "Адаптивное поведение для таблицы и формы не задано; широкая таблица не помещена в responsive-контейнер.",
+          "rationale": "Сопоставление с якорем 2: Адаптивное поведение для таблицы и формы не задано; широкая таблица не помещена в responsive-контейнер.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/components/TodoList.js",
+              "line_start": 15,
+              "line_end": 45,
+              "title": "Таблица не адаптирована для узкого экрана",
+              "explanation": "Обычная table содержит шесть колонок без responsive-обёртки или альтернативного представления.",
+              "suggestion": "Добавить адаптивный контейнер либо компактное карточное представление строк для узких экранов.",
+              "link_status": "verified",
+              "snippet": "    \u003ctable className='table table-striped table-bordered table-hover'\u003e\n      \u003cthead\u003e\n        \u003ctr\u003e\n          \u003cth\u003ePriority\u003c/th\u003e\n          \u003cth\u003eTask\u003c/th\u003e\n          \u003cth\u003eDescription\u003c/th\u003e\n          \u003cth\u003eCompletion Status?\u003c/th\u003e\n          \u003cth\u003eDate?\u003c/th\u003e\n        \u003c/tr\u003e\n      \u003c/thead\u003e\n      \u003ctbody\u003e\n        {todos.map((todo) =\u003e(\n          \u003ctr key={todo.id}\u003e\n            \u003ctd\u003e{todo.priority}\u003c/td\u003e\n            \u003ctd\u003e{todo.task}\u003c/td\u003e\n            \u003ctd\u003e{todo.description}\u003c/td\u003e\n            \u003ctd\u003e{todo.completion_status? 'Yes' : 'No'}\u003c/td\u003e\n            \u003ctd\u003e{todo.date}\u003c/td\u003e\n            \u003ctd\u003e\n              \u003cbutton\n                type='button'\n                className='btn btn-danger'\n                onClick={() =\u003e handleDeleteTodo(todo.id)}\n              \u003e\n                Delete\n              \u003c/button\u003e\n            \u003c/td\u003e\n          \u003c/tr\u003e\n        ))}\n      \u003c/tbody\u003e\n    \u003c/table\u003e",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/components/TodoList.js#L15-L45"
+            }
+          ]
+        },
+        {
+          "id": "test_quality_and_coverage",
+          "name": "Покрытие и качество тестов",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Есть только шаблонный тест, который проверяет отсутствующий текст вместо сценариев todo.",
+          "rationale": "Сопоставление с якорем 2: Есть только шаблонный тест, который проверяет отсутствующий текст вместо сценариев todo.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "src/App.test.js",
+              "line_start": 4,
+              "line_end": 7,
+              "title": "Тест не соответствует интерфейсу",
+              "explanation": "Тест ищет 'learn react', которого App не рендерит.",
+              "suggestion": "Заменить шаблонный тест на сценарии загрузки, создания, удаления, ошибок и пустого списка с моками API.",
+              "link_status": "verified",
+              "snippet": "test('renders learn react link', () =\u003e {\n  render(\u003cApp /\u003e);\n  const linkElement = screen.getByText(/learn react/i);\n  expect(linkElement).toBeInTheDocument();",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/src/App.test.js#L4-L7"
+            }
+          ]
+        },
+        {
+          "id": "test_runnability",
+          "name": "Запускаемость тестов",
+          "weight": 1,
+          "score": 2,
+          "max": 10,
+          "confidence": "high",
+          "summary": "Стандартная команда тестов определена, но существующий единственный тест статически несовместим с текущим App и должен завершаться ошибкой.",
+          "rationale": "Сопоставление с якорем 2: Стандартная команда тестов определена, но существующий единственный тест статически несовместим с текущим App и должен завершаться ошибкой.",
+          "findings": [
+            {
+              "kind": "issue",
+              "severity": "major",
+              "file": "package.json",
+              "line_start": 15,
+              "line_end": 19,
+              "title": "Команда есть, но тестовый набор некорректен",
+              "explanation": "Скрипт test запускает react-scripts, однако App.test.js ожидает несуществующий элемент.",
+              "suggestion": "Исправить App.test.js под текущий интерфейс и поддерживать проходящий набор тестов в чистом окружении.",
+              "link_status": "verified",
+              "snippet": "  \"scripts\": {\n    \"start\": \"react-scripts start\",\n    \"build\": \"react-scripts build\",\n    \"test\": \"react-scripts test\",\n    \"eject\": \"react-scripts eject\"",
+              "permalink": "https://github.com/matsjfunke/react-fastapi-todo/blob/22745e87a108c53a8470866c8585dbf2a17730b1/react-frontend/package.json#L15-L19"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "warnings": [
+    "incomplete_area"
+  ]
+}

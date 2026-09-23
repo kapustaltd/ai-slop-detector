@@ -63,6 +63,43 @@ function area(): TeamArea {
           },
         ],
       },
+      {
+        id: 'quality',
+        name: 'Качество кода',
+        weight: 0.1,
+        score: 7,
+        subcategories: [
+          {
+            id: 'readability',
+            name: 'Читаемость',
+            weight: 1,
+            score: 7,
+            metrics: [
+              {
+                id: 'naming',
+                name: 'Именование',
+                weight: 1,
+                score: 7,
+                max: 10,
+                confidence: 'high',
+                summary: 'Понятные имена.',
+                rationale: 'Обоснование именования.',
+                findings: [
+                  {
+                    kind: 'strength',
+                    severity: 'info',
+                    file: 'src/naming.ts',
+                    line_start: 1,
+                    line_end: 1,
+                    title: 'Понятные имена',
+                    explanation: 'Имена читаются однозначно.',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     ],
   }
 }
@@ -133,6 +170,17 @@ describe('TaxonomyTree', () => {
 
     expect(screen.getByText('Краткий вывод по метрике.')).toBeInTheDocument()
     expect(screen.getByText('Развёрнутое обоснование.')).toBeInTheDocument()
+  })
+
+  it('не схлопывает ранее открытую категорию при открытии соседней', async () => {
+    const user = userEvent.setup()
+    render(<Harness initial={EMPTY_PATH} />)
+
+    await user.click(screen.getByText('Безопасность'))
+    await user.click(screen.getByText('Качество кода'))
+
+    expect(screen.getByText('Аутентификация и авторизация')).toBeInTheDocument()
+    expect(screen.getByText('Читаемость')).toBeInTheDocument()
   })
 
   it('показывает якоря рубрики нужной версии на раскрытой метрике (US2 #2)', async () => {

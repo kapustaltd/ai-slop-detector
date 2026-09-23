@@ -10,3 +10,19 @@ teams:
     paths:
       backend: backend
       frontend: frontend
+  - id: team-finsberg-fastapi-react
+    name: FastAPI React App
+    repo: https://github.com/finsberg/fastapi-react-app.git
+    branch: main
+    active: true
+    paths:
+      backend: backend
+      frontend: frontend
+  - id: team-matsjfunke-react-fastapi
+    name: React FastAPI Todo
+    repo: https://github.com/matsjfunke/react-fastapi-todo.git
+    branch: main
+    active: true
+    paths:
+      backend: fastapi-backend
+      frontend: react-frontend
