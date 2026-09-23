@@ -61,8 +61,7 @@ func (r Registry) Validate() error {
 		if strings.TrimSpace(team.Branch) == "" {
 			return fmt.Errorf("team %q branch is required", team.ID)
 		}
-		parsed, err := url.Parse(team.Repo)
-		if err != nil || parsed.Host == "" || parsed.User != nil || (parsed.Scheme != "https" && parsed.Scheme != "http" && parsed.Scheme != "ssh" && parsed.Scheme != "git") {
+		if parsed, err := url.Parse(team.Repo); err != nil || (parsed.Scheme != "" && parsed.Host == "") {
 			return fmt.Errorf("team %q has invalid repository URL %q", team.ID, team.Repo)
 		}
 		for area, path := range team.Paths {

@@ -2,7 +2,7 @@ import { BarChart3, ChartSpline, CloudOff, SearchX } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
 import { getLeaderboardIndex, loadLeaderboardIndex, type LeaderboardIndexStub } from '@/shared/api'
-import { formatTeamCount, SCORE_SCALE_LEGEND } from '@/shared/lib'
+import { SCORE_SCALE_LEGEND } from '@/shared/lib'
 import { EmptyState } from '@/shared/ui'
 import { DisclaimerBanner } from '@/widgets/disclaimer-banner'
 import {
@@ -92,8 +92,13 @@ export function LeaderboardPage() {
             <h1 className="text-[17px] font-semibold tracking-[-0.01em]">
               Автооценка качества кода
             </h1>
-            <p className="text-[13.5px] text-fg-subtle">{formatTeamCount(total)}</p>
+            <p className="text-[13.5px] text-fg-subtle">
+              {total} {total === 1 ? 'команда' : 'команд'}
+            </p>
           </div>
+          <span className="ml-1 hidden rounded-badge border border-line bg-muted-surface px-2 py-[3px] text-[12.5px] tracking-[0.03em] text-fg-muted uppercase sm:inline-flex">
+            внутренний инструмент жюри
+          </span>
         </div>
         <p className="text-[14px] text-fg-muted">
           Данные собраны {new Date(builtAt).toLocaleString('ru-RU')}
@@ -141,8 +146,12 @@ export function LeaderboardPage() {
       )}
 
       {teams.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-3 text-[13.5px] text-fg-subtle">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-[13.5px] text-fg-subtle">
           <ScoreScaleLegend />
+          <span>
+            Ранг присваивается по итоговому баллу; одинаковые баллы делят одно место (знак{' '}
+            <span className="text-fg-muted">=</span>).
+          </span>
         </div>
       ) : null}
     </main>
