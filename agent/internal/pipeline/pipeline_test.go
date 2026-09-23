@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -50,6 +51,7 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 		t.Fatal(err)
 	}
 	sha := strings.TrimSpace(string(shaBytes))
+	repoURL := (&url.URL{Scheme: "file", Path: repo}).String()
 	r := rubric.Rubric{SchemaVersion: "rubric.v1", RubricVersion: "backend.v1", AreaWeights: map[string]float64{"backend": .5, "frontend": .5}, ID: "backend.v1", Version: "backend.v1", Area: "backend", Scale: rubric.Scale{Min: 0, Max: 10, Anchors: []int{2, 5, 8, 10}}, Categories: []rubric.Category{{
 		ID: "cat", Name: "Category", Weight: 1,
 		Subcategories: []rubric.Subcategory{{
@@ -68,7 +70,7 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	fake := &provider.JSONProvider{Responses: [][]byte{[]byte("not-json"), valid}}
 	output := t.TempDir()
 	skillsDir := skillsFixture(t, "backend", "1.0.0")
-	config := Config{OutputDir: output, WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team 1", Repo: repo, Branch: "main", Active: true, Paths: map[string]string{"backend": "."}}}}, Rubrics: map[string]rubric.Rubric{"backend.v1": r}, Provider: fake, MaxParallel: 1, Templates: enrichmentTemplate(), Now: fixedNow, SkillsDir: skillsDir, RubricPaths: map[string]string{"backend.v1": "../../../rubrics/backend.v1.yaml"}}
+	config := Config{OutputDir: output, WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team 1", Repo: repoURL, Branch: "main", Active: true, Paths: map[string]string{"backend": "."}}}}, Rubrics: map[string]rubric.Rubric{"backend.v1": r}, Provider: fake, MaxParallel: 1, Templates: enrichmentTemplate(), Now: fixedNow, SkillsDir: skillsDir, RubricPaths: map[string]string{"backend.v1": "../../../rubrics/backend.v1.yaml"}}
 	config.Model = "test-model"
 	summary, err := (Pipeline{}).Run(context.Background(), config)
 	if err != nil {
