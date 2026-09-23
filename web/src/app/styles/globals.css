@@ -295,3 +295,33 @@
     }
   }
 }
+
+/* Indeterminate rail: quiet, single-pass motion inspired by loading bar patterns. */
+.registry-loading-track {
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ds-track);
+}
+.registry-loading-fill {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ds-primary);
+  animation: registry-loading-sweep 1.3s ease-in-out infinite alternate;
+}
+@keyframes registry-loading-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(265%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .registry-loading-fill {
+    animation: none;
+    width: 100%;
+  }
+}
