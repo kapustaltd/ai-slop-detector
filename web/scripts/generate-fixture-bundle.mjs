@@ -89,7 +89,7 @@ const bundleMeta = {
   built_at: builtAt,
   report_schema: '1.0',
   rubric_versions: ['backend.v1', 'frontend.v1'],
-  skill_versions: ['1.0.0'],
+  skill_versions: ['2.0.0'],
   models: ['fixture-model'],
 }
 
@@ -124,7 +124,7 @@ writeJson(resolve(dataDir, 'teams/team-01.json'), {
   warnings: [],
   meta: {
     schema_version: 'evaluation.v1',
-    skill_version: '1.0.0',
+    skill_version: '2.0.0',
     rubric_version: 'backend.v1 + frontend.v1',
     model: 'fixture-model',
     evaluated_at: '2026-09-21T12:00:00Z',
