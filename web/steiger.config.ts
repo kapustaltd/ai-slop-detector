@@ -12,4 +12,23 @@ export default defineConfig([
       'fsd/public-api': 'off',
     },
   },
+  {
+    // These page compositions and the entity slices they consume intentionally stay separated:
+    // each contains independently tested UI or domain logic, though the composition is page-local.
+    files: [
+      './src/entities/finding/**',
+      './src/entities/metric/**',
+      './src/entities/team/**',
+      './src/widgets/area-profile/**',
+      './src/widgets/evaluation-meta/**',
+      './src/widgets/findings-summary/**',
+      './src/widgets/leaderboard-table/**',
+      './src/widgets/score-summary/**',
+      './src/widgets/taxonomy-tree/**',
+      './src/widgets/team-header/**',
+    ],
+    rules: {
+      'fsd/insignificant-slice': 'off',
+    },
+  },
 ])

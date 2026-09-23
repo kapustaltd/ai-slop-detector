@@ -11,6 +11,9 @@ const readRubric = (area) => parseYaml(readFileSync(resolve(rubricDir, `${area}.
 
 function makeMetric(metric, index, area) {
   const issue = index % 5 === 0
+  const file = area === 'frontend' ? 'src/main.tsx' : 'src/main.go'
+  const codeFact =
+    area === 'frontend' ? 'renderApp возвращает компонент App.' : 'Run возвращает nil.'
   return {
     id: metric.id,
     name: metric.name,
@@ -18,25 +21,20 @@ function makeMetric(metric, index, area) {
     score: Number((6.5 + (index % 5) * 0.4).toFixed(1)),
     max: 10,
     confidence: index % 4 === 0 ? 'medium' : 'high',
-    summary: issue
-      ? 'Есть рабочая основа, но остаётся заметная зона для улучшения.'
-      : 'Основной сценарий реализован последовательно.',
-    rationale: `Оценка опирается на наблюдаемое свойство: ${metric.description}`,
+    summary: issue ? 'Критерий выполнен не полностью.' : 'Критерий подтверждён фрагментом.',
+    rationale: metric.description,
     findings: [
       {
         kind: issue ? 'issue' : 'strength',
         severity: issue ? 'minor' : 'info',
-        file: area === 'frontend' ? 'src/main.tsx' : 'src/main.go',
+        file,
         line_start: index + 1,
         line_end: index + 3,
-        title: issue ? 'Локальный недочёт' : 'Положительный пример',
-        explanation: issue
-          ? 'Участок работает, но его можно сделать более явным и устойчивым.'
-          : 'Участок демонстрирует заявленное свойство кода.',
+        title: issue ? 'Неполное соответствие' : 'Подтверждение критерия',
+        explanation: codeFact,
         ...(issue
           ? {
-              suggestion:
-                'Вынести ответственность в отдельный модуль и добавить проверку сценария.',
+              suggestion: 'Вынесите ответственность в отдельный модуль; проверьте сценарий.',
             }
           : {}),
         link_status: 'verified',
@@ -44,7 +42,7 @@ function makeMetric(metric, index, area) {
           area === 'frontend'
             ? 'export function renderApp() {\n  return <App />\n}'
             : 'func Run() error {\n\treturn nil\n}',
-        permalink: `https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/${area === 'frontend' ? 'src/main.tsx' : 'src/main.go'}#L${index + 1}-L${index + 3}`,
+        permalink: `https://example.invalid/team-01/blob/0123456789abcdef0123456789abcdef01234567/${file}#L${index + 1}-L${index + 3}`,
       },
     ],
   }

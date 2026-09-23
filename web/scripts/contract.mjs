@@ -163,8 +163,8 @@ function reportTemplate(rubric, scores = {}) {
     score: scores[metric.id] ?? Number((6 + (index % 4) * 0.5).toFixed(1)),
     max: rubric.scale.max,
     confidence: 'medium',
-    summary: `Оценка по метрике «${metric.name}».`,
-    rationale: `Оценка основана на проверке свойства: ${metric.description}`,
+    summary: 'Фрагмент кода.',
+    rationale: metric.description,
     findings: [
       {
         kind: 'strength',
@@ -172,8 +172,8 @@ function reportTemplate(rubric, scores = {}) {
         file: 'src/main.go',
         line_start: index + 1,
         line_end: index + 1,
-        title: `Наблюдение по метрике «${metric.name}»`,
-        explanation: `В репозитории есть участок, относящийся к метрике «${metric.name}».`,
+        title: 'Фрагмент',
+        explanation: 'Фрагмент привязан к указанным строкам.',
       },
     ],
   }))
@@ -190,7 +190,7 @@ function reportTemplate(rubric, scores = {}) {
       evaluated_at: '2026-09-21T12:00:00Z',
     },
     metrics,
-    overall_comment: 'Фикстурный отчёт для разработки и проверки контракта.',
+    overall_comment: 'Фикстурный отчёт для проверки контракта.',
     warnings: [],
   }
 }

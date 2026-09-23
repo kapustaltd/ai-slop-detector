@@ -97,7 +97,12 @@ func (r Rubric) Validate() error {
 	if len(r.AreaWeights) != 2 {
 		return errors.New("area_weights must contain backend and frontend")
 	}
-	if r.Scale.Max <= 0 || r.Scale.Min < 0 || r.Scale.Min >= r.Scale.Max {
+	for _, area := range []string{"backend", "frontend"} {
+		if _, ok := r.AreaWeights[area]; !ok {
+			return fmt.Errorf("area_weights is missing %s", area)
+		}
+	}
+	if r.Scale.Min != 0 || r.Scale.Max != 10 {
 		return fmt.Errorf("invalid score scale %.2f..%.2f", r.Scale.Min, r.Scale.Max)
 	}
 	if len(r.Scale.Anchors) == 0 {
@@ -204,6 +209,9 @@ func (r Rubric) AreaWeight(area string) float64 {
 func validateWeights(weights []float64, label string) error {
 	total := 0.0
 	for _, weight := range weights {
+		if math.IsNaN(weight) || math.IsInf(weight, 0) {
+			return fmt.Errorf("%s contain a non-finite weight", label)
+		}
 		if weight < 0 {
 			return fmt.Errorf("%s contain a negative weight", label)
 		}
