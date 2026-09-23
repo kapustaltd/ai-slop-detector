@@ -43,9 +43,6 @@ func Load(path string) (Registry, error) {
 }
 
 func (r Registry) Validate() error {
-	if len(r.Teams) == 0 {
-		return fmt.Errorf("teams must not be empty")
-	}
 	seen := make(map[string]struct{}, len(r.Teams))
 	for _, team := range r.Teams {
 		if !safeID.MatchString(team.ID) || strings.TrimSpace(team.Name) == "" {

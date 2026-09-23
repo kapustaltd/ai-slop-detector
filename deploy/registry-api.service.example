@@ -1,0 +1,20 @@
+[Unit]
+Description=AI Slop Detector team registry API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ai-slop-detector
+Group=ai-slop-detector
+WorkingDirectory=/var/lib/ai-slop-detector
+ExecStart=/opt/ai-slop-detector/registry-api --registry /var/lib/ai-slop-detector/registry.yaml --listen 172.17.0.1:8082
+Restart=on-failure
+RestartSec=5
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/ai-slop-detector
+
+[Install]
+WantedBy=multi-user.target

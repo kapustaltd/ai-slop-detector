@@ -21,7 +21,7 @@ type Server struct {
 }
 
 func New(registryPath, token string) (*Server, error) {
-	if len(token) < 32 {
+	if token != "" && len(token) < 32 {
 		return nil, errors.New("REGISTRY_API_TOKEN must contain at least 32 characters")
 	}
 	if _, err := registry.Load(registryPath); err != nil {
@@ -44,8 +44,12 @@ func (s *Server) Handler() http.Handler {
 
 func (s *Server) authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/healthz" {
+		if r.URL.Path == "/healthz" || (r.URL.Path == "/api/teams" && (r.Method == http.MethodGet || r.Method == http.MethodPost)) {
 			next.ServeHTTP(w, r)
+			return
+		}
+		if s.token == "" {
+			writeError(w, http.StatusForbidden, "Редактирование и удаление отключены")
 			return
 		}
 		provided := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
