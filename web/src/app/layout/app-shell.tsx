@@ -7,7 +7,7 @@ export function AppShell() {
 
   useEffect(() => {
     let active = true
-    void fetch('/healthz')
+    void fetch('/api/teams')
       .then((response) => {
         if (active) setRegistryApiAvailable(response.ok)
       })

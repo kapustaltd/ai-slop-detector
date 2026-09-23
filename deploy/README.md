@@ -5,9 +5,13 @@ The GitHub Actions workflow builds `web/dist`, then deploys it over SSH to
 `/var/www/ai-slop-detector/releases/<commit-sha>` and mirrors the active release into the
 Docker bind-mounted document root `/opt/hackathon/dist`.
 
-Only the static site is deployed. Evaluation runs on the operator's machine through the pipeline
-CLI (`agent/cmd/runner`), which writes the data bundle into `web/data/` before the build; there is
-no service to install and no API to expose.
+The static site and a small registry API are deployed separately. Evaluation still runs through
+the pipeline CLI (`agent/cmd/runner`), which reads the registry YAML before a run and writes the
+data bundle into `web/data/` before the build.
+
+The registry API serves `GET` and `POST /api/teams` without a token so visitors can add a team.
+`PUT` and `DELETE` require `REGISTRY_API_TOKEN` and are disabled when it is unset. Public additions
+must be monitored because anyone who can reach the site can submit a team.
 
 ## One-time server setup
 
@@ -26,6 +30,16 @@ the container.
 
 After a deploy, verify that the public site serves the new release: the leaderboard must open and
 `index.json` must carry the expected build timestamp.
+
+## Registry API
+
+Build `agent/cmd/registry-api` for the server, install it as
+`/opt/ai-slop-detector/registry-api`, and install `deploy/registry-api.service.example` as
+`/etc/systemd/system/ai-slop-detector-registry-api.service`. Create
+`/var/lib/ai-slop-detector/registry.yaml` with `version: "1"` and `teams: []`, owned by the
+`ai-slop-detector` service account. Enable the service and proxy `/api/teams` through Nginx to
+`172.17.0.1:8082` on the current Docker bridge (or `127.0.0.1:8082` on host Nginx). The sample
+configuration is `deploy/nginx.docker.conf.example`. Keep `/api/v1/` routed to the web runner.
 
 The first deploy creates the release directory. To prepare it explicitly:
 
