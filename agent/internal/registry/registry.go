@@ -62,7 +62,9 @@ func (r Registry) Validate() error {
 			return fmt.Errorf("team %q branch is required", team.ID)
 		}
 		parsed, err := url.Parse(team.Repo)
-		if err != nil || parsed.Host == "" || parsed.User != nil || (parsed.Scheme != "https" && parsed.Scheme != "http" && parsed.Scheme != "ssh" && parsed.Scheme != "git") {
+		remoteURL := err == nil && parsed.Host != "" && parsed.User == nil && (parsed.Scheme == "https" || parsed.Scheme == "http" || parsed.Scheme == "ssh" || parsed.Scheme == "git")
+		localFileURL := err == nil && parsed.Scheme == "file" && parsed.Host == "" && parsed.User == nil && parsed.Path != "/" && filepath.IsAbs(parsed.Path) && parsed.RawQuery == "" && !parsed.ForceQuery && parsed.Fragment == ""
+		if !remoteURL && !localFileURL {
 			return fmt.Errorf("team %q has invalid repository URL %q", team.ID, team.Repo)
 		}
 		for area, path := range team.Paths {
