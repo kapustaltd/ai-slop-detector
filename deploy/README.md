@@ -47,7 +47,7 @@ Install the current `registry-api` binary and the revised systemd unit from
 `deploy/registry-api.service.example`. The service account needs write access to
 `/var/lib/ai-slop-detector`. The unit reads `/etc/ai-slop-detector/registry-bridge.env`, containing
 only `WEB_RUNNER_TOKEN` with the same value configured for the web runner, and delegates model work to the internal web runner at
-`127.0.0.1:8081`. The token stays server-side. Configure model credentials and model selection
+`172.17.0.1:8081` on the server's Docker bridge. The token stays server-side. Configure model credentials and model selection
 on that existing runner service; the registry API needs no model key or CLI.
 
 The bridge submits one team at a time, limits automatic starts to ten per UTC day (persisted in

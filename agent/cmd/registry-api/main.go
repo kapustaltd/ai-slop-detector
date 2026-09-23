@@ -17,7 +17,7 @@ func main() {
 	listen := flags.String("listen", "127.0.0.1:8080", "address to listen on")
 	publicBundle := flags.String("public-bundle", "", "directory for live evaluated bundles")
 	autoEvaluate := flags.Bool("auto-evaluate", false, "queue active teams for evaluation")
-	runnerURL := flags.String("runner-url", "http://127.0.0.1:8081", "internal evaluation runner URL")
+	runnerURL := flags.String("runner-url", "http://172.17.0.1:8081", "internal evaluation runner URL")
 	dailyLimit := flags.Int("daily-limit", 10, "maximum automatic evaluations per UTC day")
 	_ = flags.Parse(os.Args[1:])
 
