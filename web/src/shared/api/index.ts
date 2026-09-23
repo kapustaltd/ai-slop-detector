@@ -19,3 +19,15 @@ export {
   type TeamMetric,
   type TeamSubcategory,
 } from './bundle'
+export {
+  checkRegistryApi,
+  clearRegistryToken,
+  createRegistryTeam,
+  deleteRegistryTeam,
+  getRegistryTeams,
+  readRegistryToken,
+  RegistryApiError,
+  saveRegistryToken,
+  updateRegistryTeam,
+  type RegistryTeam,
+} from './registry'
