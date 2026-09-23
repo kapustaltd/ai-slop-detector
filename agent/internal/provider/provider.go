@@ -36,35 +36,54 @@ type Provider interface {
 	Evaluate(context.Context, Request) (Response, error)
 }
 
-// OpenAIAdapter keeps provider credentials in the runner process. The model
-// receives only the bounded request prompt and never inherits the API key.
-type OpenAIAdapter struct {
-	Client interface {
-		Complete(context.Context, string, string) (string, error)
-	}
-	SystemPrompt string
-}
-
-func (p OpenAIAdapter) Evaluate(ctx context.Context, request Request) (Response, error) {
-	if p.Client == nil {
-		return Response{}, fmt.Errorf("openai client is required")
-	}
-	raw, err := p.Client.Complete(ctx, p.SystemPrompt, request.Prompt)
-	if err != nil {
-		return Response{}, err
-	}
-	return Response{Raw: []byte(raw), Usage: DecodeUsage([]byte(raw))}, nil
-}
-
-// CommandProvider invokes a headless CLI without a shell. Only explicitly
-// supplied environment variables plus PATH are passed to the child process.
-// In particular, platform credentials from the parent process are not
-// inherited by the skill.
+// CommandProvider вызывает скилл ревью headless-командой, без shell.
+//
+// Задачу оценки формулирует скилл (спека 002); сюда приходит только короткая
+// инструкция с координатами прогона. Рабочим каталогом служит корень проекта
+// платформы — иначе Claude Code не найдёт скиллы в `.claude/skills`. Копия
+// репозитория команды открывается отдельно, через --add-dir, и остаётся данными.
+//
+// Дочернему процессу передаются только явно указанные переменные окружения плюс
+// PATH: секреты платформы не наследуются (спека 003 FR-013d).
 type CommandProvider struct {
-	Binary  string
-	Args    []string
-	Env     map[string]string
-	Timeout time.Duration
+	Binary string
+	// ProjectDir — корень проекта платформы, откуда обнаруживаются скиллы.
+	ProjectDir string
+	// Args полностью переопределяет аргументы; пусто — используется набор по умолчанию.
+	Args []string
+	// AllowedTools и DisallowedTools задают права скилла. По умолчанию — только чтение.
+	AllowedTools    []string
+	DisallowedTools []string
+	Env             map[string]string
+	Timeout         time.Duration
+}
+
+var (
+	defaultAllowedTools    = []string{"Read", "Glob", "Grep"}
+	defaultDisallowedTools = []string{"Write", "Edit", "Bash", "WebFetch", "WebSearch"}
+)
+
+func (p CommandProvider) arguments(request Request) []string {
+	if len(p.Args) > 0 {
+		return append([]string(nil), p.Args...)
+	}
+	allowed := p.AllowedTools
+	if len(allowed) == 0 {
+		allowed = defaultAllowedTools
+	}
+	disallowed := p.DisallowedTools
+	if len(disallowed) == 0 {
+		disallowed = defaultDisallowedTools
+	}
+	args := []string{"-p", request.Prompt, "--output-format", "json"}
+	if request.RepoPath != "" {
+		args = append(args, "--add-dir", request.RepoPath)
+	}
+	args = append(args, "--allowed-tools")
+	args = append(args, allowed...)
+	args = append(args, "--disallowed-tools")
+	args = append(args, disallowed...)
+	return args
 }
 
 func (p CommandProvider) Evaluate(parent context.Context, request Request) (Response, error) {
@@ -78,12 +97,8 @@ func (p CommandProvider) Evaluate(parent context.Context, request Request) (Resp
 	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()
 
-	args := append([]string(nil), p.Args...)
-	if len(args) == 0 {
-		args = []string{"-p", request.Prompt}
-	}
-	cmd := exec.CommandContext(ctx, p.Binary, args...)
-	cmd.Dir = request.RepoPath
+	cmd := exec.CommandContext(ctx, p.Binary, p.arguments(request)...)
+	cmd.Dir = p.ProjectDir
 	cmd.Env = safeEnv(p.Env)
 	raw, err := cmd.Output()
 	if err != nil {
@@ -98,7 +113,33 @@ func (p CommandProvider) Evaluate(parent context.Context, request Request) (Resp
 	if len(raw) == 0 {
 		return Response{}, fmt.Errorf("provider returned an empty response")
 	}
-	return Response{Raw: raw}, nil
+	report, usage := unwrapEnvelope(raw)
+	return Response{Raw: report, Usage: usage}, nil
+}
+
+// unwrapEnvelope достаёт отчёт из обёртки `claude -p --output-format json`.
+// Обёртка же несёт стоимость и расход токенов, поэтому прогон становится
+// учитываемым (спека 003 FR-035). Если обёртки нет, вход возвращается как есть:
+// это допустимо, чтобы тот же путь работал с заранее записанным отчётом.
+func unwrapEnvelope(raw []byte) ([]byte, Usage) {
+	var envelope struct {
+		Result       string  `json:"result"`
+		TotalCostUSD float64 `json:"total_cost_usd"`
+		IsError      bool    `json:"is_error"`
+		Usage        struct {
+			InputTokens  int `json:"input_tokens"`
+			OutputTokens int `json:"output_tokens"`
+		} `json:"usage"`
+	}
+	if err := json.Unmarshal(raw, &envelope); err != nil || strings.TrimSpace(envelope.Result) == "" {
+		return raw, DecodeUsage(raw)
+	}
+	usage := Usage{
+		InputTokens:  envelope.Usage.InputTokens,
+		OutputTokens: envelope.Usage.OutputTokens,
+		CostUSD:      envelope.TotalCostUSD,
+	}
+	return []byte(envelope.Result), usage
 }
 
 // JSONProvider is useful for local integration tests and for operators who

@@ -55,24 +55,9 @@ jobs:
         working-directory: ${{ github.workspace }}/agent
         run: go test ./...
 
-      - name: Build web runner
-        working-directory: ${{ github.workspace }}/agent
-        run: go build -trimpath -o "$RUNNER_TEMP/web-runner" ./cmd/web-runner
-
-      - name: Package web runner
-        working-directory: ${{ github.workspace }}
-        run: |
-          set -euo pipefail
-          package_dir="$RUNNER_TEMP/web-runner-package"
-          install -d "$package_dir/rubrics" "$package_dir/seed-data"
-          install -m 0755 "$RUNNER_TEMP/web-runner" "$package_dir/web-runner"
-          install -m 0644 rubrics/backend.v1.yaml rubrics/frontend.v1.yaml "$package_dir/rubrics/"
-          cp -R web/data/. "$package_dir/seed-data/"
-          tar -C "$package_dir" -czf "$RUNNER_TEMP/ai-slop-detector-web-runner.tar.gz" .
-
       - name: Test release scripts
         working-directory: ${{ github.workspace }}
-        run: bash -n deploy/deploy-web-runner.sh && bash deploy/test-static-deployment.sh
+        run: bash deploy/test-static-deployment.sh
 
       - name: Package static site
         run: tar -C dist -czf "$RUNNER_TEMP/ai-slop-detector-dist.tar.gz" .
@@ -82,14 +67,6 @@ jobs:
         with:
           name: web-dist
           path: ${{ runner.temp }}/ai-slop-detector-dist.tar.gz
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Upload web runner artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-runner
-          path: ${{ runner.temp }}/ai-slop-detector-web-runner.tar.gz
           if-no-files-found: error
           retention-days: 7
 
@@ -113,13 +90,6 @@ jobs:
         with:
           name: web-dist
           path: artifact
-
-      - name: Download web runner artifact
-        if: ${{ vars.DEPLOY_WEB_RUNNER == 'true' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: web-runner
-          path: runner-artifact
 
       - name: Configure strict SSH
         env:
@@ -162,19 +132,6 @@ jobs:
           scp "${ssh_opts[@]}" artifact/ai-slop-detector-dist.tar.gz \
             "$DEPLOY_USER@$DEPLOY_HOST:/tmp/ai-slop-detector-${GITHUB_SHA}.tar.gz"
 
-      - name: Upload web runner archive
-        if: ${{ vars.DEPLOY_WEB_RUNNER == 'true' }}
-        run: |
-          set -euo pipefail
-          ssh_opts=(
-            -i "$HOME/.ssh/deploy_key"
-            -o BatchMode=yes
-            -o IdentitiesOnly=yes
-            -o StrictHostKeyChecking=yes
-            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
-          )
-          scp "${ssh_opts[@]}" runner-artifact/ai-slop-detector-web-runner.tar.gz \
-            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/ai-slop-detector-web-runner-${GITHUB_SHA}.tar.gz"
 
       - name: Install release atomically
         run: |
@@ -190,20 +147,6 @@ jobs:
             "ARTIFACT_PATH='/tmp/ai-slop-detector-${GITHUB_SHA}.tar.gz' DEPLOY_ROOT='$DEPLOY_ROOT' SERVE_ROOT='/opt/hackathon/dist' RELEASE_ID='$GITHUB_SHA' KEEP_RELEASES='$RELEASES_TO_KEEP' bash -s" \
             < deploy/deploy-static.sh
 
-      - name: Install web runner atomically
-        if: ${{ vars.DEPLOY_WEB_RUNNER == 'true' }}
-        run: |
-          set -euo pipefail
-          ssh_opts=(
-            -i "$HOME/.ssh/deploy_key"
-            -o BatchMode=yes
-            -o IdentitiesOnly=yes
-            -o StrictHostKeyChecking=yes
-            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
-          )
-          ssh "${ssh_opts[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
-            "ARTIFACT_PATH='/tmp/ai-slop-detector-web-runner-${GITHUB_SHA}.tar.gz' RUNNER_ROOT='/opt/ai-slop-detector' RELEASE_ID='$GITHUB_SHA' KEEP_RELEASES='$RELEASES_TO_KEEP' RUNNER_SERVICE='ai-slop-detector-web-runner.service' bash -s" \
-            < deploy/deploy-web-runner.sh
 
       - name: Smoke check and rollback on failure
         if: ${{ vars.DEPLOY_HEALTHCHECK_URL != '' }}

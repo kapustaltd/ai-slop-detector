@@ -5,28 +5,40 @@ import (
 	"testing"
 
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/registry"
-	"github.com/kapustaltd/ai-slop-detector/agent/internal/rubric"
-	"github.com/kapustaltd/ai-slop-detector/agent/internal/scanner"
+	"github.com/kapustaltd/ai-slop-detector/agent/internal/skill"
 )
 
-func TestPromptContainsRubricAndReportContract(t *testing.T) {
-	value, err := rubric.Load("../../../rubrics/backend.v1.yaml")
-	if err != nil {
-		t.Fatal(err)
-	}
-	prompt := buildPrompt(registry.Team{ID: "123"}, "backend", strings.Repeat("a", 40), value, scanner.Snapshot{}, "test-model", "1.0.0")
-	for _, expected := range []string{`"repo":"123"`, `"model":"test-model"`, `"schema_version":"evaluation.v1"`, `"rubric_version":"backend.v1"`, "overall_comment", "line_start", "info/minor/major/critical"} {
-		if !strings.Contains(prompt, expected) {
-			t.Errorf("prompt lacks %s", expected)
+// Инструкция несёт только координаты прогона. Задачу оценки формулирует скилл
+// (спека 003 FR-013a), поэтому здесь проверяется и обратное: в инструкции не должно
+// быть ни рубрики, ни требований к структуре отчёта, ни содержимого файлов.
+func TestInstructionCarriesOnlyRunCoordinates(t *testing.T) {
+	sha := strings.Repeat("a", 40)
+	reviewSkill := skill.Skill{Name: "review-backend", Version: "1.0.0", Path: "../../.claude/skills/review-backend/SKILL.md"}
+
+	instruction := buildInstruction(
+		registry.Team{ID: "team-01", Repo: "https://example.com/team-01.git"},
+		"backend", sha, "../../rubrics/backend.v1.yaml", "/tmp/teams-repos/snapshot-1", reviewSkill,
+	)
+
+	for _, expected := range []string{
+		"review-backend", "team-01", "https://example.com/team-01.git", sha,
+		"/tmp/teams-repos/snapshot-1", "../../rubrics/backend.v1.yaml", "1.0.0",
+	} {
+		if !strings.Contains(instruction, expected) {
+			t.Errorf("инструкция не содержит координату %q", expected)
 		}
 	}
-	for _, category := range value.Categories {
-		for _, subcategory := range category.Subcategories {
-			for _, metric := range subcategory.Metrics {
-				if !strings.Contains(prompt, `"id":"`+metric.ID+`"`) {
-					t.Errorf("prompt lacks metric %s", metric.ID)
-				}
-			}
+
+	for _, forbidden := range []string{
+		"line_start", "info/minor/major/critical", "overall_comment",
+		"schema_version", "Файлы:", "Фрагменты:",
+	} {
+		if strings.Contains(instruction, forbidden) {
+			t.Errorf("инструкция подменяет скилл: найдено %q", forbidden)
 		}
+	}
+
+	if len(instruction) > 700 {
+		t.Errorf("инструкция разрослась до %d символов: задача должна жить в скилле", len(instruction))
 	}
 }

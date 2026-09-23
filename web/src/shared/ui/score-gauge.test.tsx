@@ -43,4 +43,11 @@ describe('ScoreGauge', () => {
     expect(lowFill).toHaveStyle({ background: 'var(--ds-score-1)' })
     expect(highFill).toHaveStyle({ background: 'var(--ds-score-5)' })
   })
+
+  it('layout stacked растягивает дорожку на всю ширину, а не на trackWidth', () => {
+    const { container } = render(<ScoreGauge value={7.2} layout="stacked" trackWidth={264} />)
+
+    const track = container.querySelector('[aria-hidden="true"]')
+    expect(track).toHaveStyle({ width: '100%' })
+  })
 })

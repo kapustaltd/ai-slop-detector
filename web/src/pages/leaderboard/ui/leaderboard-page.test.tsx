@@ -6,15 +6,15 @@ import { describe, expect, it } from 'vitest'
 import { LeaderboardPage } from './leaderboard-page'
 
 describe('LeaderboardPage', () => {
-  it('отрисовывает команды из фикстурного бандла', () => {
+  it('отрисовывает команды из фикстурного бандла и время сборки бандла (FR-011)', () => {
     render(
       <MemoryRouter>
         <LeaderboardPage />
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { name: 'Рейтинг команд' })).toBeInTheDocument()
-    expect(screen.getByText('Команда 01')).toBeInTheDocument()
+    expect(screen.getAllByText('Команда 01').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Данные собраны/)).toBeInTheDocument()
   })
 
   it('показывает прочерк вместо балла у неоценённой команды', () => {
@@ -27,6 +27,17 @@ describe('LeaderboardPage', () => {
     expect(screen.getAllByText('—').length).toBeGreaterThan(0)
   })
 
+  it('переход по клику на команду ведёт на страницу команды (FR-010)', () => {
+    render(
+      <MemoryRouter>
+        <LeaderboardPage />
+      </MemoryRouter>,
+    )
+
+    const link = screen.getAllByRole('link', { name: 'Команда 01' })[0]
+    expect(link).toHaveAttribute('href', '/team/team-01')
+  })
+
   it('фильтрует команды с предупреждениями из адреса страницы', () => {
     render(
       <MemoryRouter initialEntries={['/?warnings=1']}>
@@ -34,11 +45,11 @@ describe('LeaderboardPage', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Команда 02')).toBeInTheDocument()
+    expect(screen.getAllByText('Команда 02').length).toBeGreaterThan(0)
     expect(screen.queryByText('Команда 01')).not.toBeInTheDocument()
   })
 
-  it('переключает направление сортировки кнопкой числовой колонки', async () => {
+  it('переключает направление сортировки кликом по заголовку числовой колонки', async () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -51,5 +62,18 @@ describe('LeaderboardPage', () => {
       'aria-sort',
       'descending',
     )
+  })
+
+  it('пустой результат фильтра показывает EmptyState со сбросом', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/?status=running&warnings=1']}>
+        <LeaderboardPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Под фильтры не попала ни одна команда')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Сбросить фильтры' }))
+    expect(screen.getAllByText('Команда 01').length).toBeGreaterThan(0)
   })
 })

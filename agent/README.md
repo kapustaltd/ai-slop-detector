@@ -1,52 +1,33 @@
-# Architecture review agent
+# Пайплайн оценки
 
-The `slop-agent` CLI sends a bounded, redacted repository snapshot to an
-OpenAI-compatible chat endpoint and accepts only a validated JSON report.
+CLI на Go, который превращает репозитории команд в дата-бандл для интерфейса. Он оркестрирует
+прогон, но не формулирует задачу модели: оценку выполняет скилл Claude Code
+(`review-backend` / `review-frontend`), читающий рубрику из `rubrics/*.yaml` (спеки 002 и 003).
 
-It never runs code from the analyzed repository. The repository path is used
-for reading files and for `git rev-parse HEAD` only.
+## Что делает
 
-## Local run
+1. Читает реестр команд (`registry.example.yaml` как образец).
+2. Клонирует репозиторий и переключается на зафиксированный `commit_sha`. Клоны лежат **вне**
+   дерева проекта — по умолчанию `../teams-repos/`.
+3. Вызывает скилл ревью по каждой области, без shell, с правами только на чтение.
+4. Валидирует отчёт по контракту 001 и повторяет запрос при невалидном выводе.
+5. Проверяет ссылки на код, вырезает сниппеты из клона по SHA, строит постоянные ссылки.
+6. Считает агрегаты: подкатегории, категории, области, итог команды, места.
+7. Складывает дата-бандл в `web/data/`, откуда его забирает сборка интерфейса.
 
-```sh
-export AGENT_BASE_URL=https://ru.cheapvibecode.ru/v1
-export AGENT_API_KEY='set-outside-the-repository'
-export AGENT_MODEL=gpt-5.6-luna
-export AGENT_EFFORT=none
+Сырые ответы модели сохраняются всегда, рядом с вычисленными значениями.
 
-go run ./cmd/slop-agent \
-  --repo .. \
-  --repo-id ai-slop-detector \
-  --area backend \
-  --rubric ../rubrics/backend.v1.yaml \
-  --output /tmp/ai-slop-report.json
+## Запуск
+
+```bash
+cd agent
+go run ./cmd/runner run --registry ../registry.yaml --rubrics-dir ../rubrics --output-dir ../web/data
+go run ./cmd/runner recalculate --output-dir ../web/data   # пересчёт агрегатов без обращения к модели
 ```
 
-The rubric must expose leaf metric IDs under `metrics:` blocks. The canonical
-backend/frontend rubrics will be added with the evaluation-contract feature;
-the runtime deliberately does not hard-code metric names.
+## Чего здесь нет
 
-## Web runner
-
-The controlled web runner exposes `GET /healthz`, `POST /api/v1/runs`,
-`GET /api/v1/runs/<id>` and the public read-only bundle under `GET /api/v1/bundle/`.
-It accepts repository metadata only; it never accepts
-or executes arbitrary shell text from HTTP requests.
-
-```sh
-go run ./cmd/web-runner \
-  --addr 127.0.0.1:8080 \
-  --rubrics-dir ../rubrics \
-  --data-dir /tmp/ai-slop-detector-web-runner
-```
-
-The web runner is intentionally exposed without an operator token: requests from
-`/#/run` are anonymous and the page polls the run status without credentials. A
-successful run is merged into the persistent public bundle and becomes visible in
-the leaderboard automatically.
-
-## Tests
-
-```sh
-go test ./...
-```
+- Прямых обращений к API моделей: единственный провайдер — вызов скилла.
+- HTTP-сервера и control plane: запуск инициируется командой в терминале (спека 011 снята).
+- Базы данных: хранилище — файловая система.
+- Выполнения кода команд: их репозитории — данные, а не инструкции.
