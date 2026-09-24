@@ -13,7 +13,6 @@ import (
 var (
 	ErrTeamExists   = errors.New("team already exists")
 	ErrTeamNotFound = errors.New("team not found")
-	ErrLastTeam     = errors.New("cannot remove the last team")
 )
 
 func Add(path string, team Team) error {
@@ -104,9 +103,6 @@ func Remove(path, id string) error {
 	}
 	if index < 0 {
 		return ErrTeamNotFound
-	}
-	if len(value.Teams) == 1 {
-		return ErrLastTeam
 	}
 	value.Teams = append(value.Teams[:index], value.Teams[index+1:]...)
 	if err := value.Validate(); err != nil {

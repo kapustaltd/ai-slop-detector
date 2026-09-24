@@ -129,8 +129,6 @@ func writeRegistryError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusNotFound, "Команда не найдена")
 	case errors.Is(err, registry.ErrTeamExists):
 		writeError(w, http.StatusConflict, "Команда с таким ID уже существует")
-	case errors.Is(err, registry.ErrLastTeam):
-		writeError(w, http.StatusConflict, "В реестре должна остаться хотя бы одна команда")
 	default:
 		writeError(w, http.StatusBadRequest, "Не удалось сохранить изменения команды")
 	}
