@@ -117,8 +117,8 @@ export function EvaluationProgressView({ progress, className = '' }: EvaluationP
         ) : (
           <p className="mb-0 mt-2 text-sm text-fg-muted">
             {progress.status === 'running'
-              ? 'События пока не поступили.'
-              : 'Для этой оценки события не записаны.'}
+              ? 'События проверки появятся здесь.'
+              : 'Для этой проверки события не записаны.'}
           </p>
         )}
       </div>

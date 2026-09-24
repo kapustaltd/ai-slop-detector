@@ -148,14 +148,18 @@ export function TeamPage() {
 
   if (state === 'pending') {
     return (
-      <main className="mx-auto max-w-[1600px] space-y-[18px] p-4 sm:p-6" aria-live="polite">
-        <h1 className="text-h1">
-          {progress?.status === 'failed'
-            ? 'Оценка остановилась до завершения'
-            : progress?.status === 'no_data'
-              ? 'Оценка ожидает запуска'
-              : 'Оценка команды выполняется'}
-        </h1>
+      <main className="mx-auto max-w-[960px] space-y-[18px] p-4 sm:p-6" aria-live="polite">
+        <header className="border-b border-line pb-4">
+          <p className="mb-1 text-sm text-fg-muted">Команда</p>
+          <h1 className="m-0 break-all text-h1">{teamId}</h1>
+          <p className="mb-0 mt-2 text-sm text-fg-muted">
+            {progress?.status === 'failed'
+              ? 'Проверка прервана'
+              : progress?.status === 'no_data'
+                ? 'В очереди на проверку'
+                : 'Проверка выполняется'}
+          </p>
+        </header>
         {progress ? (
           <>
             <EvaluationProgressView progress={progress} />

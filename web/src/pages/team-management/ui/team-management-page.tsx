@@ -230,8 +230,8 @@ export function TeamManagementPage() {
   }
 
   return (
-    <main className="mx-auto max-w-[1400px] space-y-6 p-4 sm:p-6">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4 pr-12">
+    <main className="mx-auto max-w-[1200px] space-y-6 p-4 sm:p-6">
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
         <div>
           <Link
             className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-fg-muted no-underline"
@@ -241,9 +241,7 @@ export function TeamManagementPage() {
             Рейтинг
           </Link>
           <h1 className="text-h1 m-0">Команды</h1>
-          <p className="mt-1 text-sm text-fg-muted">
-            Новые команды сразу появляются в рейтинге. Оценка зависит от обработки на сервере.
-          </p>
+          <p className="mt-1 text-sm text-fg-muted">Добавьте репозиторий команды для проверки.</p>
         </div>
         {apiAvailable ? (
           <button
@@ -383,7 +381,7 @@ export function TeamManagementPage() {
               type="button"
               onClick={() => void confirmDelete()}
             >
-              Удалить
+              Удалить команду
             </button>
             <button
               className="min-h-11 rounded-control border border-line px-4"
@@ -415,7 +413,12 @@ export function TeamManagementPage() {
         >
           {isLoading ? <RegistryLoadingSkeleton /> : null}
           {!isLoading && teams.length === 0 ? (
-            <p className="p-4 text-sm text-fg-muted">В реестре пока нет команд.</p>
+            <div className="px-4 py-6">
+              <p className="m-0 font-medium">Команд пока нет</p>
+              <p className="mb-0 mt-1 text-sm text-fg-muted">
+                Добавьте первую команду с помощью кнопки выше.
+              </p>
+            </div>
           ) : null}
           {!isLoading && teams.length > 0 ? (
             <div className="overflow-x-auto">
@@ -472,7 +475,7 @@ export function TeamManagementPage() {
                                 : statuses[team.id] === 'failed'
                                   ? 'Ошибка'
                                   : statuses[team.id] === 'running'
-                                    ? 'Обрабатывается'
+                                    ? 'Проверяется'
                                     : 'Нет оценки'
                               : 'Отключена'}
                           </span>
@@ -708,14 +711,14 @@ function TeamForm({
               ? 'Новый репозиторий'
               : step === 'details'
                 ? 'Данные команды'
-                : 'Проверка записи'}
+                : 'Проверьте данные команды'}
           </h2>
           <p className="mb-0 mt-1 text-sm text-fg-muted">
             {step === 'repo'
               ? 'Укажите GitHub-ссылку.'
               : step === 'details'
                 ? 'Название и ветка, которые попадут в реестр.'
-                : 'Проверьте запись перед сохранением.'}
+                : 'Проверьте название, репозиторий и ветку.'}
           </p>
         </div>
         <button
@@ -888,8 +891,8 @@ function TeamForm({
             </dl>
           </div>
           <p className="m-0 text-sm text-fg-muted">
-            После сохранения команда попадёт в рейтинг. Если автооценка включена, сервер проверит
-            выбранную ветку.
+            Команда появится в рейтинге после сохранения. Если включена следующая оценка, будет
+            проверена указанная ветка.
           </p>
           {isSaving && <LoadingBar />}
           <form onSubmit={onSubmit} className="flex flex-wrap gap-2">
@@ -903,7 +906,7 @@ function TeamForm({
             </button>
             <button className={button} disabled={isSaving} type="submit">
               <Check size={16} aria-hidden="true" />
-              {isSaving ? 'Сохраняем…' : 'Добавить в реестр'}
+              {isSaving ? 'Сохраняем…' : 'Сохранить команду'}
             </button>
           </form>
         </div>

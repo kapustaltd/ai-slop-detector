@@ -54,11 +54,11 @@ export function EmptyState({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-3 rounded-panel border border-dashed border-line-strong bg-muted-surface px-6 py-6.5 text-center ${className ?? ''}`}
+      className={`flex flex-col items-start gap-2 border-y border-line px-1 py-6 text-left ${className ?? ''}`}
     >
-      <Icon aria-hidden="true" size={30} strokeWidth={1.5} className="text-fg-faint" />
+      <Icon aria-hidden="true" size={22} strokeWidth={1.5} className="text-fg-subtle" />
       <div className="text-strong">{title}</div>
-      <div className="max-w-[420px] text-[14px] leading-[1.6] text-fg-muted">{description}</div>
+      <div className="max-w-[540px] text-[14px] leading-[1.6] text-fg-muted">{description}</div>
       {action ? (
         <button
           type="button"

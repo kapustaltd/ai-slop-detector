@@ -17,10 +17,10 @@ export function getCurrentAction(progress: RegistryEvaluationProgress) {
   if (active.length > 1)
     return `Проверяются области: ${active.map((area) => areaLabels[area.area]).join(', ')}.`
   if (progress.stage === 'publishing') return 'Сохраняются проверенные результаты.'
-  if (progress.status === 'done') return 'Оценка завершена.'
-  if (progress.status === 'failed') return 'Оценка остановилась с ошибкой.'
-  if (progress.stage === 'waiting') return 'Задание ожидает запуска.'
-  if (progress.stage === 'dispatching') return 'Задание передаётся сервису оценки.'
-  if (progress.stage === 'runner_queued') return 'Задание ожидает свободного исполнителя.'
-  return 'Подготавливаю репозиторий к анализу.'
+  if (progress.status === 'done') return 'Оценка готова.'
+  if (progress.status === 'failed') return 'Проверка прервана.'
+  if (progress.stage === 'waiting') return 'Проверка в очереди.'
+  if (progress.stage === 'dispatching') return 'Передаём репозиторий на проверку.'
+  if (progress.stage === 'runner_queued') return 'Ожидаем свободного исполнителя.'
+  return 'Подготавливаем репозиторий к проверке.'
 }

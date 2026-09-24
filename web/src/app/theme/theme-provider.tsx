@@ -1,5 +1,5 @@
 import { Moon, Sun } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 import { applyTheme, getInitialTheme, type Theme } from '@/shared/config'
 
@@ -10,6 +10,11 @@ import { applyTheme, getInitialTheme, type Theme } from '@/shared/config'
  * подпись «Тёмная тема»/«Светлая тема» в фиксированном верхнем правом углу перекрывала контент
  * страниц на ширине от 360 px (FR-015 фичи 005).
  */
+const ThemeContext = createContext<{
+  theme: Theme
+  setTheme: (theme: Theme) => void
+} | null>(null)
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => getInitialTheme())
 
@@ -17,22 +22,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(theme)
   }, [theme])
 
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>
+}
+
+export function ThemeToggle() {
+  const context = useContext(ThemeContext)
+  if (!context) return null
+  const { theme, setTheme } = context
   return (
-    <>
-      <button
-        type="button"
-        aria-label="Сменить тему"
-        title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        className="fixed top-3 right-3 z-10 flex h-[var(--ds-control-mobile)] w-[var(--ds-control-mobile)] items-center justify-center rounded-control border border-line-strong bg-surface text-fg md:size-10"
-      >
-        {theme === 'dark' ? (
-          <Sun aria-hidden="true" size={18} strokeWidth={1.9} />
-        ) : (
-          <Moon aria-hidden="true" size={18} strokeWidth={1.9} />
-        )}
-      </button>
-      {children}
-    </>
+    <button
+      type="button"
+      aria-label="Сменить тему"
+      title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className="flex size-10 shrink-0 items-center justify-center rounded-control border border-line text-fg hover:bg-muted-surface"
+    >
+      {theme === 'dark' ? (
+        <Sun aria-hidden="true" size={18} strokeWidth={1.9} />
+      ) : (
+        <Moon aria-hidden="true" size={18} strokeWidth={1.9} />
+      )}
+    </button>
   )
 }

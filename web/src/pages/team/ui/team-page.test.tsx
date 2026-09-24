@@ -136,9 +136,7 @@ describe('TeamPage', () => {
       }),
     )
     renderTeam()
-    expect(
-      await screen.findByRole('heading', { name: 'Оценка команды выполняется' }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'team-01' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
     expect(screen.getAllByText('Backend').length).toBeGreaterThan(0)
     expect(screen.getByText('Ожидает запуска')).toBeInTheDocument()

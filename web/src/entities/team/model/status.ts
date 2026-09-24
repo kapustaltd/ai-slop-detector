@@ -24,10 +24,10 @@ export type SortKey = 'rank' | 'total' | 'backend' | 'frontend'
 export type SortDirection = 'asc' | 'desc'
 
 const STATUS_LABELS: Record<EvaluationStatus, string> = {
-  done: 'Оценено',
-  failed: 'Не удалось',
+  done: 'Оценка готова',
+  failed: 'Проверка прервана',
   no_data: 'Нет данных',
-  running: 'Выполняется',
+  running: 'Проверяется',
 }
 
 export function statusLabel(status: EvaluationStatus): string {
@@ -75,7 +75,7 @@ export function describeStatus(status: EvaluationStatus, partial: boolean): Stat
       icon: Check,
       tone: 'strength',
       label: statusLabel(status),
-      description: 'Оценка завершена.',
+      description: 'Результат автоматической проверки готов.',
     }
   }
   if (status === 'failed') {
@@ -83,7 +83,7 @@ export function describeStatus(status: EvaluationStatus, partial: boolean): Stat
       icon: CircleX,
       tone: 'critical',
       label: statusLabel(status),
-      description: 'Оценка не удалась. Повторный запуск доступен оператору.',
+      description: 'Проверка прервана. Повторный запуск доступен оператору.',
     }
   }
   if (status === 'running') {
@@ -91,7 +91,7 @@ export function describeStatus(status: EvaluationStatus, partial: boolean): Stat
       icon: LoaderCircle,
       tone: 'info',
       label: statusLabel(status),
-      description: 'Оценка выполняется.',
+      description: 'Проверка выполняется.',
     }
   }
   return {

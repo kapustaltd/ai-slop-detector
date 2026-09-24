@@ -90,9 +90,7 @@ export function LeaderboardPage() {
 
   return (
     <main className="mx-auto max-w-[1600px] space-y-[18px] p-4 sm:p-6">
-      {/* pr-* резервирует место под фиксированную кнопку темы (ThemeProvider) — иначе на
-          некоторых ширинах она перекрывает текст справа (найдено визуальной проверкой FR-015). */}
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line pr-[52px] pb-4 md:pr-[46px]">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-[17px] font-semibold tracking-[-0.01em]">Рейтинг команд</h1>
           <p className="text-[13.5px] text-fg-subtle">{formatTeamCount(total)}</p>
@@ -111,8 +109,8 @@ export function LeaderboardPage() {
       {total === 0 ? (
         <EmptyState
           icon={BarChart3}
-          title="Оценок пока нет"
-          description="В реестре пока нет активных команд. После добавления команда появится здесь, а оценка — по завершении обработки."
+          title="Рейтинг появится после проверки команд"
+          description="Добавьте команды в реестр. Результаты появятся здесь после проверки репозиториев."
         />
       ) : (
         <>

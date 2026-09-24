@@ -57,9 +57,9 @@ describe('guided team entry', () => {
 
     await user.click(screen.getByRole('button', { name: 'Удалить Альфа' }))
     expect(screen.queryByLabelText('Токен оператора')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Удалить' }))
+    await user.click(screen.getByRole('button', { name: 'Удалить команду' }))
     expect(await screen.findByText('Команда удалена из реестра.')).toBeInTheDocument()
-    expect(screen.getByText('В реестре пока нет команд.')).toBeInTheDocument()
+    expect(screen.getByText('Команд пока нет')).toBeInTheDocument()
     expect(fetchMock.mock.calls.some(([, options]) => options?.method === 'PUT')).toBe(true)
     expect(fetchMock.mock.calls.some(([, options]) => options?.method === 'DELETE')).toBe(true)
   })
@@ -127,10 +127,10 @@ describe('guided team entry', () => {
     await user.click(screen.getByRole('button', { name: 'Посмотреть итог' }))
     expect(screen.getByText('https://github.com/org/project')).toBeInTheDocument()
     expect(postCount).toBe(0)
-    await user.click(screen.getByRole('button', { name: 'Добавить в реестр' }))
+    await user.click(screen.getByRole('button', { name: 'Сохранить команду' }))
     expect(await screen.findAllByText('Сервис занят')).toHaveLength(1)
-    expect(screen.getByRole('button', { name: 'Добавить в реестр' })).toBeEnabled()
-    await user.click(screen.getByRole('button', { name: 'Добавить в реестр' }))
+    expect(screen.getByRole('button', { name: 'Сохранить команду' })).toBeEnabled()
+    await user.click(screen.getByRole('button', { name: 'Сохранить команду' }))
     await waitFor(() => expect(screen.getByText(/Команда добавлена/)).toBeInTheDocument())
     expect(postCount).toBe(2)
   })
@@ -164,16 +164,16 @@ describe('guided team entry', () => {
     )
     await user.click(screen.getByRole('button', { name: 'Продолжить' }))
     await user.click(await screen.findByRole('button', { name: 'Посмотреть итог' }))
-    await user.click(screen.getByRole('button', { name: 'Добавить в реестр' }))
+    await user.click(screen.getByRole('button', { name: 'Сохранить команду' }))
 
-    expect(await screen.findByText('Задание ожидает запуска.')).toBeInTheDocument()
+    expect(await screen.findByText('Проверка в очереди.')).toBeInTheDocument()
     expect(await screen.findByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Смотреть ход оценки' })).toHaveAttribute(
       'href',
       '/team/project',
     )
     await waitFor(() => expect(progressCalls).toBeGreaterThan(1), { timeout: 5000 })
-    expect(await screen.findByText('Оценка завершена.')).toBeInTheDocument()
+    expect(await screen.findByText('Оценка готова.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Открыть отчёт' })).toHaveAttribute(
       'href',
       '/team/project',

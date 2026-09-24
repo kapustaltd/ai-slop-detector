@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 
+import { ThemeToggle } from '../theme/theme-provider'
+
 export function AppShell() {
   const [registryApiAvailable, setRegistryApiAvailable] = useState(false)
   const location = useLocation()
@@ -28,29 +30,45 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh bg-bg text-fg">
-      <header className="border-b bg-surface">
-        <div className="mx-auto flex max-w-[1600px] items-center px-4 py-3 pr-16 sm:px-6 sm:pr-16">
+      <header className="border-b border-line bg-surface">
+        <div className="mx-auto grid max-w-[1320px] grid-cols-[1fr_auto] items-center gap-x-2 px-3 py-2 sm:flex sm:gap-6 sm:px-6">
           <Link
             aria-label="На главную"
-            className="flex min-h-11 min-w-0 items-center gap-3 rounded-md text-fg no-underline hover:text-fg hover:no-underline"
+            className="col-span-2 flex min-h-11 min-w-0 items-center gap-2 rounded-md text-fg no-underline hover:text-fg hover:no-underline sm:gap-3"
             to="/"
           >
             <img
               alt=""
               aria-hidden="true"
-              className="size-9 shrink-0 rounded-lg object-cover outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
+              className="size-8 shrink-0 rounded-lg object-cover outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10 sm:size-9"
               src="/cyber-fish-logo.svg"
             />
-            <span className="text-[15px] font-semibold tracking-[-0.01em]">Оценка кода</span>
+            <span className="text-sm font-semibold tracking-[-0.01em] sm:text-[15px]">
+              Проверка проектов
+            </span>
           </Link>
-          {registryApiAvailable && location.pathname !== '/manage/teams' ? (
+          <nav
+            aria-label="Основная навигация"
+            className="flex items-center gap-1 text-sm sm:ml-auto"
+          >
             <Link
-              className="ml-auto inline-flex min-h-11 items-center rounded-control px-3 text-sm text-fg no-underline hover:bg-muted-surface"
-              to="/manage/teams"
+              aria-current={location.pathname === '/' ? 'page' : undefined}
+              className={`inline-flex min-h-11 items-center rounded-control px-2 no-underline hover:bg-muted-surface sm:px-3 ${location.pathname === '/' ? 'font-semibold text-fg' : 'text-fg-muted'}`}
+              to="/"
             >
-              Команды
+              Рейтинг
             </Link>
-          ) : null}
+            {registryApiAvailable ? (
+              <Link
+                aria-current={location.pathname === '/manage/teams' ? 'page' : undefined}
+                className={`inline-flex min-h-11 items-center rounded-control px-2 no-underline hover:bg-muted-surface sm:px-3 ${location.pathname === '/manage/teams' ? 'font-semibold text-fg' : 'text-fg-muted'}`}
+                to="/manage/teams"
+              >
+                Команды
+              </Link>
+            ) : null}
+          </nav>
+          <ThemeToggle />
         </div>
       </header>
       <div

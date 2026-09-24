@@ -6,15 +6,15 @@ import { TeamStatusBadge } from './team-status-badge'
 describe('TeamStatusBadge', () => {
   it('показывает подпись и доступное пояснение для каждого статуса', () => {
     render(<TeamStatusBadge status="done" />)
-    expect(screen.getByText('Оценено')).toBeInTheDocument()
-    expect(screen.getByText('Оценка завершена.')).toBeInTheDocument()
+    expect(screen.getByText('Оценка готова')).toBeInTheDocument()
+    expect(screen.getByText('Результат автоматической проверки готов.')).toBeInTheDocument()
   })
 
   it('для failed поясняет, что нужен повторный запуск', () => {
     render(<TeamStatusBadge status="failed" />)
-    expect(screen.getByText('Не удалось')).toBeInTheDocument()
+    expect(screen.getByText('Проверка прервана')).toBeInTheDocument()
     expect(
-      screen.getByText('Оценка не удалась. Повторный запуск доступен оператору.'),
+      screen.getByText('Проверка прервана. Повторный запуск доступен оператору.'),
     ).toBeInTheDocument()
   })
 
@@ -26,12 +26,12 @@ describe('TeamStatusBadge', () => {
 
   it('для running показывает статус выполнения', () => {
     render(<TeamStatusBadge status="running" />)
-    expect(screen.getByText('Выполняется')).toBeInTheDocument()
+    expect(screen.getByText('Проверяется')).toBeInTheDocument()
   })
 
   it('частичную оценку показывает как «Частично», а не «Оценено»', () => {
     render(<TeamStatusBadge status="done" partial />)
     expect(screen.getByText('Частично')).toBeInTheDocument()
-    expect(screen.queryByText('Оценено')).not.toBeInTheDocument()
+    expect(screen.queryByText('Оценка готова')).not.toBeInTheDocument()
   })
 })
