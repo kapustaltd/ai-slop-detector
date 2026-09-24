@@ -5,10 +5,19 @@ import { Link } from 'react-router-dom'
 import {
   checkRegistryApi,
   createRegistryTeam,
+  getRegistryEvaluationStatus,
   getRegistryTeams,
   RegistryApiError,
+  type RegistryEvaluationStatus,
   type RegistryTeam,
 } from '@/shared/api'
+import {
+  ChainOfThought,
+  ChainOfThoughtContent,
+  ChainOfThoughtHeader,
+  ChainOfThoughtStep,
+  type ChainOfThoughtStepStatus,
+} from '@/shared/ui/shadcn/chain-of-thought'
 
 type TeamDraft = Pick<RegistryTeam, 'id' | 'name' | 'repo' | 'branch' | 'active'>
 
@@ -22,6 +31,7 @@ export function TeamManagementPage() {
   const [apiAvailable, setApiAvailable] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [trackedTeam, setTrackedTeam] = useState<TeamDraft | null>(null)
   const [step, setStep] = useState<'repo' | 'details' | 'review'>('repo')
   const [isChecking, setIsChecking] = useState(false)
 
@@ -153,8 +163,9 @@ export function TeamManagementPage() {
     setNotice('')
     try {
       await createRegistryTeam(draft)
+      setTrackedTeam(draft)
       setDraft(null)
-      setNotice('Команда добавлена. Статус обработки появится в рейтинге.')
+      setNotice('Команда добавлена в реестр.')
       setStep('repo')
       void loadTeams()
     } catch (cause) {
@@ -190,6 +201,7 @@ export function TeamManagementPage() {
               setStep('repo')
               setError('')
               setNotice('')
+              setTrackedTeam(null)
             }}
           >
             <Plus aria-hidden="true" size={17} />
@@ -238,6 +250,8 @@ export function TeamManagementPage() {
           {notice}
         </p>
       ) : null}
+
+      {trackedTeam ? <RepositoryProgress key={trackedTeam.id} team={trackedTeam} /> : null}
 
       {apiAvailable ? (
         <section
@@ -296,6 +310,85 @@ export function TeamManagementPage() {
         </section>
       ) : null}
     </main>
+  )
+}
+
+function RepositoryProgress({ team }: { team: TeamDraft }) {
+  const [status, setStatus] = useState<RegistryEvaluationStatus>(
+    team.active ? 'running' : 'no_data',
+  )
+  const [pollError, setPollError] = useState(false)
+
+  useEffect(() => {
+    if (!team.active) return
+    let stopped = false
+    let timer: ReturnType<typeof setTimeout>
+    const poll = async () => {
+      try {
+        const nextStatus = await getRegistryEvaluationStatus(team.id)
+        if (stopped) return
+        setPollError(false)
+        if (nextStatus) setStatus(nextStatus)
+        if (nextStatus === 'done' || nextStatus === 'failed' || nextStatus === 'no_data') return
+      } catch {
+        if (stopped) return
+        setPollError(true)
+      }
+      timer = setTimeout(() => void poll(), 3000)
+    }
+    void poll()
+    return () => {
+      stopped = true
+      clearTimeout(timer)
+    }
+  }, [team.active, team.id])
+
+  const processing: ChainOfThoughtStepStatus =
+    status === 'done' ? 'complete' : status === 'running' ? 'active' : 'pending'
+  const report: ChainOfThoughtStepStatus = status === 'done' ? 'complete' : 'pending'
+
+  return (
+    <section
+      aria-label={`Обработка репозитория ${team.name}`}
+      className="rounded-panel border border-line bg-surface p-4 sm:p-5"
+    >
+      <h2 className="m-0 text-lg font-semibold">Обработка репозитория</h2>
+      <p className="mb-2 mt-1 text-sm text-fg-muted break-all">{team.repo}</p>
+      <ChainOfThought defaultOpen>
+        <ChainOfThoughtHeader>Этапы обработки</ChainOfThoughtHeader>
+        <ChainOfThoughtContent>
+          <ChainOfThoughtStep label="Проверка ссылки и реестра" status="complete" />
+          <ChainOfThoughtStep label="Добавление команды" status="complete" />
+          <ChainOfThoughtStep
+            label="Оценка репозитория"
+            description={
+              status === 'running' ? 'Сервер обрабатывает код и готовит результаты.' : undefined
+            }
+            status={processing}
+          />
+          <ChainOfThoughtStep label="Публикация отчёта" status={report} />
+        </ChainOfThoughtContent>
+      </ChainOfThought>
+      <p role="status" className="mb-0 mt-3 text-sm text-fg-muted">
+        {status === 'done'
+          ? 'Отчёт готов.'
+          : status === 'failed'
+            ? 'Оценка завершилась с ошибкой.'
+            : status === 'no_data'
+              ? 'Оценка не запущена или пока недоступна.'
+              : pollError
+                ? 'Связь со статусом прервана. Повторяем проверку…'
+                : 'Оценка выполняется. Статус обновляется автоматически.'}
+      </p>
+      {status === 'done' ? (
+        <Link
+          className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm text-link"
+          to={`/team/${encodeURIComponent(team.id)}`}
+        >
+          Открыть отчёт <ArrowRight aria-hidden="true" size={16} />
+        </Link>
+      ) : null}
+    </section>
   )
 }
 

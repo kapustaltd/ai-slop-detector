@@ -12,6 +12,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  type TooltipContentProps,
 } from 'recharts'
 
 import type { StatsBundle, TeamArea } from '@/shared/api'
@@ -28,6 +29,30 @@ export interface AreaProfileProps {
   areaName: 'backend' | 'frontend'
   area: TeamArea
   stats?: StatsBundle['areas'][number]
+}
+
+const tooltipNumber = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 })
+
+function AreaChartTooltip({ active, payload, label }: TooltipContentProps) {
+  if (!active || !payload?.length) return null
+
+  return (
+    <div className="max-w-64 rounded-control border border-line bg-surface p-3 text-sm text-fg shadow-md">
+      <p className="m-0 mb-2 font-medium break-words">{label}</p>
+      <ul className="m-0 list-none space-y-1 p-0">
+        {payload.map((entry) => (
+          <li key={entry.dataKey?.toString() ?? entry.name} className="flex justify-between gap-4">
+            <span>{entry.name}</span>
+            <span className="font-medium tabular-nums">
+              {typeof entry.value === 'number'
+                ? tooltipNumber.format(entry.value)
+                : String(entry.value ?? '')}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
 }
 
 export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
@@ -69,7 +94,7 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
                   fillOpacity={1}
                   strokeWidth={2.2}
                 />
-                <Tooltip />
+                <Tooltip content={AreaChartTooltip} />
                 <Legend verticalAlign="bottom" wrapperStyle={{ paddingTop: 16 }} />
               </RadarChart>
             </ResponsiveContainer>
@@ -92,7 +117,7 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--ds-chart-grid)" />
                   <XAxis type="number" domain={[0, 10]} tick={{ fontSize: 10 }} />
                   <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10 }} />
-                  <Tooltip />
+                  <Tooltip content={AreaChartTooltip} />
                   <Legend />
                   <Bar dataKey="score" name="Команда" fill="var(--ds-chart-team-stroke)" />
                   <Bar dataKey="mean" name="Среднее" fill="var(--ds-chart-average-bar)" />

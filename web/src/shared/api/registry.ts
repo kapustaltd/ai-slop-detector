@@ -33,6 +33,21 @@ export async function createRegistryTeam(team: RegistryTeam) {
   return request<RegistryTeam>('/api/teams', 'POST', team)
 }
 
+export type RegistryEvaluationStatus = 'done' | 'failed' | 'no_data' | 'running'
+
+/** Read only the live index: a build-time bundle cannot report current progress. */
+export async function getRegistryEvaluationStatus(
+  teamId: string,
+): Promise<RegistryEvaluationStatus | null> {
+  const response = await fetch('/api/bundle/index', { cache: 'no-store' })
+  if (!response.ok)
+    throw new RegistryApiError('Не удалось получить статус обработки', response.status)
+  const index = (await response.json()) as {
+    teams?: { team_id: string; status: RegistryEvaluationStatus }[]
+  }
+  return index.teams?.find((team) => team.team_id === teamId)?.status ?? null
+}
+
 async function request<T>(url: string, method = 'GET', body?: RegistryTeam): Promise<T> {
   let response: Response
   try {

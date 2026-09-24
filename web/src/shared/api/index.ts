@@ -23,7 +23,9 @@ export {
 export {
   checkRegistryApi,
   createRegistryTeam,
+  getRegistryEvaluationStatus,
   getRegistryTeams,
   RegistryApiError,
+  type RegistryEvaluationStatus,
   type RegistryTeam,
 } from './registry'

@@ -85,4 +85,53 @@ describe('guided team entry', () => {
     await waitFor(() => expect(screen.getByText(/Команда добавлена/)).toBeInTheDocument())
     expect(postCount).toBe(2)
   })
+
+  it('shows live processing steps and the report when evaluation completes', async () => {
+    let finishEvaluation!: (response: Response) => void
+    const liveStatus = new Promise<Response>((resolve) => {
+      finishEvaluation = resolve
+    })
+    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
+      if (url === '/api/bundle/index') return liveStatus
+      if (options?.method === 'POST') return json({ id: 'project' }, 201)
+      return json([])
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Добавить команду' }))
+    await user.type(
+      screen.getByRole('textbox', { name: 'Ссылка на репозиторий' }),
+      'https://github.com/org/project',
+    )
+    await user.click(screen.getByRole('button', { name: 'Продолжить' }))
+    await user.click(await screen.findByRole('button', { name: 'Посмотреть итог' }))
+    await user.click(screen.getByRole('button', { name: 'Добавить в реестр' }))
+
+    expect(await screen.findByText('Оценка репозитория')).toBeInTheDocument()
+    expect(screen.getByText('Оценка репозитория').closest('li')).toHaveAttribute(
+      'data-status',
+      'active',
+    )
+    expect(screen.getByText('Публикация отчёта').closest('li')).toHaveAttribute(
+      'data-status',
+      'pending',
+    )
+
+    finishEvaluation(json({ teams: [{ team_id: 'project', status: 'done' }] }))
+    expect(await screen.findByText('Отчёт готов.')).toBeInTheDocument()
+    expect(screen.getByText('Публикация отчёта').closest('li')).toHaveAttribute(
+      'data-status',
+      'complete',
+    )
+    expect(screen.getByRole('link', { name: 'Открыть отчёт' })).toHaveAttribute(
+      'href',
+      '/team/project',
+    )
+  })
 })
