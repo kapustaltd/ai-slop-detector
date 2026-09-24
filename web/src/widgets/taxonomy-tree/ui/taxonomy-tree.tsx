@@ -59,7 +59,7 @@ export function TaxonomyTree({
         <button
           type="button"
           onClick={collapseAll}
-          className="h-[30px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] text-fg"
+          className="min-h-11 rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] text-fg md:min-h-10"
         >
           Свернуть всё
         </button>

@@ -99,7 +99,10 @@ export function LeaderboardTable({ teams, sort, onSort }: LeaderboardTableProps)
                 </td>
                 <td className="px-4 py-2.5">
                   {team.status === 'done' || team.status === 'running' ? (
-                    <Link to={`/team/${team.team_id}`} className="text-strong no-underline">
+                    <Link
+                      to={`/team/${team.team_id}`}
+                      className="inline-flex min-h-10 items-center text-strong no-underline"
+                    >
                       {team.name}
                     </Link>
                   ) : (

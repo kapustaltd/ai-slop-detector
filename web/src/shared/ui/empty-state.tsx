@@ -43,7 +43,7 @@ export function EmptyState({
           <button
             type="button"
             onClick={action.onClick}
-            className="h-[30px] shrink-0 rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] font-medium text-fg"
+            className="min-h-11 shrink-0 rounded-control border border-line-strong bg-surface px-3 text-[14px] font-medium text-fg hover:bg-muted-surface md:min-h-10"
           >
             {action.label}
           </button>
@@ -63,7 +63,7 @@ export function EmptyState({
         <button
           type="button"
           onClick={action.onClick}
-          className="h-[30px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] font-medium text-fg"
+          className="min-h-11 rounded-control border border-line-strong bg-surface px-3 text-[14px] font-medium text-fg hover:bg-muted-surface md:min-h-10"
         >
           {action.label}
         </button>

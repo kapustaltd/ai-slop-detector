@@ -134,7 +134,7 @@ export function FindingCard({
             type="button"
             aria-expanded={false}
             onClick={onToggle}
-            className="flex h-7 shrink-0 items-center gap-[5px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] text-fg"
+            className="flex min-h-11 shrink-0 items-center gap-[5px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] text-fg md:min-h-10"
           >
             {state === 'unverified' ? 'Подробнее' : finding.snippet ? 'Показать код' : 'Подробнее'}
             <ChevronDown aria-hidden="true" size={12} strokeWidth={2.2} />
@@ -170,7 +170,7 @@ export function FindingCard({
             href={finding.permalink}
             target="_blank"
             rel="noreferrer"
-            className="flex h-7 shrink-0 items-center gap-[5px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] text-fg no-underline"
+            className="flex min-h-11 shrink-0 items-center gap-[5px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] text-fg no-underline md:min-h-10"
           >
             Открыть на {permalinkBase}
             <ExternalLink aria-hidden="true" size={12} strokeWidth={2} />
@@ -181,7 +181,7 @@ export function FindingCard({
             type="button"
             aria-expanded={codeExpanded}
             onClick={() => setCodeExpanded((value) => !value)}
-            className="flex h-7 shrink-0 items-center gap-[5px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] text-fg"
+            className="flex min-h-11 shrink-0 items-center gap-[5px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[14px] text-fg md:min-h-10"
           >
             {codeExpanded ? 'Свернуть код' : 'Показать код'}
             {codeExpanded ? (

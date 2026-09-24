@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         aria-label="Сменить тему"
         title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        className="fixed top-3 right-3 z-10 flex h-[var(--ds-control-mobile)] w-[var(--ds-control-mobile)] items-center justify-center rounded-control border border-line-strong bg-surface text-fg md:h-[var(--ds-control-desktop)] md:w-[var(--ds-control-desktop)]"
+        className="fixed top-3 right-3 z-10 flex h-[var(--ds-control-mobile)] w-[var(--ds-control-mobile)] items-center justify-center rounded-control border border-line-strong bg-surface text-fg md:size-10"
       >
         {theme === 'dark' ? (
           <Sun aria-hidden="true" size={18} strokeWidth={1.9} />

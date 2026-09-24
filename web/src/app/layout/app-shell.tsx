@@ -4,6 +4,13 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 export function AppShell() {
   const [registryApiAvailable, setRegistryApiAvailable] = useState(false)
   const location = useLocation()
+  const [routeState, setRouteState] = useState<{
+    path: string
+    animatedPath: string | null
+  }>({ path: location.pathname, animatedPath: null })
+  if (routeState.path !== location.pathname) {
+    setRouteState({ path: location.pathname, animatedPath: location.pathname })
+  }
 
   useEffect(() => {
     let active = true
@@ -31,7 +38,7 @@ export function AppShell() {
             <img
               alt=""
               aria-hidden="true"
-              className="size-9 shrink-0 rounded-lg object-cover outline outline-1 -outline-offset-1 outline-line"
+              className="size-9 shrink-0 rounded-lg object-cover outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
               src="/cyber-fish-logo.svg"
             />
           </Link>
@@ -45,7 +52,12 @@ export function AppShell() {
           ) : null}
         </div>
       </header>
-      <Outlet />
+      <div
+        key={location.pathname}
+        className={routeState.animatedPath === location.pathname ? 'route-page' : undefined}
+      >
+        <Outlet />
+      </div>
     </div>
   )
 }

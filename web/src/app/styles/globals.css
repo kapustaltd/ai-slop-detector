@@ -173,6 +173,18 @@
   --ds-code-line-number: #6e7681;
 }
 
+/* Keep route changes legible without moving the dashboard data users are reading. */
+.route-page {
+  opacity: 1;
+  transition: opacity 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@starting-style {
+  .route-page {
+    opacity: 0;
+  }
+}
+
 /* Токены, доступные утилитами Tailwind: bg-surface, text-fg-muted, text-lead и т. д. */
 @theme inline {
   --color-bg: var(--ds-bg);
@@ -271,6 +283,23 @@
     font-variant-numeric: tabular-nums;
   }
 
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
   /* tokens.json → focus: outline: none не допускается нигде */
   :focus-visible {
     outline: 2px solid var(--ds-primary);
@@ -293,6 +322,26 @@
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
     }
+  }
+}
+
+/* Interactive feedback is brief, interruptible, and shared across every route. */
+button:not(:disabled):not([data-press-static]),
+a[href]:not([data-press-static]) {
+  transition-property: scale, transform, color, background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+button:not(:disabled):not([data-press-static]):active,
+a[href]:not([data-press-static]):active {
+  scale: 0.96;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):not([data-press-static]):active,
+  a[href]:not([data-press-static]):active {
+    scale: 1;
   }
 }
 

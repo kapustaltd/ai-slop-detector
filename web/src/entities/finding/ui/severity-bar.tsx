@@ -31,7 +31,7 @@ export function SeverityBar({ counts, activeSeverity, onSelect, className }: Sev
       {total === 0 ? (
         <div className="h-3.5 rounded-[6px] border border-dashed border-line-strong" />
       ) : (
-        <div className="flex h-3.5 gap-0.5">
+        <div className="flex h-11 gap-0.5 xl:h-10">
           {SEVERITY_ORDER.filter((severity) => counts[severity] > 0).map((severity, index, arr) => (
             <button
               key={severity}
@@ -39,16 +39,27 @@ export function SeverityBar({ counts, activeSeverity, onSelect, className }: Sev
               aria-label={`${SEVERITY_PLURAL_LABEL[severity]}: ${counts[severity]} — показать только их`}
               aria-pressed={activeSeverity === severity}
               onClick={() => toggle(severity)}
-              className={
-                index === 0 ? 'rounded-l-[6px]' : index === arr.length - 1 ? 'rounded-r-[6px]' : ''
-              }
+              className="relative h-full"
               style={{
                 width: `${(counts[severity] / total) * 100}%`,
-                background: SEVERITY_CHART_VAR[severity],
-                outline: activeSeverity === severity ? '2px solid var(--ds-fg)' : undefined,
-                outlineOffset: activeSeverity === severity ? '1px' : undefined,
               }}
-            />
+            >
+              <span
+                aria-hidden="true"
+                className={`absolute inset-x-0 top-1/2 h-3.5 -translate-y-1/2 ${
+                  index === 0
+                    ? 'rounded-l-[6px]'
+                    : index === arr.length - 1
+                      ? 'rounded-r-[6px]'
+                      : ''
+                }`}
+                style={{
+                  background: SEVERITY_CHART_VAR[severity],
+                  outline: activeSeverity === severity ? '2px solid var(--ds-fg)' : undefined,
+                  outlineOffset: activeSeverity === severity ? '1px' : undefined,
+                }}
+              />
+            </button>
           ))}
         </div>
       )}

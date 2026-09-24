@@ -18,7 +18,7 @@ export function ChainOfThoughtHeader({
   return (
     <Collapsible.Trigger
       className={cn(
-        'group inline-flex min-h-9 items-center gap-1 text-sm text-fg-muted hover:text-fg',
+        'group inline-flex min-h-11 items-center gap-1 text-sm text-fg-muted hover:text-fg md:min-h-10',
         className,
       )}
       {...props}

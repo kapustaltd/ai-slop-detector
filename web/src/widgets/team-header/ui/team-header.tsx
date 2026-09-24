@@ -36,7 +36,7 @@ export function TeamHeader({ team, rankContext }: TeamHeaderProps) {
           aria-label="Хлебные крошки"
           className="flex items-center gap-2 text-[14.5px] text-fg-muted"
         >
-          <Link to="/" className="no-underline">
+          <Link to="/" className="inline-flex min-h-11 items-center no-underline md:min-h-10">
             Рейтинг
           </Link>
           <span className="text-fg-subtle">/</span>
@@ -47,7 +47,7 @@ export function TeamHeader({ team, rankContext }: TeamHeaderProps) {
             {rankContext.previousTeamId ? (
               <Link
                 to={`/team/${rankContext.previousTeamId}`}
-                className="flex h-8 items-center gap-1.5 rounded-control border border-line-strong px-2.5 text-[14.5px] text-fg no-underline"
+                className="flex min-h-11 items-center gap-1.5 rounded-control border border-line-strong px-2.5 text-[14.5px] text-fg no-underline md:min-h-10"
               >
                 <ChevronLeft aria-hidden="true" size={13} strokeWidth={2.2} />
                 Предыдущая команда
@@ -56,7 +56,7 @@ export function TeamHeader({ team, rankContext }: TeamHeaderProps) {
             {rankContext.nextTeamId ? (
               <Link
                 to={`/team/${rankContext.nextTeamId}`}
-                className="flex h-8 items-center gap-1.5 rounded-control border border-line-strong px-2.5 text-[14.5px] text-fg no-underline"
+                className="flex min-h-11 items-center gap-1.5 rounded-control border border-line-strong px-2.5 text-[14.5px] text-fg no-underline md:min-h-10"
               >
                 Следующая команда
                 <ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
