@@ -530,22 +530,21 @@ export function TeamManagementPage() {
 }
 
 function RepositoryProgress({ team }: { team: TeamDraft }) {
-  const [progress, setProgress] = useState<RegistryEvaluationProgress>({
-    status: team.active ? 'running' : 'no_data',
-    stage: 'waiting',
-  })
+  const [progress, setProgress] = useState<RegistryEvaluationProgress | null>(() =>
+    team.active ? null : { status: 'no_data', stage: 'waiting' },
+  )
   const [pollError, setPollError] = useState(false)
   const [elapsed, setElapsed] = useState(0)
-  const [startedAt, setStartedAt] = useState(() => Date.now())
+  const [startedAt, setStartedAt] = useState<number | null>(null)
 
   useEffect(() => {
-    if (progress.status !== 'running') return
+    if (progress?.status !== 'running' || startedAt === null) return
     const timer = setInterval(
       () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000))),
       1000,
     )
     return () => clearInterval(timer)
-  }, [progress.status, startedAt])
+  }, [progress?.status, startedAt])
 
   useEffect(() => {
     if (!team.active) return
@@ -557,7 +556,15 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
         if (stopped) return
         setPollError(false)
         setProgress(nextProgress)
-        if (nextProgress.started_at) setStartedAt(new Date(nextProgress.started_at).getTime())
+        if (nextProgress.started_at) {
+          const timestamp = new Date(nextProgress.started_at).getTime()
+          if (Number.isFinite(timestamp)) {
+            setStartedAt(timestamp)
+            setElapsed(Math.max(0, Math.floor((Date.now() - timestamp) / 1000)))
+          }
+        } else if (nextProgress.status === 'running') {
+          setStartedAt((current) => current ?? Date.now())
+        }
         if (nextProgress.status !== 'running') return
       } catch {
         if (stopped) return
@@ -572,7 +579,7 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
     }
   }, [team.active, team.id])
 
-  const stages = progress.legacy
+  const stages = progress?.legacy
     ? [
         {
           stage: 'waiting' as const,
@@ -581,9 +588,12 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
         },
       ]
     : evaluationStages
-  const currentStage = stages.findIndex((item) => item.stage === progress.stage)
-  const statusMessage =
-    progress.status === 'done'
+  const currentStage = progress ? stages.findIndex((item) => item.stage === progress.stage) : -1
+  const statusMessage = !progress
+    ? pollError
+      ? 'Не удалось получить статус. Повторяем проверку…'
+      : 'Получаем актуальный статус…'
+    : progress.status === 'done'
       ? 'Отчёт готов.'
       : progress.status === 'failed'
         ? 'Оценка завершилась с ошибкой.'
@@ -593,8 +603,8 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
             ? 'Связь со статусом прервана. Повторяем проверку…'
             : `${stages[currentStage]?.label ?? 'Оценка репозитория'}. Статус обновляется автоматически.`
   const stageStatus = (index: number): ChainOfThoughtStepStatus => {
-    if (progress.status === 'done' || index < currentStage) return 'complete'
-    if (index > currentStage || progress.status === 'no_data') return 'pending'
+    if (progress?.status === 'done' || (progress && index < currentStage)) return 'complete'
+    if (!progress || index > currentStage || progress.status === 'no_data') return 'pending'
     return progress.status === 'failed' ? 'failed' : 'active'
   }
   const activeStage = stages[currentStage]?.stage ?? 'waiting'
@@ -607,22 +617,24 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
     >
       <h2 className="m-0 text-lg font-semibold">Обработка репозитория</h2>
       <p className="mb-2 mt-1 text-sm text-fg-muted break-all">{team.repo}</p>
-      <ChainOfThought defaultOpen>
-        <ChainOfThoughtHeader>Этапы обработки</ChainOfThoughtHeader>
-        <ChainOfThoughtContent>
-          <ChainOfThoughtStep label="Проверка ссылки и реестра" status="complete" />
-          <ChainOfThoughtStep label="Добавление команды" status="complete" />
-          {stages.map((item, index) => (
-            <ChainOfThoughtStep
-              key={item.stage}
-              label={item.label}
-              description={stageStatus(index) === 'active' ? item.description : undefined}
-              status={stageStatus(index)}
-            />
-          ))}
-        </ChainOfThoughtContent>
-      </ChainOfThought>
-      {progress.status === 'running' ? (
+      {progress ? (
+        <ChainOfThought defaultOpen>
+          <ChainOfThoughtHeader>Этапы обработки</ChainOfThoughtHeader>
+          <ChainOfThoughtContent>
+            <ChainOfThoughtStep label="Проверка ссылки и реестра" status="complete" />
+            <ChainOfThoughtStep label="Добавление команды" status="complete" />
+            {stages.map((item, index) => (
+              <ChainOfThoughtStep
+                key={item.stage}
+                label={item.label}
+                description={stageStatus(index) === 'active' ? item.description : undefined}
+                status={stageStatus(index)}
+              />
+            ))}
+          </ChainOfThoughtContent>
+        </ChainOfThought>
+      ) : null}
+      {progress?.status === 'running' ? (
         <details className="group mt-2 border-t border-line pt-2 text-sm">
           <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 text-link marker:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
             <span className="group-open:hidden">Показать детали анализа</span>
@@ -662,17 +674,17 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
       <p role="status" className="mb-0 mt-3 text-sm text-fg-muted">
         {statusMessage}
       </p>
-      {progress.status === 'running' ? (
+      {progress?.status === 'running' ? (
         <p className="mb-0 mt-1 text-sm text-fg-muted">
           Прошло {Math.floor(elapsed / 60)} мин {String(elapsed % 60).padStart(2, '0')} с.
         </p>
       ) : null}
-      {progress.status === 'done' || progress.status === 'running' ? (
+      {progress?.status === 'done' || progress?.status === 'running' ? (
         <Link
           className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm text-link"
           to={`/team/${encodeURIComponent(team.id)}`}
         >
-          {progress.status === 'running' ? 'Смотреть обработанную часть' : 'Открыть отчёт'}{' '}
+          {progress?.status === 'running' ? 'Смотреть обработанную часть' : 'Открыть отчёт'}{' '}
           <ArrowRight aria-hidden="true" size={16} />
         </Link>
       ) : null}
