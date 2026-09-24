@@ -15,7 +15,7 @@ function json(data: unknown, status = 200) {
 }
 
 describe('guided team entry', () => {
-  it('updates a team with the operator token and deletes it without one', async () => {
+  it('updates and deletes a team without an operator token', async () => {
     const existing = {
       id: 'alpha',
       name: 'Альфа',
@@ -28,7 +28,7 @@ describe('guided team entry', () => {
       if (url === '/api/bundle/index')
         return json({ teams: [{ team_id: 'alpha', status: 'done' }] })
       if (options?.method === 'PUT') {
-        expect(options.headers).toMatchObject({ Authorization: 'Bearer secret' })
+        expect(options.headers).not.toHaveProperty('Authorization')
         teams = [JSON.parse(options.body as string)]
         return json(teams[0])
       }
@@ -48,9 +48,9 @@ describe('guided team entry', () => {
     )
 
     await user.click(await screen.findByRole('button', { name: 'Изменить Альфа' }))
+    expect(screen.queryByLabelText('Токен оператора')).not.toBeInTheDocument()
     await user.clear(screen.getByRole('textbox', { name: 'Ветка' }))
     await user.type(screen.getByRole('textbox', { name: 'Ветка' }), 'release')
-    await user.type(screen.getByLabelText('Токен оператора'), 'secret')
     await user.click(screen.getByRole('button', { name: 'Сохранить' }))
     expect(await screen.findByText('Команда обновлена.')).toBeInTheDocument()
     expect(screen.getByText('release')).toBeInTheDocument()

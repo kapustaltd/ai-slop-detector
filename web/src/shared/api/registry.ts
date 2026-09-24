@@ -33,8 +33,8 @@ export async function createRegistryTeam(team: RegistryTeam) {
   return request<RegistryTeam>('/api/teams', 'POST', team)
 }
 
-export async function updateRegistryTeam(team: RegistryTeam, token: string) {
-  return request<RegistryTeam>(`/api/teams/${encodeURIComponent(team.id)}`, 'PUT', team, token)
+export async function updateRegistryTeam(team: RegistryTeam) {
+  return request<RegistryTeam>(`/api/teams/${encodeURIComponent(team.id)}`, 'PUT', team)
 }
 
 export async function deleteRegistryTeam(teamId: string) {
@@ -95,7 +95,6 @@ async function request<T>(
   url: string,
   method = 'GET',
   body?: RegistryTeam,
-  token?: string,
 ): Promise<T> {
   let response: Response
   try {
@@ -104,7 +103,6 @@ async function request<T>(
       cache: 'no-store',
       headers: {
         ...(body ? { 'Content-Type': 'application/json' } : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
     })

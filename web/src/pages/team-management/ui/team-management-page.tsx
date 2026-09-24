@@ -41,7 +41,6 @@ export function TeamManagementPage() {
   const [isChecking, setIsChecking] = useState(false)
   const [editing, setEditing] = useState<RegistryTeam | null>(null)
   const [deleting, setDeleting] = useState<RegistryTeam | null>(null)
-  const [operatorToken, setOperatorToken] = useState('')
   const [statuses, setStatuses] = useState<Record<string, RegistryEvaluationStatus>>({})
 
   const checkRepository = async () => {
@@ -188,9 +187,8 @@ export function TeamManagementPage() {
     setIsSaving(true)
     setError('')
     try {
-      await updateRegistryTeam(editing, operatorToken.trim())
+      await updateRegistryTeam(editing)
       setEditing(null)
-      setOperatorToken('')
       await loadTeams()
       setNotice('Команда обновлена.')
     } catch (cause) {
@@ -208,7 +206,6 @@ export function TeamManagementPage() {
       await deleteRegistryTeam(deleting.id)
       setTrackedTeam((current) => (current?.id === deleting.id ? null : current))
       setDeleting(null)
-      setOperatorToken('')
       await loadTeams()
       setNotice('Команда удалена из реестра.')
     } catch (cause) {
@@ -354,17 +351,6 @@ export function TeamManagementPage() {
               Активна
             </label>
           </div>
-          <label className="block text-sm">
-            Токен оператора
-            <input
-              className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
-              required
-              type="password"
-              autoComplete="off"
-              value={operatorToken}
-              onChange={(event) => setOperatorToken(event.target.value)}
-            />
-          </label>
           <div className="flex gap-2">
             <button
               className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
@@ -378,7 +364,6 @@ export function TeamManagementPage() {
               type="button"
               onClick={() => {
                 setEditing(null)
-                setOperatorToken('')
                 setError('')
               }}
             >
