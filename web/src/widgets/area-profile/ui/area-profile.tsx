@@ -107,9 +107,7 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
           <h3 className="text-[15px] font-medium">Команда против среднего</h3>
           {insufficientData ? (
             <p className="m-0 max-w-[42ch] text-sm leading-6 text-fg-muted">
-              {sampleSize > 0
-                ? `Для сравнения нужно не менее ${MIN_COMPARISON_SAMPLE} оценённых команд. Сейчас их ${sampleSize}; профиль этой команды остаётся виден.`
-                : `Для сравнения нужно не менее ${MIN_COMPARISON_SAMPLE} оценённых команд. Профиль этой команды остаётся виден.`}
+              Недостаточно оценённых команд для сравнения. Профиль этой команды остаётся виден.
             </p>
           ) : (
             <div className="h-96" aria-label={`Сравнение со средним — ${areaName}`}>

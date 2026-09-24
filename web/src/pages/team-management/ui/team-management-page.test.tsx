@@ -125,7 +125,7 @@ describe('guided team entry', () => {
     expect(postCount).toBe(0)
 
     await user.click(screen.getByRole('button', { name: 'Посмотреть итог' }))
-    expect(screen.getAllByText('https://github.com/org/project')).toHaveLength(2)
+    expect(screen.getByText('https://github.com/org/project')).toBeInTheDocument()
     expect(postCount).toBe(0)
     await user.click(screen.getByRole('button', { name: 'Добавить в реестр' }))
     expect(await screen.findAllByText('Сервис занят')).toHaveLength(1)
