@@ -308,7 +308,10 @@ func (e *evaluationService) partialTeam(id string) (bundle.Team, bool) {
 	for _, path := range paths {
 		if state == "running" {
 			info, err := os.Stat(path)
-			if err != nil || info.ModTime().Before(started) {
+			// Published report timestamps use RFC3339 second precision. Compare at
+			// that same precision so filesystems with coarser mtimes do not make
+			// a report written during this run look older than its start time.
+			if err != nil || info.ModTime().Truncate(time.Second).Before(started.Truncate(time.Second)) {
 				continue
 			}
 		}
