@@ -85,11 +85,21 @@ jobs:
       - name: Checkout deployment scripts
         uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: agent/go.mod
+          cache-dependency-path: agent/go.sum
+
       - name: Download static artifact
         uses: actions/download-artifact@v4
         with:
           name: web-dist
           path: artifact
+
+      - name: Build registry API
+        working-directory: agent
+        run: go build -o ../artifact/registry-api ./cmd/registry-api
 
       - name: Configure strict SSH
         env:
@@ -131,6 +141,44 @@ jobs:
           )
           scp "${ssh_opts[@]}" artifact/ai-slop-detector-dist.tar.gz \
             "$DEPLOY_USER@$DEPLOY_HOST:/tmp/ai-slop-detector-${GITHUB_SHA}.tar.gz"
+
+      - name: Upload registry API
+        run: |
+          set -euo pipefail
+          ssh_opts=(
+            -i "$HOME/.ssh/deploy_key"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+          )
+          scp "${ssh_opts[@]}" artifact/registry-api \
+            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/ai-slop-detector-registry-api-${GITHUB_SHA}"
+
+      - name: Install and restart registry API
+        run: |
+          set -euo pipefail
+          ssh_opts=(
+            -i "$HOME/.ssh/deploy_key"
+            -o BatchMode=yes
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+          )
+          ssh "${ssh_opts[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "set -eu
+            binary=/opt/ai-slop-detector/registry-api
+            staged=/opt/ai-slop-detector/registry-api.new
+            backup=/opt/ai-slop-detector/registry-api.previous
+            install -o root -g root -m 0755 '/tmp/ai-slop-detector-registry-api-${GITHUB_SHA}' \"\$staged\"
+            cp -a \"\$binary\" \"\$backup\"
+            mv -f \"\$staged\" \"\$binary\"
+            if ! systemctl restart ai-slop-detector-registry-api.service || ! systemctl is-active --quiet ai-slop-detector-registry-api.service; then
+              mv -f \"\$backup\" \"\$binary\"
+              systemctl restart ai-slop-detector-registry-api.service
+              exit 1
+            fi
+            rm -f \"\$backup\" '/tmp/ai-slop-detector-registry-api-${GITHUB_SHA}'"
 
 
       - name: Install release atomically
