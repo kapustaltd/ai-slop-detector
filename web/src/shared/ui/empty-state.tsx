@@ -32,7 +32,7 @@ export function EmptyState({
   if (layout === 'inline') {
     return (
       <div
-        className={`flex items-center gap-3 rounded-panel border border-line bg-surface px-3.5 py-2.5 ${className ?? ''}`}
+        className={`flex flex-wrap items-center gap-3 rounded-panel border border-line bg-surface px-3.5 py-2.5 ${className ?? ''}`}
       >
         <Icon aria-hidden="true" size={15} strokeWidth={2} className="shrink-0 text-fg-subtle" />
         <div className="flex flex-grow flex-col gap-0.5">

@@ -30,12 +30,15 @@ func TestAnonymousTeamCreationKeepsOtherWritesProtected(t *testing.T) {
 	if err != nil || len(stored.Teams) != 2 {
 		t.Fatalf("created team was not persisted: teams=%d err=%v", len(stored.Teams), err)
 	}
-	for _, method := range []string{http.MethodPut, http.MethodDelete} {
-		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, httptest.NewRequest(method, "/api/teams/new-team", nil))
-		if response.Code != http.StatusForbidden {
-			t.Errorf("anonymous %s: got %d, want 403", method, response.Code)
-		}
+	update := httptest.NewRecorder()
+	handler.ServeHTTP(update, httptest.NewRequest(http.MethodPut, "/api/teams/new-team", strings.NewReader(`{"name":"Updated","repo":"https://github.com/example/new","branch":"main","active":true}`)))
+	if update.Code != http.StatusForbidden {
+		t.Errorf("anonymous PUT: got %d, want 403", update.Code)
+	}
+	remove := httptest.NewRecorder()
+	handler.ServeHTTP(remove, httptest.NewRequest(http.MethodDelete, "/api/teams/new-team", nil))
+	if remove.Code != http.StatusNoContent {
+		t.Errorf("anonymous DELETE: got %d, want 204: %s", remove.Code, remove.Body.String())
 	}
 }
 

@@ -31,11 +31,12 @@ function SortIcon({ active, direction }: { active: boolean; direction: SortDirec
 
 export function LeaderboardTable({ teams, sort, onSort }: LeaderboardTableProps) {
   return (
-    <div className="hidden overflow-hidden rounded-card border border-line md:block">
-      <table className="w-full table-fixed border-collapse">
+    <div className="hidden overflow-x-auto rounded-card border border-line xl:block">
+      <table className="w-full min-w-[1100px] table-fixed border-collapse">
         <caption className="sr-only">
-          Рейтинг команд по автоматической оценке качества кода. Сортировка по итоговому баллу, по
-          убыванию.
+          Рейтинг команд по автоматической оценке качества кода. Сортировка:{' '}
+          {SORT_COLUMNS.find((column) => column.key === sort.key)?.label},{' '}
+          {sort.direction === 'asc' ? 'по возрастанию' : 'по убыванию'}.
         </caption>
         <colgroup>
           <col style={{ width: 62 }} />
@@ -43,43 +44,57 @@ export function LeaderboardTable({ teams, sort, onSort }: LeaderboardTableProps)
           <col style={{ width: 152 }} />
           <col style={{ width: 152 }} />
           <col style={{ width: 132 }} />
+          <col style={{ width: 180 }} />
           <col style={{ width: 250 }} />
         </colgroup>
         <thead>
           <tr className="bg-muted-surface">
-            {SORT_COLUMNS.map(({ key, label, align }) =>
-              key === 'rank' ? (
-                <th
-                  key={key}
-                  scope="col"
-                  className="text-overline px-4 py-2.5 text-left text-fg-muted uppercase"
+            <th
+              scope="col"
+              aria-sort={
+                sort.key === 'rank'
+                  ? sort.direction === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none'
+              }
+              className="text-overline px-4 py-2.5 text-left text-fg-muted uppercase"
+            >
+              <button
+                type="button"
+                aria-label="Сортировать по месту"
+                onClick={() => onSort('rank')}
+                className="inline-flex min-h-10 items-center gap-1"
+              >
+                № <SortIcon active={sort.key === 'rank'} direction={sort.direction} />
+              </button>
+            </th>
+            <th scope="col" className="text-overline px-4 py-2.5 text-left text-fg-muted uppercase">
+              Команда
+            </th>
+            {SORT_COLUMNS.filter(({ key }) => key !== 'rank').map(({ key, label, align }) => (
+              <th
+                key={key}
+                scope="col"
+                aria-sort={
+                  sort.key === key
+                    ? sort.direction === 'asc'
+                      ? 'ascending'
+                      : 'descending'
+                    : 'none'
+                }
+                className={`text-overline px-4 py-2.5 uppercase ${align === 'right' ? 'text-right' : 'text-left'} ${sort.key === key ? 'text-fg' : 'text-fg-muted'}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => onSort(key)}
+                  className={`inline-flex min-h-10 items-center gap-1 ${align === 'right' ? 'flex-row-reverse' : ''}`}
                 >
-                  №
-                </th>
-              ) : (
-                <th
-                  key={key}
-                  scope="col"
-                  aria-sort={
-                    sort.key === key
-                      ? sort.direction === 'asc'
-                        ? 'ascending'
-                        : 'descending'
-                      : 'none'
-                  }
-                  className={`text-overline px-4 py-2.5 uppercase ${align === 'right' ? 'text-right' : 'text-left'} ${sort.key === key ? 'text-fg' : 'text-fg-muted'}`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => onSort(key)}
-                    className={`inline-flex items-center gap-1 ${align === 'right' ? 'flex-row-reverse' : ''}`}
-                  >
-                    {label}
-                    <SortIcon active={sort.key === key} direction={sort.direction} />
-                  </button>
-                </th>
-              ),
-            )}
+                  {label}
+                  <SortIcon active={sort.key === key} direction={sort.direction} />
+                </button>
+              </th>
+            ))}
             <th scope="col" className="text-overline px-4 py-2.5 text-left text-fg-muted uppercase">
               Статус
             </th>

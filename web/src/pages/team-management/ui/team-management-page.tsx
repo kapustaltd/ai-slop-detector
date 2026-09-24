@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Check, Plus } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -205,7 +205,7 @@ export function TeamManagementPage() {
     setIsSaving(true)
     setError('')
     try {
-      await deleteRegistryTeam(deleting.id, operatorToken.trim())
+      await deleteRegistryTeam(deleting.id)
       setTrackedTeam((current) => (current?.id === deleting.id ? null : current))
       setDeleting(null)
       setOperatorToken('')
@@ -397,21 +397,10 @@ export function TeamManagementPage() {
           <p className="m-0 text-sm">
             Запись исчезнет из реестра и текущего рейтинга. Сохранённые отчёты останутся на сервере.
           </p>
-          <label className="block text-sm">
-            Токен оператора
-            <input
-              className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
-              required
-              type="password"
-              autoComplete="off"
-              value={operatorToken}
-              onChange={(event) => setOperatorToken(event.target.value)}
-            />
-          </label>
           <div className="flex gap-2">
             <button
               className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
-              disabled={isSaving || !operatorToken.trim()}
+              disabled={isSaving}
               type="button"
               onClick={() => void confirmDelete()}
             >
@@ -422,7 +411,6 @@ export function TeamManagementPage() {
               type="button"
               onClick={() => {
                 setDeleting(null)
-                setOperatorToken('')
                 setError('')
               }}
             >
@@ -504,8 +492,10 @@ export function TeamManagementPage() {
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">
                           <button
-                            className="min-h-11 text-link"
+                            aria-label={`Изменить ${team.name}`}
+                            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-link transition-colors hover:bg-muted-surface hover:text-link-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                             type="button"
+                            title={`Изменить ${team.name}`}
                             onClick={() => {
                               setEditing(team)
                               setDeleting(null)
@@ -514,11 +504,13 @@ export function TeamManagementPage() {
                               setNotice('')
                             }}
                           >
-                            Изменить {team.name}
+                            <Pencil aria-hidden="true" size={18} strokeWidth={2} />
                           </button>
                           <button
-                            className="min-h-11 text-warn-fg"
+                            aria-label={`Удалить ${team.name}`}
+                            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-warn-fg transition-colors hover:bg-warn-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warn-border"
                             type="button"
+                            title={`Удалить ${team.name}`}
                             onClick={() => {
                               setDeleting(team)
                               setEditing(null)
@@ -527,7 +519,7 @@ export function TeamManagementPage() {
                               setNotice('')
                             }}
                           >
-                            Удалить {team.name}
+                            <Trash2 aria-hidden="true" size={18} strokeWidth={2} />
                           </button>
                           {team.active &&
                           (statuses[team.id] === 'done' || statuses[team.id] === 'running') ? (

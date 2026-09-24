@@ -9,9 +9,8 @@ The static site and registry API are deployed separately. With automatic evaluat
 the API runs the existing pipeline for each new active team and serves the published result at
 `/api/bundle/`. Without a configured provider, it shows the registered team as unevaluated.
 
-The registry API serves `GET` and `POST /api/teams` without a token so visitors can add a team.
-`PUT` and `DELETE` require `REGISTRY_API_TOKEN` and are disabled when it is unset. Public additions
-must be monitored because anyone who can reach the site can submit a team.
+The registry API serves `GET`, `POST`, and `DELETE /api/teams/{id}` without a token. `PUT /api/teams/{id}` requires `REGISTRY_API_TOKEN`.
+Public additions and deletions must be monitored because anyone who can reach the site can change the team registry.
 
 ## One-time server setup
 

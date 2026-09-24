@@ -15,7 +15,7 @@ function json(data: unknown, status = 200) {
 }
 
 describe('guided team entry', () => {
-  it('updates a team and deletes it with the operator token', async () => {
+  it('updates a team with the operator token and deletes it without one', async () => {
     const existing = {
       id: 'alpha',
       name: 'Альфа',
@@ -33,7 +33,7 @@ describe('guided team entry', () => {
         return json(teams[0])
       }
       if (options?.method === 'DELETE') {
-        expect(options.headers).toMatchObject({ Authorization: 'Bearer secret' })
+        expect(options.headers).not.toHaveProperty('Authorization')
         teams = []
         return new Response(null, { status: 204 })
       }
@@ -56,7 +56,7 @@ describe('guided team entry', () => {
     expect(screen.getByText('release')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Удалить Альфа' }))
-    await user.type(screen.getByLabelText('Токен оператора'), 'secret')
+    expect(screen.queryByLabelText('Токен оператора')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Удалить' }))
     expect(await screen.findByText('Команда удалена из реестра.')).toBeInTheDocument()
     expect(screen.getByText('В реестре пока нет команд.')).toBeInTheDocument()

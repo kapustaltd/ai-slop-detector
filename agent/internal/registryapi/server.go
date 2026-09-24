@@ -49,7 +49,7 @@ func (s *Server) Handler() http.Handler {
 
 func (s *Server) authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/healthz" || (r.Method == http.MethodGet && (strings.HasPrefix(r.URL.Path, "/api/bundle/") || strings.HasPrefix(r.URL.Path, "/api/evaluation/progress/"))) || (r.URL.Path == "/api/teams" && (r.Method == http.MethodGet || r.Method == http.MethodPost)) {
+		if r.URL.Path == "/healthz" || (r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/teams/")) || (r.Method == http.MethodGet && (strings.HasPrefix(r.URL.Path, "/api/bundle/") || strings.HasPrefix(r.URL.Path, "/api/evaluation/progress/"))) || (r.URL.Path == "/api/teams" && (r.Method == http.MethodGet || r.Method == http.MethodPost)) {
 			next.ServeHTTP(w, r)
 			return
 		}

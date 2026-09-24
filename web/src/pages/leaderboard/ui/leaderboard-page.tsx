@@ -104,9 +104,7 @@ export function LeaderboardPage() {
             <ChartSpline aria-hidden="true" size={17} strokeWidth={1.9} />
           </div>
           <div className="flex flex-col gap-0.5">
-            <h1 className="text-[17px] font-semibold tracking-[-0.01em]">
-              Автооценка качества кода
-            </h1>
+            <h1 className="text-[17px] font-semibold tracking-[-0.01em]">Рейтинг команд</h1>
             <p className="text-[13.5px] text-fg-subtle">{formatTeamCount(total)}</p>
           </div>
         </div>
@@ -151,7 +149,7 @@ export function LeaderboardPage() {
           ) : (
             <>
               <LeaderboardTable teams={teams} sort={sort} onSort={onSort} />
-              <div className="flex flex-col gap-2 md:hidden">
+              <div className="flex flex-col gap-2 xl:hidden">
                 {teams.map((team) => (
                   <LeaderboardRowCard key={team.team_id} team={team} />
                 ))}

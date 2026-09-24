@@ -37,8 +37,8 @@ export async function updateRegistryTeam(team: RegistryTeam, token: string) {
   return request<RegistryTeam>(`/api/teams/${encodeURIComponent(team.id)}`, 'PUT', team, token)
 }
 
-export async function deleteRegistryTeam(teamId: string, token: string) {
-  return request<void>(`/api/teams/${encodeURIComponent(teamId)}`, 'DELETE', undefined, token)
+export async function deleteRegistryTeam(teamId: string) {
+  return request<void>(`/api/teams/${encodeURIComponent(teamId)}`, 'DELETE')
 }
 
 export type RegistryEvaluationStatus = 'done' | 'failed' | 'no_data' | 'running'

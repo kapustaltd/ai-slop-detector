@@ -1,3 +1,5 @@
+import { ArrowDownUp } from 'lucide-react'
+
 import type { SortDirection, SortKey } from '@/entities/team'
 import type { EvaluationStatus } from '@/shared/api'
 
@@ -6,8 +8,8 @@ import type { FilterState } from '../model/use-leaderboard-state'
 
 /**
  * Фильтры и счётчик показанных строк. Сортировка десктопа — клики по заголовкам таблицы
- * (`LeaderboardTable`); здесь только `<select>` сортировки для мобильного, где заголовков нет
- * (research.md: дублирующий dropdown на десктопе не собираем — FR-007 уже закрыт заголовками).
+ * (`LeaderboardTable`); здесь `<select>` и направление сортировки для компактной карточной версии.
+ * На десктопе отдельный dropdown не нужен: FR-007 уже закрыт заголовками таблицы.
  */
 
 export interface LeaderboardToolbarProps {
@@ -29,14 +31,14 @@ export function LeaderboardToolbar({
 }: LeaderboardToolbarProps) {
   return (
     <section aria-label="Фильтры рейтинга" className="flex flex-wrap items-center gap-3">
-      <label className="flex h-9 items-center gap-2 text-[15px]">
+      <label className="flex min-h-11 items-center gap-2 text-[15px] xl:min-h-10">
         <span className="sr-only">Статус оценки</span>
         <select
           value={filters.status}
           onChange={(event) =>
             onFiltersChange({ status: event.target.value as EvaluationStatus | 'all' })
           }
-          className="h-9 rounded-control border border-line-strong bg-surface px-3 text-[15px] text-fg"
+          className="min-h-11 rounded-control border border-line-strong bg-surface px-3 text-[15px] text-fg xl:min-h-10"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -46,7 +48,7 @@ export function LeaderboardToolbar({
         </select>
       </label>
 
-      <label className="flex h-9 items-center gap-2 text-[15px] text-fg">
+      <label className="flex min-h-11 items-center gap-2 text-[15px] text-fg xl:min-h-10">
         <input
           type="checkbox"
           checked={filters.warningsOnly}
@@ -55,12 +57,12 @@ export function LeaderboardToolbar({
         Только с предупреждениями
       </label>
 
-      <label className="flex h-9 items-center gap-2 text-[15px] md:hidden">
+      <label className="flex min-h-11 items-center gap-2 text-[15px] xl:hidden">
         <span className="sr-only">Сортировка</span>
         <select
           value={sort.key}
           onChange={(event) => onSort(event.target.value as SortKey)}
-          className="h-9 rounded-control border border-line-strong bg-surface px-3 text-[15px] text-fg"
+          className="min-h-11 rounded-control border border-line-strong bg-surface px-3 text-[15px] text-fg"
         >
           {MOBILE_SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -69,6 +71,17 @@ export function LeaderboardToolbar({
           ))}
         </select>
       </label>
+
+      <button
+        type="button"
+        aria-label={`Направление сортировки: ${sort.direction === 'asc' ? 'по возрастанию' : 'по убыванию'}. Изменить`}
+        title={sort.direction === 'asc' ? 'По возрастанию' : 'По убыванию'}
+        className="inline-flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3 text-[15px] text-fg xl:hidden"
+        onClick={() => onSort(sort.key)}
+      >
+        <ArrowDownUp aria-hidden="true" size={16} />
+        {sort.direction === 'asc' ? 'По возрастанию' : 'По убыванию'}
+      </button>
 
       <span className="ml-auto text-[14.5px] text-fg-subtle" aria-live="polite">
         Показано: {shown} из {total}

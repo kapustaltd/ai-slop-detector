@@ -31,7 +31,15 @@ describe('LeaderboardTable', () => {
   it('показывает колонки место/команда/итог/backend/frontend/статус/признаки (FR-001)', () => {
     renderTable([team({ team_id: 'a', name: 'Команда А' })])
 
-    expect(screen.getByRole('columnheader', { name: '№' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: '№' })).toHaveAttribute(
+      'aria-sort',
+      'ascending',
+    )
+    expect(screen.getByRole('button', { name: 'Сортировать по месту' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Команда' })).toBeInTheDocument()
+    expect(screen.getAllByRole('columnheader').map((header) => header.textContent?.trim())).toEqual(
+      ['№', 'Команда', 'Итог', 'Backend', 'Frontend', 'Статус', 'Признаки'],
+    )
     expect(screen.getByRole('columnheader', { name: /Итог/ })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: /Backend/ })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: /Frontend/ })).toBeInTheDocument()
