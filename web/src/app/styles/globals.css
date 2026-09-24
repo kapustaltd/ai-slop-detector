@@ -345,13 +345,64 @@ a[href]:not([data-press-static]):active {
   }
 }
 
-/* Indeterminate rail: quiet, single-pass motion inspired by loading bar patterns. */
+/* Shared placeholder shimmer; the base follows the existing light/dark muted surface token. */
+:root {
+  --ds-skeleton-shimmer: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(0 0 0 / 3%) 35%,
+    rgb(0 0 0 / 7%) 50%,
+    rgb(0 0 0 / 3%) 65%,
+    transparent 100%
+  );
+  --ds-skeleton-speed: 1.8s;
+}
+
+.dark {
+  --ds-skeleton-shimmer: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 4%) 35%,
+    rgb(255 255 255 / 8%) 50%,
+    rgb(255 255 255 / 4%) 65%,
+    transparent 100%
+  );
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--ds-muted);
+  isolation: isolate;
+}
+
+.skeleton::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background-image: var(--ds-skeleton-shimmer);
+  background-size: 200% 100%;
+  background-position: -200% 0;
+  content: '';
+  animation: skeleton-shimmer var(--ds-skeleton-speed) ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes skeleton-shimmer {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* Compact progress rail used while checking or saving a registry form. */
 .registry-loading-track {
   height: 3px;
   overflow: hidden;
   border-radius: 999px;
   background: var(--ds-track);
 }
+
 .registry-loading-fill {
   display: block;
   width: 38%;
@@ -360,6 +411,7 @@ a[href]:not([data-press-static]):active {
   background: var(--ds-primary);
   animation: registry-loading-sweep 1.3s ease-in-out infinite alternate;
 }
+
 @keyframes registry-loading-sweep {
   from {
     transform: translateX(-100%);
@@ -368,7 +420,13 @@ a[href]:not([data-press-static]):active {
     transform: translateX(265%);
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none !important;
+    background-position: 50% 0;
+  }
+
   .registry-loading-fill {
     animation: none;
     width: 100%;

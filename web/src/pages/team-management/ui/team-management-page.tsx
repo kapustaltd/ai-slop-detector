@@ -15,6 +15,7 @@ import {
   type RegistryEvaluationStatus,
   type RegistryTeam,
 } from '@/shared/api'
+import { Skeleton } from '@/shared/ui'
 import { EvaluationProgressView } from '@/widgets/evaluation-progress'
 
 type TeamDraft = Pick<RegistryTeam, 'id' | 'name' | 'repo' | 'branch' | 'active'>
@@ -412,12 +413,7 @@ export function TeamManagementPage() {
           aria-label="Реестр команд"
           className="divide-y divide-line border-y border-line"
         >
-          {isLoading ? (
-            <div className="p-4 text-sm text-fg-muted">
-              <LoadingBar />
-              Загружаем команды…
-            </div>
-          ) : null}
+          {isLoading ? <RegistryLoadingSkeleton /> : null}
           {!isLoading && teams.length === 0 ? (
             <p className="p-4 text-sm text-fg-muted">В реестре пока нет команд.</p>
           ) : null}
@@ -647,6 +643,34 @@ interface TeamFormProps {
   onCancel: () => void
   onChange: (draft: TeamDraft) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
+}
+
+function RegistryLoadingSkeleton() {
+  return (
+    <div aria-hidden="true" className="overflow-x-auto">
+      <div className="min-w-[820px]">
+        <div className="grid grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_0.8fr] gap-4 bg-muted-surface px-4 py-3">
+          <span className="text-xs font-medium text-fg-muted">Команда</span>
+          <span className="text-xs font-medium text-fg-muted">Репозиторий</span>
+          <span className="text-xs font-medium text-fg-muted">Ветка</span>
+          <span className="text-xs font-medium text-fg-muted">Оценка</span>
+          <span className="text-xs font-medium text-fg-muted">Действия</span>
+        </div>
+        {Array.from({ length: 4 }, (_, index) => (
+          <div
+            key={index}
+            className="grid h-[58px] grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_0.8fr] items-center gap-4 border-t border-line px-4"
+          >
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function LoadingBar() {
