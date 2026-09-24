@@ -147,13 +147,24 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 	}
 
 	teams := make([]teamRun, 0)
+	var targetTrace *progressRecorder
 	for _, team := range config.Registry.Teams {
 		if !team.Active || (config.TeamID != "" && config.TeamID != team.ID) {
 			continue
 		}
 		result := teamRun{Registry: team, Status: "failed", Areas: make(map[string]bundle.Area)}
+		var trace *progressRecorder
+		if config.TeamID == team.ID {
+			trace = newProgressRecorder(config.OutputDir, team.ID, config.Now, progressAreas(config.Rubrics))
+			targetTrace = trace
+			trace.update("analyzing", "stage", "Подготовка репозитория", "Подключаюсь к репозиторию и определяю доступные области анализа.", "")
+		}
 		prepared, prepareErr := gitrepo.Prepare(ctx, team.Repo, team.Branch, config.WorkspaceDir)
 		if prepareErr != nil {
+			trace.setStatus("failed", "analyzing")
+			trace.setArea("backend", "failed", 0, 0, 0, categoryCount(config.Rubrics, "backend"))
+			trace.setArea("frontend", "no_data", 0, 0, 0, categoryCount(config.Rubrics, "frontend"))
+			trace.update("analyzing", "error", "Не удалось подготовить репозиторий", sanitizeError(prepareErr), "")
 			result.Areas["backend"] = bundle.Area{Status: "failed", Error: sanitizeError(prepareErr)}
 			result.Areas["frontend"] = bundle.Area{Status: "no_data"}
 			teams = append(teams, result)
@@ -161,11 +172,16 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 			continue
 		}
 		result.CommitSHA = prepared.CommitSHA
+		trace.update("analyzing", "stage", "Репозиторий подготовлен", "Рабочая копия создана; определяю области и файлы для проверки.", "")
 		// Репозиторий команды — недоверенные данные: файлы инструкций агентов
 		// обезвреживаются до того, как скилл получит доступ к копии
 		// (принцип IV конституции, спека 003 FR-007a).
 		neutralized, neutralizeErr := gitrepo.NeutralizeAgentInstructions(prepared.Root)
 		if neutralizeErr != nil {
+			trace.setStatus("failed", "analyzing")
+			trace.setArea("backend", "failed", 0, 0, 0, categoryCount(config.Rubrics, "backend"))
+			trace.setArea("frontend", "no_data", 0, 0, 0, categoryCount(config.Rubrics, "frontend"))
+			trace.update("analyzing", "error", "Не удалось подготовить файлы репозитория", sanitizeError(neutralizeErr), "")
 			result.Areas["backend"] = bundle.Area{Status: "failed", Error: sanitizeError(neutralizeErr)}
 			result.Areas["frontend"] = bundle.Area{Status: "no_data"}
 			teams = append(teams, result)
@@ -184,11 +200,21 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 			}
 		}
 		if len(areas) == 0 {
+			trace.setStatus("failed", "analyzing")
+			trace.setArea("backend", "failed", 0, 0, 0, categoryCount(config.Rubrics, "backend"))
+			trace.setArea("frontend", "no_data", 0, 0, 0, categoryCount(config.Rubrics, "frontend"))
+			trace.update("analyzing", "error", "Не найдены области для анализа", "В репозитории не обнаружены поддерживаемые области.", "")
 			result.Areas["backend"] = bundle.Area{Status: "failed", Error: "no analyzable areas found"}
 			result.Areas["frontend"] = bundle.Area{Status: "no_data"}
 			teams = append(teams, result)
 			continue
 		}
+		for _, expectedArea := range []string{"backend", "frontend"} {
+			if _, available := areas[expectedArea]; !available {
+				trace.setArea(expectedArea, "no_data", 0, 0, 0, categoryCount(config.Rubrics, expectedArea))
+			}
+		}
+		trace.update("analyzing", "stage", "Области анализа определены", fmt.Sprintf("Запускаю проверку: %s.", areaCountLabel(len(areas))), "")
 		var wait sync.WaitGroup
 		semaphore := make(chan struct{}, config.MaxParallel)
 		var mu sync.Mutex
@@ -199,7 +225,7 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 				defer wait.Done()
 				semaphore <- struct{}{}
 				defer func() { <-semaphore }()
-				item := runArea(ctx, config, team, prepared, area, areaPath, rawRoot)
+				item := runArea(ctx, config, team, prepared, area, areaPath, rawRoot, trace)
 				mu.Lock()
 				result.Areas[area] = item.area
 				result.CostUSD += item.costUSD
@@ -212,6 +238,15 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 				result.Warnings = append(result.Warnings, item.warnings...)
 				if err := writePartialTeam(config.OutputDir, config.Now(), result); err != nil {
 					logf(config.Logger, "team=%s partial report unavailable: %s", team.ID, sanitizeError(err))
+				} else if item.area.Status == "done" {
+					trace.setArea(area, "done", -1, -1, categoryCount(config.Rubrics, area), categoryCount(config.Rubrics, area))
+					trace.update("analyzing", "area", "Область опубликована", "Проверенные результаты области доступны в частичном отчёте.", area)
+					if item.traceFinding != nil {
+						trace.verifiedFinding(area, *item.traceFinding)
+					}
+				} else if item.area.Status == "failed" {
+					trace.setArea(area, "failed", -1, -1, 0, categoryCount(config.Rubrics, area))
+					trace.update("analyzing", "error", "Не удалось завершить проверку области", item.area.Error, area)
 				}
 				mu.Unlock()
 			}()
@@ -256,8 +291,34 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 		input = append(input, bundle.InputTeam{Registry: team.Registry, Status: team.Status, CommitSHA: team.CommitSHA, Total: team.Total, Partial: team.Partial, Areas: team.Areas, Warnings: unique(team.Warnings), Meta: team.Meta})
 		summary.CostUSD += team.CostUSD
 	}
+	if targetTrace != nil {
+		targetTrace.update("publishing", "stage", "Собираю отчёт", "Сохраняю проверенные области и формирую текущий отчёт команды.", "")
+	}
 	if err := bundle.Write(config.OutputDir, config.Now(), input, config.Rubrics); err != nil {
+		targetTrace.setStatus("failed", "publishing")
+		targetTrace.update("publishing", "error", "Не удалось опубликовать отчёт", sanitizeError(err), "")
 		return Summary{}, err
+	}
+	if targetTrace != nil {
+		teamStatus := "failed"
+		for _, team := range teams {
+			if team.Registry.ID == config.TeamID {
+				teamStatus = team.Status
+				for areaName, area := range team.Areas {
+					if area.Status == "done" && targetTrace.areaStatus(areaName) != "done" {
+						targetTrace.setArea(areaName, "done", -1, -1, categoryCount(config.Rubrics, areaName), categoryCount(config.Rubrics, areaName))
+						targetTrace.update("publishing", "area", "Область опубликована", "Проверенные результаты области доступны в отчёте команды.", areaName)
+					}
+				}
+				break
+			}
+		}
+		if teamStatus == "done" {
+			targetTrace.update("publishing", "report", "Отчёт опубликован", "Проверенные результаты добавлены в отчёт команды.", "")
+			targetTrace.setStatus("done", "done")
+		} else {
+			targetTrace.setStatus("failed", "analyzing")
+		}
 	}
 	finished := config.Now().UTC()
 	summary.FinishedAt = finished.Format(time.RFC3339)
@@ -269,10 +330,11 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 }
 
 type areaRunResult struct {
-	area     bundle.Area
-	costUSD  float64
-	warnings []string
-	meta     *bundle.TeamMeta
+	area         bundle.Area
+	costUSD      float64
+	warnings     []string
+	meta         *bundle.TeamMeta
+	traceFinding *enrichment.EnrichedFinding
 }
 
 func writePartialTeam(output string, builtAt time.Time, result teamRun) error {
@@ -297,7 +359,9 @@ func writePartialTeam(output string, builtAt time.Time, result teamRun) error {
 	})
 }
 
-func runArea(ctx context.Context, config Config, team registry.Team, prepared gitrepo.Prepared, area, areaPath, rawRoot string) areaRunResult {
+func runArea(ctx context.Context, config Config, team registry.Team, prepared gitrepo.Prepared, area, areaPath, rawRoot string, trace *progressRecorder) areaRunResult {
+	trace.setArea(area, "running", 0, 0, 0, categoryCount(config.Rubrics, area))
+	trace.update("analyzing", "area", "Начата проверка области", "Сканирую поддерживаемые файлы перед оценкой рубрики.", area)
 	rubricValue, err := rubricFor(config.Rubrics, area)
 	if err != nil {
 		return failedArea(config, team, area, rawRoot, err)
@@ -313,7 +377,7 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 				// Recompute from validated leaves, never trust cached aggregates.
 				if aggregate, err := aggregation.Area(rubricValue, saved.Report); err == nil {
 					saved.Aggregate = aggregate
-					return areaRunResult{area: toBundleArea(saved), meta: metaFromReport(saved.Report), warnings: saved.Warnings}
+					return areaRunResult{area: toBundleArea(saved), meta: metaFromReport(saved.Report), warnings: saved.Warnings, traceFinding: firstVerifiedFinding(saved.Enriched)}
 				}
 			}
 		}
@@ -326,6 +390,16 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 	if err != nil {
 		return failedArea(config, team, area, rawRoot, err)
 	}
+	included, excluded := 0, len(snapshot.Excluded)
+	for _, file := range snapshot.Files {
+		if file.Included {
+			included++
+		} else {
+			excluded++
+		}
+	}
+	trace.setArea(area, "running", included, excluded, 0, categoryCount(config.Rubrics, area))
+	trace.update("analyzing", "scan", "Структура файлов проверена", fmt.Sprintf("Включено %d %s, исключено %d.", included, pluralFiles(included), excluded), area)
 	instruction := buildInstruction(team, area, prepared.CommitSHA, config.RubricPaths[rubricValue.Version], root, reviewSkill)
 	started := time.Now()
 	maxAttempts := config.MaxRetries + 1
@@ -397,6 +471,7 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 		return areaRunResult{area: bundle.Area{Status: "failed", Error: sanitizeError(lastErr), DurationMS: duration.Milliseconds(), RawAttempts: attempts}}
 	}
 	enriched := enrichment.Enrich(report, enrichment.Options{RepoRoot: root, RepoURL: prepared.RepoURL, CommitSHA: prepared.CommitSHA, Templates: config.Templates, MaxSnippetLines: config.MaxSnippetLines, MaxSnippetBytes: config.MaxSnippetBytes})
+	traceFinding := firstVerifiedFinding(enriched)
 	aggregate, err := aggregation.Area(rubricValue, report)
 	if err != nil {
 		return failedArea(config, team, area, rawRoot, err)
@@ -410,7 +485,19 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 	if err := writeJSON(filepath.Join(config.OutputDir, "state", team.ID, area+".json"), saved); err != nil {
 		return areaRunResult{area: bundle.Area{Status: "failed", Error: err.Error()}}
 	}
-	return areaRunResult{area: toBundleArea(saved), costUSD: response.Usage.CostUSD, warnings: warnings, meta: metaFromReport(report)}
+	return areaRunResult{area: toBundleArea(saved), costUSD: response.Usage.CostUSD, warnings: warnings, meta: metaFromReport(report), traceFinding: traceFinding}
+}
+
+func firstVerifiedFinding(enriched enrichment.Result) *enrichment.EnrichedFinding {
+	for _, metric := range enriched.Metrics {
+		for _, finding := range metric.Findings {
+			if finding.LinkStatus == "verified" && finding.Permalink != "" {
+				copy := finding
+				return &copy
+			}
+		}
+	}
+	return nil
 }
 
 func failedArea(config Config, team registry.Team, area, rawRoot string, err error) areaRunResult {

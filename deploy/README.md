@@ -58,8 +58,9 @@ that have no published result, including teams added before this update. Use
 For live partial reports, the runner and registry API must share the same data root. With the
 example service units, the runner writes under `runs/<job-id>/` and the registry API's
 `--public-bundle` is `public/` beside `runs/`. The API reads the current job's partial team file,
-or reconstructs completed areas from its `state/<id>/<area>.json` files on older runners. It serves
-the completed report from `public/`.
+or reconstructs completed areas from its `state/<id>/<area>.json` files on older runners. The
+progress endpoint also reads the current job's bounded trace from `runs/<job-id>/progress/`. It
+serves the completed report from `public/`.
 
 Update the mounted Nginx configuration and reload Nginx after verifying the new route. The
 frontend also supports the older registry API: it shows registered teams with “Нет данных” until

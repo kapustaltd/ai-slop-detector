@@ -1,3 +1,5 @@
+import type { EvaluationProgress } from './generated/evaluation-progress'
+
 export interface RegistryTeam {
   id: string
   name: string
@@ -41,16 +43,9 @@ export async function deleteRegistryTeam(teamId: string) {
   return request<void>(`/api/teams/${encodeURIComponent(teamId)}`, 'DELETE')
 }
 
-export type RegistryEvaluationStatus = 'done' | 'failed' | 'no_data' | 'running'
-export type RegistryEvaluationStage =
-  'waiting' | 'dispatching' | 'runner_queued' | 'analyzing' | 'publishing' | 'done'
-
-export interface RegistryEvaluationProgress {
-  status: RegistryEvaluationStatus
-  stage: RegistryEvaluationStage
-  started_at?: string
-  legacy?: boolean
-}
+export type RegistryEvaluationStatus = EvaluationProgress['status']
+export type RegistryEvaluationStage = EvaluationProgress['stage']
+export type RegistryEvaluationProgress = EvaluationProgress & { legacy?: boolean }
 
 export async function getRegistryEvaluationProgress(
   teamId: string,
@@ -63,12 +58,22 @@ export async function getRegistryEvaluationProgress(
     return {
       status: status ?? 'running',
       stage: status === 'done' ? 'done' : 'waiting',
+      areas: [],
+      events: [],
       legacy: true,
     }
   }
   if (!response.ok)
     throw new RegistryApiError('Не удалось получить этап обработки', response.status)
-  return (await response.json()) as RegistryEvaluationProgress
+  const progress = (await response.json()) as Partial<RegistryEvaluationProgress>
+  return {
+    status: progress.status ?? 'no_data',
+    stage: progress.stage ?? 'waiting',
+    started_at: progress.started_at,
+    areas: progress.areas ?? [],
+    events: progress.events ?? [],
+    legacy: progress.legacy,
+  }
 }
 
 /** Read only the live index: a build-time bundle cannot report current progress. */

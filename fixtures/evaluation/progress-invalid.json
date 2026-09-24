@@ -1,0 +1,15 @@
+{
+  "status": "running",
+  "stage": "thinking",
+  "areas": [
+    {
+      "area": "unknown",
+      "status": "running",
+      "included_files": -1,
+      "excluded_files": 0,
+      "completed_categories": 0,
+      "total_categories": 7
+    }
+  ],
+  "events": []
+}

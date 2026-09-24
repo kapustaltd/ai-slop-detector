@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/bundle"
+	"github.com/kapustaltd/ai-slop-detector/agent/internal/contract"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/registry"
 )
 
@@ -38,7 +39,48 @@ func (f *fakeEvaluator) Evaluate(_ context.Context, team registry.Team) error {
 	}
 	return os.WriteFile(filepath.Join(f.publicDir, "teams", team.ID+".json"), []byte(`{"team_id":"new-team","name":"New team","status":"done","total":8,"areas":{}}`), 0640)
 }
+
+func (f *fakeEvaluator) EvaluateWithProgressAndJob(ctx context.Context, team registry.Team, report func(string), onJob func(string)) error {
+	onJob("job-1")
+	report("analyzing")
+	return f.Evaluate(ctx, team)
+}
 func scorePtr(value float64) *float64 { return &value }
+
+func TestReadProgressSnapshotIsRunScopedAndRejectsStaleData(t *testing.T) {
+	root := t.TempDir()
+	service := &evaluationService{publicDir: filepath.Join(root, "public")}
+	started := time.Date(2026, 9, 24, 10, 0, 0, 900_000_000, time.UTC)
+	path := filepath.Join(root, "runs", "job-new", "progress", "alpha.json")
+	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
+		t.Fatal(err)
+	}
+	fallback := evaluationProgress{Status: "running", Stage: "dispatching", StartedAt: started.Format(time.RFC3339), Areas: []contract.AreaProgress{}, Events: []contract.Event{}}
+	write := func(at string) {
+		t.Helper()
+		data, err := json.Marshal(evaluationProgress{Status: "running", Stage: "analyzing", StartedAt: at, Areas: []contract.AreaProgress{{Area: "backend", Status: "running"}}, Events: []contract.Event{{Sequence: 1, At: at, Kind: "scan", Title: "Файлы проверены"}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, data, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write(started.Add(-time.Minute).Format(time.RFC3339))
+	stale := service.readProgressSnapshot("alpha", "job-new", started, fallback)
+	if stale.Stage != "dispatching" || len(stale.Events) != 0 {
+		t.Fatalf("stale progress leaked: %+v", stale)
+	}
+	write(started.Add(50 * time.Millisecond).Format(time.RFC3339))
+	current := service.readProgressSnapshot("alpha", "job-new", started, fallback)
+	if current.Stage != "analyzing" || len(current.Events) != 1 {
+		t.Fatalf("current progress missing: %+v", current)
+	}
+	otherJob := service.readProgressSnapshot("alpha", "job-old", started, fallback)
+	if otherJob.Stage != "dispatching" || len(otherJob.Events) != 0 {
+		t.Fatalf("snapshot from another job leaked: %+v", otherJob)
+	}
+}
 
 func TestRunningTeamReadsCurrentRunnerOutput(t *testing.T) {
 	root := t.TempDir()
@@ -222,6 +264,19 @@ func TestCreateQueuesEvaluationAndLiveIndexUpdates(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("evaluation did not start")
 	}
+	progressPath := filepath.Join(root, "runs", "job-1", "progress", "new-team.json")
+	if err := os.MkdirAll(filepath.Dir(progressPath), 0750); err != nil {
+		t.Fatal(err)
+	}
+	startedAt := time.Now().UTC().Add(time.Second).Format(time.RFC3339)
+	snapshot, _ := json.Marshal(evaluationProgress{
+		Status: "running", Stage: "analyzing", StartedAt: startedAt,
+		Areas:  []contract.AreaProgress{{Area: "backend", Status: "running", IncludedFiles: 12, TotalCategories: 8}},
+		Events: []contract.Event{{Sequence: 1, At: startedAt, Kind: "scan", Title: "Структура файлов проверена"}},
+	})
+	if err := os.WriteFile(progressPath, snapshot, 0600); err != nil {
+		t.Fatal(err)
+	}
 	getIndex := func() bundle.Index {
 		t.Helper()
 		response := httptest.NewRecorder()
@@ -244,7 +299,7 @@ func TestCreateQueuesEvaluationAndLiveIndexUpdates(t *testing.T) {
 	if err := json.Unmarshal(progressResponse.Body.Bytes(), &progress); err != nil {
 		t.Fatal(err)
 	}
-	if progressResponse.Code != http.StatusOK || progress.Status != "running" || progress.Stage != "dispatching" || progress.StartedAt == "" {
+	if progressResponse.Code != http.StatusOK || progress.Status != "running" || progress.Stage != "analyzing" || progress.StartedAt == "" || len(progress.Events) != 1 || progress.Areas[0].IncludedFiles != 12 {
 		t.Fatalf("progress during evaluation: %+v", progress)
 	}
 	close(fake.release)
@@ -306,7 +361,7 @@ func TestEvaluationFailureIsVisibleWithoutScore(t *testing.T) {
 			if err := json.Unmarshal(progressResponse.Body.Bytes(), &progress); err != nil {
 				t.Fatal(err)
 			}
-			if progress.Status != "failed" || progress.Stage != "dispatching" {
+			if progress.Status != "failed" || progress.Stage != "analyzing" {
 				t.Fatalf("failed progress: %+v", progress)
 			}
 			return

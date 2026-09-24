@@ -1,0 +1,37 @@
+{
+  "status": "running",
+  "stage": "analyzing",
+  "started_at": "2026-09-24T12:00:00Z",
+  "areas": [
+    {
+      "area": "backend",
+      "status": "running",
+      "included_files": 46,
+      "excluded_files": 8,
+      "completed_categories": 0,
+      "total_categories": 7
+    }
+  ],
+  "events": [
+    {
+      "sequence": 1,
+      "at": "2026-09-24T12:00:08Z",
+      "kind": "scan",
+      "title": "Структура репозитория проверена",
+      "detail": "Для анализа включено 46 файлов.",
+      "area": "backend"
+    },
+    {
+      "sequence": 2,
+      "at": "2026-09-24T12:02:10Z",
+      "kind": "finding",
+      "title": "Найдено место обработки повторных попыток",
+      "area": "backend",
+      "source": {
+        "file": "agent/main.go",
+        "line_start": 18,
+        "line_end": 31
+      }
+    }
+  ]
+}

@@ -24,6 +24,42 @@ describe('TeamPage', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string) => {
+        if (url === '/api/evaluation/progress/team-01')
+          return new Response(
+            JSON.stringify({
+              status: 'running',
+              stage: 'analyzing',
+              areas: [
+                {
+                  area: 'backend',
+                  status: 'running',
+                  included_files: 46,
+                  excluded_files: 3,
+                  completed_categories: 0,
+                  total_categories: 5,
+                },
+                {
+                  area: 'frontend',
+                  status: 'queued',
+                  included_files: 0,
+                  excluded_files: 0,
+                  completed_categories: 0,
+                  total_categories: 4,
+                },
+              ],
+              events: [
+                {
+                  sequence: 1,
+                  at: '2026-09-24T10:00:00Z',
+                  kind: 'scan',
+                  title: 'Структура файлов проверена',
+                  detail: 'Включено 46 файлов, исключено 3.',
+                  area: 'backend',
+                },
+              ],
+            }),
+            { status: 200 },
+          )
         if (url === '/api/bundle/index')
           return new Response(
             JSON.stringify({ teams: [{ team_id: 'team-01', status: 'running' }] }),
@@ -44,10 +80,134 @@ describe('TeamPage', () => {
       }),
     )
     renderTeam()
-    expect(await screen.findByText(/Оценка продолжается/)).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Ход анализа' })).toBeInTheDocument()
+    expect(screen.getByText('46 файлов включено в проверку')).toBeInTheDocument()
+    expect(screen.getByText('Структура файлов проверена')).toBeInTheDocument()
     expect(await screen.findByText('Разбор по рубрике · backend')).toBeInTheDocument()
     expect(screen.queryByText('Разбор по рубрике · frontend')).not.toBeInTheDocument()
   })
+
+  it('shows the rubric skeleton and current trace before the first partial bundle exists', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/evaluation/progress/team-01')
+          return new Response(
+            JSON.stringify({
+              status: 'running',
+              stage: 'analyzing',
+              areas: [
+                {
+                  area: 'backend',
+                  status: 'running',
+                  included_files: 12,
+                  excluded_files: 1,
+                  completed_categories: 0,
+                  total_categories: 5,
+                },
+                {
+                  area: 'frontend',
+                  status: 'queued',
+                  included_files: 0,
+                  excluded_files: 0,
+                  completed_categories: 0,
+                  total_categories: 4,
+                },
+              ],
+              events: [
+                {
+                  sequence: 2,
+                  at: '2026-09-24T10:00:00Z',
+                  kind: 'scan',
+                  title: 'Структура файлов проверена',
+                  detail: 'Включено 12 файлов.',
+                  area: 'backend',
+                },
+              ],
+            }),
+            { status: 200 },
+          )
+        if (url === '/api/bundle/index')
+          return new Response(
+            JSON.stringify({ teams: [{ team_id: 'team-01', status: 'running' }] }),
+            { status: 200 },
+          )
+        return new Response(null, { status: 404 })
+      }),
+    )
+    renderTeam()
+    expect(
+      await screen.findByRole('heading', { name: 'Оценка команды выполняется' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Ход анализа' })).toBeInTheDocument()
+    expect(screen.getByText('Архитектура и структура')).toBeInTheDocument()
+    expect(screen.getAllByText('В очереди').length).toBeGreaterThan(0)
+    expect(screen.getByText('Структура файлов проверена')).toBeInTheDocument()
+  })
+
+  it('retains the last confirmed trace when a later progress poll fails', async () => {
+    const fixture = await loadTeam('team-01')
+    let progressCalls = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/evaluation/progress/team-01') {
+          progressCalls++
+          if (progressCalls > 1) throw new Error('network unavailable')
+          return new Response(
+            JSON.stringify({
+              status: 'running',
+              stage: 'analyzing',
+              areas: [
+                {
+                  area: 'backend',
+                  status: 'running',
+                  included_files: 12,
+                  excluded_files: 0,
+                  completed_categories: 0,
+                  total_categories: 5,
+                },
+              ],
+              events: [
+                {
+                  sequence: 3,
+                  at: '2026-09-24T10:00:00Z',
+                  kind: 'scan',
+                  title: 'Последнее подтверждённое событие',
+                  detail: 'Включено 12 файлов.',
+                  area: 'backend',
+                },
+              ],
+            }),
+            { status: 200 },
+          )
+        }
+        if (url === '/api/bundle/index')
+          return new Response(
+            JSON.stringify({ teams: [{ team_id: 'team-01', status: 'running' }] }),
+            { status: 200 },
+          )
+        if (url === '/api/bundle/teams/team-01')
+          return new Response(
+            JSON.stringify({
+              ...fixture,
+              status: 'running',
+              total: null,
+              partial: true,
+              areas: { backend: fixture.areas.backend },
+            }),
+            { status: 200 },
+          )
+        return new Response(null, { status: 404 })
+      }),
+    )
+    renderTeam()
+    expect(await screen.findByText('Последнее подтверждённое событие')).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Не удалось обновить ход оценки/, {}, { timeout: 8000 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Последнее подтверждённое событие')).toBeInTheDocument()
+  }, 12_000)
 
   it('показывает заголовок, дисклеймер, итог и метаданные', async () => {
     renderTeam()

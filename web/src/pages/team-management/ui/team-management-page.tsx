@@ -15,7 +15,8 @@ import {
   type RegistryEvaluationStatus,
   type RegistryTeam,
 } from '@/shared/api'
-import { evaluationStages, getEvaluationNarrative } from '../model/evaluation-progress'
+import { evaluationStages } from '../model/evaluation-progress'
+import { EvaluationProgressView } from '@/widgets/evaluation-progress'
 import {
   ChainOfThought,
   ChainOfThoughtContent,
@@ -531,7 +532,7 @@ export function TeamManagementPage() {
 
 function RepositoryProgress({ team }: { team: TeamDraft }) {
   const [progress, setProgress] = useState<RegistryEvaluationProgress | null>(() =>
-    team.active ? null : { status: 'no_data', stage: 'waiting' },
+    team.active ? null : { status: 'no_data', stage: 'waiting', areas: [], events: [] },
   )
   const [pollError, setPollError] = useState(false)
   const [elapsed, setElapsed] = useState(0)
@@ -607,8 +608,6 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
     if (!progress || index > currentStage || progress.status === 'no_data') return 'pending'
     return progress.status === 'failed' ? 'failed' : 'active'
   }
-  const activeStage = stages[currentStage]?.stage ?? 'waiting'
-  const narrative = getEvaluationNarrative(activeStage)
 
   return (
     <section
@@ -635,41 +634,7 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
         </ChainOfThought>
       ) : null}
       {progress?.status === 'running' ? (
-        <details className="group mt-2 border-t border-line pt-2 text-sm">
-          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 text-link marker:hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden">
-            <span className="group-open:hidden">Показать детали анализа</span>
-            <span className="hidden group-open:inline">Скрыть детали анализа</span>
-          </summary>
-          <div className="grid gap-3 pb-2 pt-1 sm:grid-cols-2">
-            <div>
-              <h3 className="mb-1 mt-0 font-medium">Что сейчас проверяется</h3>
-              <p className="m-0 text-fg-muted">{narrative.checking}</p>
-            </div>
-            <div>
-              <h3 className="mb-1 mt-0 font-medium">Почему это делается</h3>
-              <p className="m-0 text-fg-muted">{narrative.reason}</p>
-            </div>
-            <div>
-              <h3 className="mb-1 mt-0 font-medium">Что известно</h3>
-              <ul className="m-0 list-disc space-y-1 pl-5 text-fg-muted">
-                <li>Репозиторий: {team.repo}</li>
-                <li>Ветка: {team.branch}</li>
-                <li>Список файлов и результаты проверок пока недоступны.</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="mb-1 mt-0 font-medium">Следующий шаг</h3>
-              <p className="m-0 text-fg-muted">{narrative.next}</p>
-            </div>
-            <div className="sm:col-span-2">
-              <h3 className="mb-1 mt-0 font-medium">Активность сервиса</h3>
-              <p className="m-0 text-fg-muted">
-                Сервер обновляет статус задания каждые 3 секунды. Детали этапов появятся по мере
-                поступления данных от сервиса оценки.
-              </p>
-            </div>
-          </div>
-        </details>
+        <EvaluationProgressView progress={progress} className="mt-3" />
       ) : null}
       <p role="status" className="mb-0 mt-3 text-sm text-fg-muted">
         {statusMessage}
@@ -684,7 +649,7 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
           className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm text-link"
           to={`/team/${encodeURIComponent(team.id)}`}
         >
-          {progress?.status === 'running' ? 'Смотреть обработанную часть' : 'Открыть отчёт'}{' '}
+          {progress?.status === 'running' ? 'Смотреть ход оценки' : 'Открыть отчёт'}{' '}
           <ArrowRight aria-hidden="true" size={16} />
         </Link>
       ) : null}

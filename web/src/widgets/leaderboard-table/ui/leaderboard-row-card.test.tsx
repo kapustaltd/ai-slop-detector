@@ -27,10 +27,25 @@ describe('LeaderboardRowCard', () => {
       </MemoryRouter>,
     )
 
-    const link = screen.getByRole('link', { name: /Команда X/ })
-    expect(link).toHaveTextContent('1')
-    expect(link).toHaveTextContent('8.6')
-    expect(link).toHaveAttribute('href', '/team/team-x')
+    expect(screen.getByText('Команда X')).toBeInTheDocument()
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('8.6')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Открыть отчёт' })).toHaveAttribute(
+      'href',
+      '/team/team-x',
+    )
+  })
+
+  it('направляет от обрабатываемой команды к ходу оценки', () => {
+    render(
+      <MemoryRouter>
+        <LeaderboardRowCard team={team({ status: 'running', total: null })} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('link', { name: 'Смотреть ход оценки' })).toHaveAttribute(
+      'href',
+      '/team/team-x',
+    )
   })
 
   it('показывает backend и frontend', () => {

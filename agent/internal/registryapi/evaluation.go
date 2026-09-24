@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/bundle"
+	"github.com/kapustaltd/ai-slop-detector/agent/internal/contract"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/pipeline"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/registry"
 )
@@ -30,11 +31,7 @@ type jobTeamEvaluator interface {
 	EvaluateWithProgressAndJob(context.Context, registry.Team, func(string), func(string)) error
 }
 
-type evaluationProgress struct {
-	Status    string `json:"status"`
-	Stage     string `json:"stage"`
-	StartedAt string `json:"started_at,omitempty"`
-}
+type evaluationProgress = contract.EvaluationProgress
 
 type evaluationService struct {
 	registryPath, publicDir string
@@ -134,7 +131,7 @@ func (e *evaluationService) enqueue(id string) {
 		return
 	}
 	e.states[id] = "running"
-	e.progress[id] = evaluationProgress{Status: "running", Stage: "waiting", StartedAt: e.started[id].Format(time.RFC3339)}
+	e.progress[id] = evaluationProgress{Status: "running", Stage: "waiting", StartedAt: e.started[id].Format(time.RFC3339), Areas: []contract.AreaProgress{}, Events: []contract.Event{}}
 	e.queue <- id
 }
 
@@ -179,7 +176,6 @@ func (e *evaluationService) work() {
 			}
 		}
 		e.mu.Lock()
-		delete(e.jobIDs, id)
 		if err != nil {
 			e.states[id] = "failed"
 			progress := e.progress[id]
@@ -223,21 +219,51 @@ func (s *Server) liveProgress(w http.ResponseWriter, r *http.Request) {
 		s.evaluation.mu.RLock()
 		progress, ok := s.evaluation.progress[id]
 		state := s.evaluation.states[id]
+		jobID := s.evaluation.jobIDs[id]
+		started := s.evaluation.started[id]
 		s.evaluation.mu.RUnlock()
 		if ok {
+			progress = s.evaluation.readProgressSnapshot(id, jobID, started, progress)
 			writeJSON(w, http.StatusOK, progress)
 			return
 		}
 		if state == "failed" || state == "no_data" {
-			writeJSON(w, http.StatusOK, evaluationProgress{Status: state, Stage: "waiting"})
+			writeJSON(w, http.StatusOK, evaluationProgress{Status: state, Stage: "waiting", Areas: []contract.AreaProgress{}, Events: []contract.Event{}})
 			return
 		}
 		if saved, ok := s.evaluation.publishedTeams()[id]; ok && saved.Status == "done" {
-			writeJSON(w, http.StatusOK, evaluationProgress{Status: "done", Stage: "done"})
+			writeJSON(w, http.StatusOK, evaluationProgress{Status: "done", Stage: "done", Areas: []contract.AreaProgress{}, Events: []contract.Event{}})
 			return
 		}
 	}
-	writeJSON(w, http.StatusOK, evaluationProgress{Status: "no_data", Stage: "waiting"})
+	writeJSON(w, http.StatusOK, evaluationProgress{Status: "no_data", Stage: "waiting", Areas: []contract.AreaProgress{}, Events: []contract.Event{}})
+}
+
+func (e *evaluationService) readProgressSnapshot(id, jobID string, started time.Time, fallback evaluationProgress) evaluationProgress {
+	if !safeJobID.MatchString(jobID) || jobID == "." || jobID == ".." {
+		return fallback
+	}
+	path := filepath.Join(filepath.Dir(e.publicDir), "runs", jobID, "progress", id+".json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fallback
+	}
+	var snapshot evaluationProgress
+	if json.Unmarshal(data, &snapshot) != nil || snapshot.Areas == nil || snapshot.Events == nil {
+		return fallback
+	}
+	if startedAt, err := time.Parse(time.RFC3339, snapshot.StartedAt); err != nil || startedAt.Truncate(time.Second).Before(started.Truncate(time.Second)) {
+		return fallback
+	}
+	// Service state is authoritative for terminal status; event details remain run-scoped.
+	snapshot.Status = fallback.Status
+	if fallback.Status == "done" {
+		snapshot.Stage = "done"
+	}
+	if fallback.StartedAt != "" {
+		snapshot.StartedAt = fallback.StartedAt
+	}
+	return snapshot
 }
 
 func (e *evaluationService) publishedTeams() map[string]bundle.IndexTeam {

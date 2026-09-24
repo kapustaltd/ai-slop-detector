@@ -136,12 +136,16 @@ describe('guided team entry', () => {
   })
 
   it('shows live processing steps and the report when evaluation completes', async () => {
-    let finishEvaluation!: (response: Response) => void
-    const liveStatus = new Promise<Response>((resolve) => {
-      finishEvaluation = resolve
-    })
+    let progressCalls = 0
     const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
-      if (url === '/api/evaluation/progress/project') return liveStatus
+      if (url === '/api/evaluation/progress/project') {
+        progressCalls++
+        return json(
+          progressCalls === 1
+            ? { status: 'running', stage: 'waiting', areas: [], events: [] }
+            : { status: 'done', stage: 'done', areas: [], events: [] },
+        )
+      }
       if (options?.method === 'POST') return json({ id: 'project' }, 201)
       return json([])
     })
@@ -176,7 +180,12 @@ describe('guided team entry', () => {
       'pending',
     )
 
-    finishEvaluation(json({ status: 'done', stage: 'done' }))
+    expect(await screen.findByRole('region', { name: 'Ход анализа' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Смотреть ход оценки' })).toHaveAttribute(
+      'href',
+      '/team/project',
+    )
+    await waitFor(() => expect(progressCalls).toBeGreaterThan(1), { timeout: 5000 })
     expect(await screen.findByText('Отчёт готов.')).toBeInTheDocument()
     expect(screen.getByText('Публикация отчёта').closest('li')).toHaveAttribute(
       'data-status',

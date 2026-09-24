@@ -62,15 +62,17 @@ export function LeaderboardRowCard({ team }: LeaderboardRowCardProps) {
           <TeamWarningBadges warnings={team.warnings} />
         </div>
       ) : null}
+      {team.status === 'running' || team.status === 'done' ? (
+        <Link
+          className="inline-flex min-h-10 items-center text-sm text-link"
+          to={`/team/${team.team_id}`}
+        >
+          {team.status === 'running' ? 'Смотреть ход оценки' : 'Открыть отчёт'}
+        </Link>
+      ) : null}
     </>
   )
   const className =
     'flex flex-col gap-[9px] rounded-card border border-line bg-surface px-[13px] py-3 no-underline'
-  return team.status === 'done' || team.status === 'running' ? (
-    <Link to={`/team/${team.team_id}`} className={className}>
-      {content}
-    </Link>
-  ) : (
-    <article className={className}>{content}</article>
-  )
+  return <article className={className}>{content}</article>
 }

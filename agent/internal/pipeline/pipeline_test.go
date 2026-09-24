@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/bundle"
+	"github.com/kapustaltd/ai-slop-detector/agent/internal/contract"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/enrichment"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/provider"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/registry"
@@ -90,7 +91,7 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	fake := &provider.JSONProvider{Responses: [][]byte{[]byte("not-json"), valid}}
 	output := t.TempDir()
 	skillsDir := skillsFixture(t, "backend", "1.0.0")
-	config := Config{OutputDir: output, WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team 1", Repo: repoURL, Branch: "main", Active: true, Paths: map[string]string{"backend": "."}}}}, Rubrics: map[string]rubric.Rubric{"backend.v1": r}, Provider: fake, MaxParallel: 1, Templates: enrichmentTemplate(), Now: fixedNow, SkillsDir: skillsDir, RubricPaths: map[string]string{"backend.v1": "../../../rubrics/backend.v1.yaml"}}
+	config := Config{OutputDir: output, WorkspaceDir: t.TempDir(), Registry: registry.Registry{Teams: []registry.Team{{ID: "team-1", Name: "Team 1", Repo: repoURL, Branch: "main", Active: true, Paths: map[string]string{"backend": "."}}}}, Rubrics: map[string]rubric.Rubric{"backend.v1": r}, Provider: fake, MaxParallel: 1, Templates: enrichmentTemplate(), Now: fixedNow, SkillsDir: skillsDir, RubricPaths: map[string]string{"backend.v1": "../../../rubrics/backend.v1.yaml"}, TeamID: "team-1"}
 	config.Model = "test-model"
 	summary, err := (Pipeline{}).Run(context.Background(), config)
 	if err != nil {
@@ -110,6 +111,26 @@ func TestRunRetriesInvalidOutputAndResumesWithoutProvider(t *testing.T) {
 	}
 	if fake.Index != 2 {
 		t.Fatalf("provider attempts = %d", fake.Index)
+	}
+	progressData, err := os.ReadFile(filepath.Join(output, "progress", "team-1.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var progress contract.EvaluationProgress
+	if err := json.Unmarshal(progressData, &progress); err != nil {
+		t.Fatal(err)
+	}
+	if progress.Status != "done" || progress.Stage != "done" || progress.Areas[0].IncludedFiles == 0 || progress.Areas[0].Status != "done" {
+		t.Fatalf("pipeline progress snapshot: %+v", progress)
+	}
+	var sawScan bool
+	for _, event := range progress.Events {
+		if event.Kind == "scan" {
+			sawScan = true
+		}
+	}
+	if !sawScan {
+		t.Fatalf("missing scan event: %+v", progress.Events)
 	}
 
 	second := &provider.JSONProvider{}

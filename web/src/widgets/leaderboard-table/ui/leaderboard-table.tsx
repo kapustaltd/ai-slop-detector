@@ -159,7 +159,17 @@ export function LeaderboardTable({ teams, sort, onSort }: LeaderboardTableProps)
                   </div>
                 </td>
                 <td className="px-4 py-2.5">
-                  <TeamStatusBadge status={team.status} partial={team.partial} />
+                  <div className="flex flex-col items-start gap-1">
+                    <TeamStatusBadge status={team.status} partial={team.partial} />
+                    {team.status === 'running' || team.status === 'done' ? (
+                      <Link
+                        className="inline-flex min-h-9 items-center text-sm text-link"
+                        to={`/team/${team.team_id}`}
+                      >
+                        {team.status === 'running' ? 'Смотреть ход оценки' : 'Открыть отчёт'}
+                      </Link>
+                    ) : null}
+                  </div>
                 </td>
                 <td className="px-4 py-2.5">
                   <TeamWarningBadges warnings={team.warnings} />

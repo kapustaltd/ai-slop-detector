@@ -62,4 +62,12 @@ describe('LeaderboardTable', () => {
 
     expect(screen.queryByText('0.0')).not.toBeInTheDocument()
   })
+
+  it('даёт прямую ссылку на ход оценки из running статуса', () => {
+    renderTable([team({ status: 'running', total: null })])
+    expect(screen.getByRole('link', { name: 'Смотреть ход оценки' })).toHaveAttribute(
+      'href',
+      '/team/team-x',
+    )
+  })
 })

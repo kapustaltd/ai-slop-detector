@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
 import {
+  getRegistryEvaluationProgress,
   getRegistryEvaluationStatus,
   loadStats,
   loadRubric,
@@ -11,6 +12,7 @@ import {
   type TeamBundle,
   type StatsBundle,
   type RegistryEvaluationStatus,
+  type RegistryEvaluationProgress,
 } from '@/shared/api'
 import { EmptyState } from '@/shared/ui'
 import { DisclaimerBanner } from '@/widgets/disclaimer-banner'
@@ -25,6 +27,7 @@ import {
   TaxonomyTree,
 } from '@/widgets/taxonomy-tree'
 import { TeamHeader, teamRankContext } from '@/widgets/team-header'
+import { EvaluationProgressView } from '@/widgets/evaluation-progress'
 
 /**
  * Страница команды (спека 006). Композиция и значения — `design/reference/screens/04-06-team-*
@@ -43,6 +46,8 @@ export function TeamPage() {
   const [stats, setStats] = useState<StatsBundle | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const [liveStatus, setLiveStatus] = useState<RegistryEvaluationStatus | null>(null)
+  const [progress, setProgress] = useState<RegistryEvaluationProgress | null>(null)
+  const [pollError, setPollError] = useState(false)
   const [retryKey, setRetryKey] = useState(0)
 
   // Переход по prev/next (005-стиль ссылок) меняет :teamId без размонтирования страницы — состояние
@@ -54,36 +59,63 @@ export function TeamPage() {
     setState('loading')
     setTeam(null)
     setLiveStatus(null)
+    setProgress(null)
+    setPollError(false)
   }
 
   useEffect(() => {
     if (!teamId) return
     let cancelled = false
     const refresh = async () => {
-      let status: RegistryEvaluationStatus | null = null
+      let currentStatus: RegistryEvaluationStatus | null = null
       try {
-        status = await getRegistryEvaluationStatus(teamId)
+        const nextProgress = await getRegistryEvaluationProgress(teamId)
+        if (cancelled) return
+        setProgress(nextProgress)
+        setLiveStatus(nextProgress.status)
+        setPollError(false)
+        currentStatus = nextProgress.status
       } catch {
-        /* static mode */
+        setPollError(true)
+        try {
+          const status = await getRegistryEvaluationStatus(teamId)
+          if (!cancelled && status) {
+            setLiveStatus(status)
+            currentStatus = status
+          }
+        } catch {
+          // Keep the last successful snapshot while the polling request is unavailable.
+        }
       }
       if (cancelled) return
-      setLiveStatus(status)
-      try {
-        const [loadedTeam, backend, frontend, loadedStats] = await Promise.all([
-          loadTeam(teamId),
-          loadRubric('backend.v1'),
-          loadRubric('frontend.v1'),
-          loadStats(),
-        ])
-        if (cancelled) return
-        setTeam(loadedTeam)
-        setRubrics({ backend, frontend })
-        setStats(loadedStats)
+      const [loadedTeam, backend, frontend, loadedStats] = await Promise.allSettled([
+        loadTeam(teamId),
+        loadRubric('backend.v1'),
+        loadRubric('frontend.v1'),
+        loadStats(),
+      ])
+      if (cancelled) return
+      if (loadedTeam.status === 'fulfilled') {
+        setTeam(loadedTeam.value)
         setState('ready')
-      } catch {
-        if (!cancelled)
-          setState(status === 'running' || status === 'no_data' ? 'pending' : 'missing')
+      } else {
+        setState((current) => {
+          if (currentStatus == null) return current === 'loading' ? 'missing' : current
+          if (
+            currentStatus === 'running' ||
+            currentStatus === 'no_data' ||
+            currentStatus === 'failed'
+          ) {
+            return 'pending'
+          }
+          return current === 'ready' ? current : 'missing'
+        })
       }
+      if (backend.status === 'fulfilled')
+        setRubrics((current) => ({ ...current, backend: backend.value }))
+      if (frontend.status === 'fulfilled')
+        setRubrics((current) => ({ ...current, frontend: frontend.value }))
+      if (loadedStats.status === 'fulfilled') setStats(loadedStats.value)
     }
     void refresh()
     const timer = window.setInterval(() => void refresh(), 5000)
@@ -120,9 +152,38 @@ export function TeamPage() {
 
   if (state === 'pending') {
     return (
-      <main className="mx-auto max-w-[1600px] p-6" aria-live="polite">
-        <h1 className="text-h1">Оценка команды выполняется</h1>
-        <p className="text-fg-muted">Готовые области появятся здесь автоматически.</p>
+      <main className="mx-auto max-w-[1600px] space-y-[18px] p-4 sm:p-6" aria-live="polite">
+        <h1 className="text-h1">
+          {progress?.status === 'failed'
+            ? 'Оценка остановилась до завершения'
+            : progress?.status === 'no_data'
+              ? 'Оценка ожидает запуска'
+              : 'Оценка команды выполняется'}
+        </h1>
+        {progress ? (
+          <>
+            <EvaluationProgressView progress={progress} rubrics={rubrics} />
+            {pollError ? (
+              <p role="status" className="text-sm text-fg-muted">
+                Не удалось обновить ход оценки. Последние подтверждённые данные сохранены.
+              </p>
+            ) : null}
+          </>
+        ) : pollError ? (
+          <p
+            role="status"
+            className="rounded-panel border border-line bg-surface p-4 text-sm text-fg-muted"
+          >
+            Не удалось обновить ход оценки. Повторяем запрос…
+          </p>
+        ) : (
+          <p
+            role="status"
+            className="rounded-panel border border-line bg-surface p-4 text-sm text-fg-muted"
+          >
+            Получаем структуру репозитория…
+          </p>
+        )}
       </main>
     )
   }
@@ -167,20 +228,35 @@ export function TeamPage() {
         team={displayTeam}
         rankContext={liveStatus === 'running' ? { ...rankContext, rank: null } : rankContext}
       />
-      {liveStatus === 'running' ? (
-        <p role="status" className="rounded-panel border border-line bg-surface p-4 text-sm">
-          Оценка продолжается. Ниже показаны уже опубликованные области; страница обновляется
-          автоматически.
-        </p>
+      {progress &&
+      (liveStatus === 'running' ||
+        liveStatus === 'failed' ||
+        progress.areas.some((area) => area.status === 'failed')) ? (
+        <>
+          <EvaluationProgressView progress={progress} rubrics={rubrics} />
+          {pollError ? (
+            <p role="status" className="text-sm text-fg-muted">
+              Не удалось обновить ход оценки. Последние подтверждённые данные сохранены.
+            </p>
+          ) : null}
+        </>
       ) : null}
       <DisclaimerBanner />
 
       {doneAreas.length === 0 ? (
-        <EmptyState
-          icon={FileQuestion}
-          title="Оценка недоступна"
-          description="Ни одна область не оценена — данных для профиля и разбора пока нет."
-        />
+        liveStatus === 'running' || liveStatus === 'failed' ? (
+          <div className="rounded-panel border border-line bg-surface p-4 text-sm text-fg-muted">
+            {liveStatus === 'failed'
+              ? 'Оценка остановилась до публикации отчёта. Сохранённые события доступны выше.'
+              : 'Результаты появятся здесь после публикации первой области.'}
+          </div>
+        ) : (
+          <EmptyState
+            icon={FileQuestion}
+            title="Оценка недоступна"
+            description="Ни одна область не оценена — данных для профиля и разбора пока нет."
+          />
+        )
       ) : (
         <>
           <ScoreSummary team={displayTeam} />
