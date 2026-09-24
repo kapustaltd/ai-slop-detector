@@ -12,6 +12,11 @@
 - The worker has one active run, a bounded queue and a configurable daily submission limit. Anonymous registration must not create unlimited model spend. A missing worker configuration is shown as `no_data` and never described as processing.
 - Registration success, queue state, evaluation failure and publication failure are distinct. A failed evaluation does not produce a fake score.
 - A completed row links to its team page. Pending and failed rows show their status without a broken detail link.
+- A running team with an already published area can open that available report. The page refreshes
+  while evaluation continues and never presents unfinished areas as scored.
+- The pipeline writes an atomic partial team file after each area finishes. The live API reads it
+  from the current runner job's output directory under the same data root as its public bundle;
+  an older file from a previous run is ignored until this run publishes a new one.
 - Existing static fixture pages and tests continue to work when the API is absent.
 
 ## Verification

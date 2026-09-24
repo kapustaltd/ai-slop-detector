@@ -15,6 +15,55 @@ function json(data: unknown, status = 200) {
 }
 
 describe('guided team entry', () => {
+  it('updates a team and deletes it with the operator token', async () => {
+    const existing = {
+      id: 'alpha',
+      name: 'Альфа',
+      repo: 'https://github.com/org/alpha',
+      branch: 'main',
+      active: true,
+    }
+    let teams = [existing]
+    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
+      if (url === '/api/bundle/index')
+        return json({ teams: [{ team_id: 'alpha', status: 'done' }] })
+      if (options?.method === 'PUT') {
+        expect(options.headers).toMatchObject({ Authorization: 'Bearer secret' })
+        teams = [JSON.parse(options.body as string)]
+        return json(teams[0])
+      }
+      if (options?.method === 'DELETE') {
+        expect(options.headers).toMatchObject({ Authorization: 'Bearer secret' })
+        teams = []
+        return new Response(null, { status: 204 })
+      }
+      return json(teams)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Изменить Альфа' }))
+    await user.clear(screen.getByRole('textbox', { name: 'Ветка' }))
+    await user.type(screen.getByRole('textbox', { name: 'Ветка' }), 'release')
+    await user.type(screen.getByLabelText('Токен оператора'), 'secret')
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+    expect(await screen.findByText('Команда обновлена.')).toBeInTheDocument()
+    expect(screen.getByText('release')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Удалить Альфа' }))
+    await user.type(screen.getByLabelText('Токен оператора'), 'secret')
+    await user.click(screen.getByRole('button', { name: 'Удалить' }))
+    expect(await screen.findByText('Команда удалена из реестра.')).toBeInTheDocument()
+    expect(screen.getByText('В реестре пока нет команд.')).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([, options]) => options?.method === 'PUT')).toBe(true)
+    expect(fetchMock.mock.calls.some(([, options]) => options?.method === 'DELETE')).toBe(true)
+  })
+
   it('stops an existing repository before details and does not post', async () => {
     const fetchMock = vi.fn(async (_url: string, options?: RequestInit) => {
       if (options?.method === 'POST') throw new Error('unexpected POST')
@@ -92,7 +141,7 @@ describe('guided team entry', () => {
       finishEvaluation = resolve
     })
     const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
-      if (url === '/api/bundle/index') return liveStatus
+      if (url === '/api/evaluation/progress/project') return liveStatus
       if (options?.method === 'POST') return json({ id: 'project' }, 201)
       return json([])
     })
@@ -113,17 +162,21 @@ describe('guided team entry', () => {
     await user.click(await screen.findByRole('button', { name: 'Посмотреть итог' }))
     await user.click(screen.getByRole('button', { name: 'Добавить в реестр' }))
 
-    expect(await screen.findByText('Оценка репозитория')).toBeInTheDocument()
-    expect(screen.getByText('Оценка репозитория').closest('li')).toHaveAttribute(
+    expect(await screen.findByText('Ожидание в очереди')).toBeInTheDocument()
+    expect(screen.getByText('Ожидание в очереди').closest('li')).toHaveAttribute(
       'data-status',
       'active',
+    )
+    expect(screen.getByText('Анализ репозитория').closest('li')).toHaveAttribute(
+      'data-status',
+      'pending',
     )
     expect(screen.getByText('Публикация отчёта').closest('li')).toHaveAttribute(
       'data-status',
       'pending',
     )
 
-    finishEvaluation(json({ teams: [{ team_id: 'project', status: 'done' }] }))
+    finishEvaluation(json({ status: 'done', stage: 'done' }))
     expect(await screen.findByText('Отчёт готов.')).toBeInTheDocument()
     expect(screen.getByText('Публикация отчёта').closest('li')).toHaveAttribute(
       'data-status',

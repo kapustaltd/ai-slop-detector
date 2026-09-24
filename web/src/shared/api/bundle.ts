@@ -109,15 +109,21 @@ export async function loadLeaderboardIndex(): Promise<LeaderboardIndexStub> {
 
 /** Данные одной команды. Отдельный чанк, поэтому загрузка асинхронная. */
 export async function loadTeam(teamId: string): Promise<TeamBundle> {
+  let liveIndexAvailable = false
   try {
     const response = await fetch(`/api/bundle/teams/${encodeURIComponent(teamId)}`, {
       cache: 'no-store',
     })
     if (response.ok) return (await response.json()) as TeamBundle
     if (response.status !== 404) throw new BundleError('Не удалось загрузить оценку команды')
+    const indexResponse = await fetch('/api/bundle/index', { cache: 'no-store' })
+    if (indexResponse.ok) {
+      liveIndexAvailable = true
+    }
   } catch (cause) {
     if (cause instanceof BundleError) throw cause
   }
+  if (liveIndexAvailable) throw new BundleError(`Оценка команды ${teamId} ещё не опубликована`)
   const loader = teamModules[`/data/teams/${teamId}.json`]
   if (!loader) {
     throw new BundleError(`В бандле нет файла команды ${teamId}`)

@@ -59,4 +59,22 @@ describe('доступ к дата-бандлу', () => {
       vi.unstubAllGlobals()
     }
   })
+
+  it('does not show an old static report while the live report is pending', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url === '/api/bundle/index'
+          ? new Response(JSON.stringify({ teams: [{ team_id: 'team-01', status: 'running' }] }), {
+              status: 200,
+            })
+          : new Response(null, { status: 404 }),
+      ),
+    )
+    try {
+      await expect(loadTeam('team-01')).rejects.toBeInstanceOf(BundleError)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })

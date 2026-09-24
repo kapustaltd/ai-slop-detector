@@ -22,6 +22,19 @@ type RemoteEvaluator struct {
 }
 
 func (e RemoteEvaluator) Evaluate(ctx context.Context, team registry.Team) error {
+	return e.EvaluateWithProgress(ctx, team, nil)
+}
+
+func (e RemoteEvaluator) EvaluateWithProgress(ctx context.Context, team registry.Team, report func(string)) error {
+	return e.EvaluateWithProgressAndJob(ctx, team, report, nil)
+}
+
+func (e RemoteEvaluator) EvaluateWithProgressAndJob(ctx context.Context, team registry.Team, report func(string), onJob func(string)) error {
+	progress := func(stage string) {
+		if report != nil {
+			report(stage)
+		}
+	}
 	if e.URL == "" || e.Token == "" {
 		return errors.New("runner URL and token are required")
 	}
@@ -37,6 +50,7 @@ func (e RemoteEvaluator) Evaluate(ctx context.Context, team registry.Team) error
 		"repository_url": team.Repo, "repository_id": team.ID, "branch": team.Branch, "area": "both",
 	})
 	var jobID string
+	progress("dispatching")
 	for jobID == "" {
 		request, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(e.URL, "/")+"/api/v1/runs", bytes.NewReader(input))
 		if err != nil {
@@ -65,6 +79,10 @@ func (e RemoteEvaluator) Evaluate(ctx context.Context, team registry.Team) error
 			return fmt.Errorf("runner rejected evaluation request (HTTP %d)", response.StatusCode)
 		}
 		jobID = body.Data.ID
+		if onJob != nil {
+			onJob(jobID)
+		}
+		progress("runner_queued")
 	}
 	for {
 		if err := waitForEvaluation(ctx, interval); err != nil {
@@ -91,10 +109,14 @@ func (e RemoteEvaluator) Evaluate(ctx context.Context, team registry.Team) error
 		}
 		switch body.Data.Status {
 		case "succeeded":
+			progress("publishing")
 			return nil
 		case "failed":
 			return errors.New("runner evaluation failed")
-		case "queued", "running":
+		case "queued":
+			progress("runner_queued")
+		case "running":
+			progress("analyzing")
 		default:
 			return errors.New("runner returned unknown evaluation state")
 		}

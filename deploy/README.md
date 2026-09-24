@@ -39,7 +39,8 @@ Build `agent/cmd/registry-api` for the server, install it as
 `/var/lib/ai-slop-detector/registry.yaml` with `version: "1"` and `teams: []`, owned by the
 `ai-slop-detector` service account. Enable the service and proxy `/api/teams` through Nginx to
 `172.17.0.1:8082` on the current Docker bridge (or `127.0.0.1:8082` on host Nginx). The sample
-configuration is `deploy/nginx.docker.conf.example`. Proxy `/api/bundle/` to the same service.
+configuration is `deploy/nginx.docker.conf.example`. Proxy `/api/bundle/` and
+`/api/evaluation/progress/` to the same service.
 
 ### Enable automatic evaluation
 
@@ -55,6 +56,11 @@ The bridge submits one team at a time, limits automatic starts to ten per UTC da
 `runs/` and publishes successful team bundles under `public/`. On startup the bridge queues active registered teams
 that have no published result, including teams added before this update. Use
 `GET /api/bundle/index` to check their states. A server restart does not reset the daily limit.
+
+For live partial reports, the runner and registry API must share the same data root. With the
+example service units, the runner writes `runs/<job-id>/teams/<id>.json` and the registry API's
+`--public-bundle` is `public/` beside `runs/`. The pipeline updates the job's team file after
+each area; the API reads only the current job's file and serves the completed report from `public/`.
 
 Update the mounted Nginx configuration and reload Nginx after verifying the new route. The
 frontend also supports the older registry API: it shows registered teams with “Нет данных” until

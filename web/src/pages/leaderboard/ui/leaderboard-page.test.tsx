@@ -48,7 +48,10 @@ describe('LeaderboardPage', () => {
     )
     await waitFor(() => expect(screen.getAllByText('Новая команда').length).toBeGreaterThan(0))
     expect(screen.queryByText('Команда 01')).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Новая команда' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Новая команда' })).toHaveAttribute(
+      'href',
+      '/team/new-team',
+    )
   })
   it('отрисовывает команды из фикстурного бандла и время сборки бандла (FR-011)', () => {
     render(

@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from 'react'
 
 import { cn } from 'cn'
 
-export type ChainOfThoughtStepStatus = 'complete' | 'active' | 'pending'
+export type ChainOfThoughtStepStatus = 'complete' | 'active' | 'pending' | 'failed'
 
 export function ChainOfThought({ className, ...props }: ComponentProps<typeof Collapsible.Root>) {
   return <Collapsible.Root className={cn('border-l-2 border-line pl-3', className)} {...props} />
@@ -75,6 +75,7 @@ export function ChainOfThoughtStep({
             'border-primary bg-primary animate-pulse motion-reduce:animate-none',
           status === 'complete' && 'border-fg-muted bg-fg-muted',
           status === 'pending' && 'border-line-strong bg-surface',
+          status === 'failed' && 'border-sev-critical-fg bg-sev-critical-fg',
         )}
       />
       <div className={cn('min-w-0 text-sm', status === 'pending' ? 'text-fg-muted' : 'text-fg')}>
@@ -84,7 +85,9 @@ export function ChainOfThoughtStep({
             ? ' — завершено'
             : status === 'active'
               ? ' — выполняется'
-              : ' — ожидает'}
+              : status === 'failed'
+                ? ' — ошибка'
+                : ' — ожидает'}
         </span>
         {description ? <p className="mb-0 mt-1 text-xs text-fg-muted">{description}</p> : null}
       </div>

@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
 import {
+  getRegistryEvaluationStatus,
   loadStats,
   loadRubric,
   loadTeam,
   type RubricBundle,
   type TeamBundle,
   type StatsBundle,
+  type RegistryEvaluationStatus,
 } from '@/shared/api'
 import { EmptyState } from '@/shared/ui'
 import { DisclaimerBanner } from '@/widgets/disclaimer-banner'
@@ -31,7 +33,7 @@ import { TeamHeader, teamRankContext } from '@/widgets/team-header'
  * (команды нет в бандле), `error` (сбой чтения бандла).
  */
 
-type PageState = 'loading' | 'ready' | 'missing' | 'error'
+type PageState = 'loading' | 'ready' | 'pending' | 'missing' | 'error'
 
 export function TeamPage() {
   const { teamId } = useParams()
@@ -40,6 +42,8 @@ export function TeamPage() {
   const [rubrics, setRubrics] = useState<Record<string, RubricBundle>>({})
   const [stats, setStats] = useState<StatsBundle | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
+  const [liveStatus, setLiveStatus] = useState<RegistryEvaluationStatus | null>(null)
+  const [retryKey, setRetryKey] = useState(0)
 
   // Переход по prev/next (005-стиль ссылок) меняет :teamId без размонтирования страницы — состояние
   // сбрасывается во время рендера (react.dev: «Adjusting state when a prop changes»), не в эффекте,
@@ -49,48 +53,49 @@ export function TeamPage() {
     setRenderedForTeamId(teamId)
     setState('loading')
     setTeam(null)
+    setLiveStatus(null)
   }
 
   useEffect(() => {
     if (!teamId) return
     let cancelled = false
-    Promise.all([
-      loadTeam(teamId),
-      loadRubric('backend.v1'),
-      loadRubric('frontend.v1'),
-      loadStats(),
-    ])
-      .then(([loadedTeam, backend, frontend, loadedStats]) => {
+    const refresh = async () => {
+      let status: RegistryEvaluationStatus | null = null
+      try {
+        status = await getRegistryEvaluationStatus(teamId)
+      } catch {
+        /* static mode */
+      }
+      if (cancelled) return
+      setLiveStatus(status)
+      try {
+        const [loadedTeam, backend, frontend, loadedStats] = await Promise.all([
+          loadTeam(teamId),
+          loadRubric('backend.v1'),
+          loadRubric('frontend.v1'),
+          loadStats(),
+        ])
         if (cancelled) return
         setTeam(loadedTeam)
         setRubrics({ backend, frontend })
         setStats(loadedStats)
         setState('ready')
-      })
-      .catch(() => {
-        if (!cancelled) setState('missing')
-      })
+      } catch {
+        if (!cancelled)
+          setState(status === 'running' || status === 'no_data' ? 'pending' : 'missing')
+      }
+    }
+    void refresh()
+    const timer = window.setInterval(() => void refresh(), 5000)
     return () => {
       cancelled = true
+      window.clearInterval(timer)
     }
-  }, [teamId])
+  }, [teamId, retryKey])
 
   const retry = () => {
     setState('loading')
-    if (!teamId) return
-    Promise.all([
-      loadTeam(teamId),
-      loadRubric('backend.v1'),
-      loadRubric('frontend.v1'),
-      loadStats(),
-    ])
-      .then(([loadedTeam, backend, frontend, loadedStats]) => {
-        setTeam(loadedTeam)
-        setRubrics({ backend, frontend })
-        setStats(loadedStats)
-        setState('ready')
-      })
-      .catch(() => setState('error'))
+    setRetryKey((key) => key + 1)
   }
 
   const path = parseTaxonomyPath(searchParams)
@@ -109,6 +114,15 @@ export function TeamPage() {
     return (
       <main className="mx-auto max-w-[1600px] p-6" aria-busy="true">
         <p className="text-[15px] text-fg-muted">Загрузка команды…</p>
+      </main>
+    )
+  }
+
+  if (state === 'pending') {
+    return (
+      <main className="mx-auto max-w-[1600px] p-6" aria-live="polite">
+        <h1 className="text-h1">Оценка команды выполняется</h1>
+        <p className="text-fg-muted">Готовые области появятся здесь автоматически.</p>
       </main>
     )
   }
@@ -143,10 +157,22 @@ export function TeamPage() {
     TeamBundle['areas'][string],
   ][]
   const doneAreas = areaEntries.filter(([, area]) => area.status === 'done')
+  const displayTeam: TeamBundle =
+    liveStatus === 'running' ? { ...team, status: 'running', total: null, partial: true } : team
+  const rankContext = teamRankContext(team.team_id)
 
   return (
     <main className="mx-auto max-w-[1600px] space-y-[18px] p-4 sm:p-6">
-      <TeamHeader team={team} rankContext={teamRankContext(team.team_id)} />
+      <TeamHeader
+        team={displayTeam}
+        rankContext={liveStatus === 'running' ? { ...rankContext, rank: null } : rankContext}
+      />
+      {liveStatus === 'running' ? (
+        <p role="status" className="rounded-panel border border-line bg-surface p-4 text-sm">
+          Оценка продолжается. Ниже показаны уже опубликованные области; страница обновляется
+          автоматически.
+        </p>
+      ) : null}
       <DisclaimerBanner />
 
       {doneAreas.length === 0 ? (
@@ -157,7 +183,7 @@ export function TeamPage() {
         />
       ) : (
         <>
-          <ScoreSummary team={team} />
+          <ScoreSummary team={displayTeam} />
 
           {doneAreas.map(([areaName, area]) => {
             const findingCounts = countFindings(area)

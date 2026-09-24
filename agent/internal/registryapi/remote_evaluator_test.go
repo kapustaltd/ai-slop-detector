@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,17 +35,31 @@ func TestRemoteEvaluatorSubmitsAuthenticatedJobAndWaitsForSuccess(t *testing.T) 
 		}
 		if r.Method == http.MethodGet && r.URL.Path == "/api/v1/runs/job-1" {
 			polls++
-			_, _ = w.Write([]byte(`{"data":{"status":"succeeded"}}`))
+			status := "succeeded"
+			if polls == 1 {
+				status = "queued"
+			} else if polls == 2 {
+				status = "running"
+			}
+			_, _ = w.Write([]byte(`{"data":{"status":"` + status + `"}}`))
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer runner.Close()
 	evaluator := RemoteEvaluator{URL: runner.URL, Token: "internal-token", PollInterval: time.Millisecond}
-	if err := evaluator.Evaluate(context.Background(), registry.Team{ID: "team", Repo: "https://github.com/org/repo", Branch: "main", Active: true}); err != nil {
+	var stages []string
+	var jobID string
+	if err := evaluator.EvaluateWithProgressAndJob(context.Background(), registry.Team{ID: "team", Repo: "https://github.com/org/repo", Branch: "main", Active: true}, func(stage string) { stages = append(stages, stage) }, func(id string) { jobID = id }); err != nil {
 		t.Fatal(err)
 	}
-	if posts != 1 || polls != 1 {
+	if jobID != "job-1" {
+		t.Fatalf("job ID = %q", jobID)
+	}
+	if posts != 1 || polls != 3 {
 		t.Fatalf("posts=%d polls=%d", posts, polls)
+	}
+	if want := "dispatching,runner_queued,runner_queued,analyzing,publishing"; strings.Join(stages, ",") != want {
+		t.Fatalf("stages=%v", stages)
 	}
 }

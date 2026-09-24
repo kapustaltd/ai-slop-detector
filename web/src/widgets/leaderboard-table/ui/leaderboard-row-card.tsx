@@ -66,7 +66,7 @@ export function LeaderboardRowCard({ team }: LeaderboardRowCardProps) {
   )
   const className =
     'flex flex-col gap-[9px] rounded-card border border-line bg-surface px-[13px] py-3 no-underline'
-  return team.status === 'done' ? (
+  return team.status === 'done' || team.status === 'running' ? (
     <Link to={`/team/${team.team_id}`} className={className}>
       {content}
     </Link>

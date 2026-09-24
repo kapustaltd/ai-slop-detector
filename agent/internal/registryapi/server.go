@@ -40,6 +40,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/bundle/index", s.liveIndex)
 	mux.HandleFunc("GET /api/bundle/stats", s.liveStats)
 	mux.HandleFunc("GET /api/bundle/teams/{id}", s.liveTeam)
+	mux.HandleFunc("GET /api/evaluation/progress/{id}", s.liveProgress)
 	mux.HandleFunc("POST /api/teams", s.createTeam)
 	mux.HandleFunc("PUT /api/teams/{id}", s.updateTeam)
 	mux.HandleFunc("DELETE /api/teams/{id}", s.deleteTeam)
@@ -48,7 +49,7 @@ func (s *Server) Handler() http.Handler {
 
 func (s *Server) authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/healthz" || (r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/bundle/")) || (r.URL.Path == "/api/teams" && (r.Method == http.MethodGet || r.Method == http.MethodPost)) {
+		if r.URL.Path == "/healthz" || (r.Method == http.MethodGet && (strings.HasPrefix(r.URL.Path, "/api/bundle/") || strings.HasPrefix(r.URL.Path, "/api/evaluation/progress/"))) || (r.URL.Path == "/api/teams" && (r.Method == http.MethodGet || r.Method == http.MethodPost)) {
 			next.ServeHTTP(w, r)
 			return
 		}

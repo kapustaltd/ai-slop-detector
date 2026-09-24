@@ -21,6 +21,20 @@ type TeamEvaluator interface {
 	Evaluate(context.Context, registry.Team) error
 }
 
+type progressTeamEvaluator interface {
+	EvaluateWithProgress(context.Context, registry.Team, func(string)) error
+}
+
+type jobTeamEvaluator interface {
+	EvaluateWithProgressAndJob(context.Context, registry.Team, func(string), func(string)) error
+}
+
+type evaluationProgress struct {
+	Status    string `json:"status"`
+	Stage     string `json:"stage"`
+	StartedAt string `json:"started_at,omitempty"`
+}
+
 type evaluationService struct {
 	registryPath, publicDir string
 	budgetPath              string
@@ -28,6 +42,8 @@ type evaluationService struct {
 	queue                   chan string
 	mu                      sync.RWMutex
 	states                  map[string]string
+	progress                map[string]evaluationProgress
+	jobIDs                  map[string]string
 	started                 map[string]time.Time
 	limit                   int
 }
@@ -44,7 +60,7 @@ func (s *Server) ConfigureEvaluation(publicDir string, evaluator TeamEvaluator, 
 	if err := os.MkdirAll(filepath.Dir(publicDir), 0o750); err != nil {
 		return err
 	}
-	e := &evaluationService{registryPath: s.registryPath, publicDir: publicDir, budgetPath: filepath.Join(filepath.Dir(publicDir), "evaluation-budget.json"), evaluator: evaluator, queue: make(chan string, 32), states: map[string]string{}, started: map[string]time.Time{}, limit: dailyLimit}
+	e := &evaluationService{registryPath: s.registryPath, publicDir: publicDir, budgetPath: filepath.Join(filepath.Dir(publicDir), "evaluation-budget.json"), evaluator: evaluator, queue: make(chan string, 32), states: map[string]string{}, progress: map[string]evaluationProgress{}, jobIDs: map[string]string{}, started: map[string]time.Time{}, limit: dailyLimit}
 	if data, err := os.ReadFile(e.budgetPath); err == nil {
 		if err := json.Unmarshal(data, &e.started); err != nil {
 			return err
@@ -117,7 +133,23 @@ func (e *evaluationService) enqueue(id string) {
 		return
 	}
 	e.states[id] = "running"
+	e.progress[id] = evaluationProgress{Status: "running", Stage: "waiting", StartedAt: e.started[id].Format(time.RFC3339)}
 	e.queue <- id
+}
+
+func (e *evaluationService) setStage(id, stage string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	progress := e.progress[id]
+	progress.Stage = stage
+	progress.Status = "running"
+	e.progress[id] = progress
+}
+
+func (e *evaluationService) setJob(id, jobID string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.jobIDs[id] = jobID
 }
 
 func (e *evaluationService) work() {
@@ -129,7 +161,14 @@ func (e *evaluationService) work() {
 				if team.ID == id && team.Active {
 					found = true
 					ctx, cancel := context.WithTimeout(context.Background(), 45*time.Minute)
-					err = e.evaluator.Evaluate(ctx, team)
+					e.setStage(id, "dispatching")
+					if evaluator, ok := e.evaluator.(jobTeamEvaluator); ok {
+						err = evaluator.EvaluateWithProgressAndJob(ctx, team, func(stage string) { e.setStage(id, stage) }, func(jobID string) { e.setJob(id, jobID) })
+					} else if evaluator, ok := e.evaluator.(progressTeamEvaluator); ok {
+						err = evaluator.EvaluateWithProgress(ctx, team, func(stage string) { e.setStage(id, stage) })
+					} else {
+						err = e.evaluator.Evaluate(ctx, team)
+					}
 					cancel()
 					break
 				}
@@ -139,14 +178,65 @@ func (e *evaluationService) work() {
 			}
 		}
 		e.mu.Lock()
+		delete(e.jobIDs, id)
 		if err != nil {
 			e.states[id] = "failed"
+			progress := e.progress[id]
+			progress.Status = "failed"
+			e.progress[id] = progress
 			log.Printf("evaluation team=%s failed: %v", id, err)
 		} else {
 			delete(e.states, id)
+			progress := e.progress[id]
+			progress.Status = "done"
+			progress.Stage = "done"
+			e.progress[id] = progress
 		}
 		e.mu.Unlock()
 	}
+}
+
+func (s *Server) liveProgress(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if !safeTeamID.MatchString(id) {
+		writeError(w, http.StatusNotFound, "Команда не найдена")
+		return
+	}
+	registered, err := registry.Load(s.registryPath)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Не удалось прочитать реестр команд")
+		return
+	}
+	found := false
+	for _, team := range registered.Teams {
+		if team.ID == id && team.Active {
+			found = true
+			break
+		}
+	}
+	if !found {
+		writeError(w, http.StatusNotFound, "Команда не найдена")
+		return
+	}
+	if s.evaluation != nil {
+		s.evaluation.mu.RLock()
+		progress, ok := s.evaluation.progress[id]
+		state := s.evaluation.states[id]
+		s.evaluation.mu.RUnlock()
+		if ok {
+			writeJSON(w, http.StatusOK, progress)
+			return
+		}
+		if state == "failed" || state == "no_data" {
+			writeJSON(w, http.StatusOK, evaluationProgress{Status: state, Stage: "waiting"})
+			return
+		}
+		if saved, ok := s.evaluation.publishedTeams()[id]; ok && saved.Status == "done" {
+			writeJSON(w, http.StatusOK, evaluationProgress{Status: "done", Stage: "done"})
+			return
+		}
+	}
+	writeJSON(w, http.StatusOK, evaluationProgress{Status: "no_data", Stage: "waiting"})
 }
 
 func (e *evaluationService) publishedTeams() map[string]bundle.IndexTeam {
@@ -163,6 +253,48 @@ func (e *evaluationService) publishedTeams() map[string]bundle.IndexTeam {
 		result[team.TeamID] = team
 	}
 	return result
+}
+
+func (e *evaluationService) reportIsCurrent(id, builtAt string) bool {
+	e.mu.RLock()
+	state, started := e.states[id], e.started[id]
+	e.mu.RUnlock()
+	if state == "failed" {
+		return false
+	}
+	if state != "running" || started.IsZero() {
+		return true
+	}
+	publishedAt, err := time.Parse(time.RFC3339, builtAt)
+	return err == nil && !publishedAt.Before(started.Truncate(time.Second))
+}
+
+func (e *evaluationService) partialTeam(id string) (bundle.Team, bool) {
+	e.mu.RLock()
+	jobID := e.jobIDs[id]
+	state, started := e.states[id], e.started[id]
+	e.mu.RUnlock()
+	paths := []string{filepath.Join(e.publicDir, "teams", id+".json")}
+	if safeJobID.MatchString(jobID) && jobID != "." && jobID != ".." {
+		paths = append([]string{filepath.Join(filepath.Dir(e.publicDir), "runs", jobID, "teams", id+".json")}, paths...)
+	}
+	for _, path := range paths {
+		if state == "running" {
+			info, err := os.Stat(path)
+			if err != nil || info.ModTime().Before(started) {
+				continue
+			}
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		var team bundle.Team
+		if json.Unmarshal(data, &team) == nil && team.TeamID == id && e.reportIsCurrent(id, team.BuiltAt) {
+			return team, true
+		}
+	}
+	return bundle.Team{}, false
 }
 
 func (s *Server) liveIndex(w http.ResponseWriter, _ *http.Request) {
@@ -190,11 +322,6 @@ func (s *Server) liveIndex(w http.ResponseWriter, _ *http.Request) {
 		if !team.Active {
 			continue
 		}
-		if saved, ok := published[team.ID]; ok && saved.Status == "done" {
-			saved.Name = team.Name
-			index.Teams = append(index.Teams, saved)
-			continue
-		}
 		status := "no_data"
 		if s.evaluation != nil {
 			s.evaluation.mu.RLock()
@@ -202,6 +329,29 @@ func (s *Server) liveIndex(w http.ResponseWriter, _ *http.Request) {
 				status = state
 			}
 			s.evaluation.mu.RUnlock()
+		}
+		if status == "running" && s.evaluation != nil {
+			if partial, ok := s.evaluation.partialTeam(team.ID); ok {
+				areas := map[string]float64{}
+				for name, area := range partial.Areas {
+					if area.Status == "done" && area.Score != nil {
+						areas[name] = *area.Score
+					}
+				}
+				index.Teams = append(index.Teams, bundle.IndexTeam{TeamID: team.ID, Name: team.Name, Status: status, Areas: areas, Partial: len(areas) > 0})
+				continue
+			}
+		}
+		if saved, ok := published[team.ID]; ok && s.evaluation != nil && s.evaluation.reportIsCurrent(team.ID, index.BuiltAt) {
+			saved.Name = team.Name
+			if status == "running" {
+				saved.Status = "running"
+				saved.Total = nil
+				saved.Rank = nil
+				saved.Partial = true
+			}
+			index.Teams = append(index.Teams, saved)
+			continue
 		}
 		index.Teams = append(index.Teams, bundle.IndexTeam{TeamID: team.ID, Name: team.Name, Status: status, Areas: map[string]float64{}, Partial: false})
 	}
@@ -233,6 +383,7 @@ func (s *Server) liveIndex(w http.ResponseWriter, _ *http.Request) {
 }
 
 var safeTeamID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`)
+var safeJobID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`)
 
 func (s *Server) liveTeam(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
@@ -256,13 +407,12 @@ func (s *Server) liveTeam(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "Команда не найдена")
 		return
 	}
-	data, err := os.ReadFile(filepath.Join(s.evaluation.publicDir, "teams", id+".json"))
-	if err != nil {
+	saved, ok := s.evaluation.partialTeam(id)
+	if !ok {
 		writeError(w, http.StatusNotFound, "Оценка команды ещё не готова")
 		return
 	}
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	_, _ = w.Write(data)
+	writeJSON(w, http.StatusOK, saved)
 }
 
 func (s *Server) liveStats(w http.ResponseWriter, _ *http.Request) {

@@ -18,6 +18,26 @@ import (
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/rubric"
 )
 
+func TestWritePartialTeamPublishesOnlyCompletedArea(t *testing.T) {
+	root := t.TempDir()
+	score := 8.0
+	result := teamRun{Registry: registry.Team{ID: "alpha", Name: "Alpha"}, CommitSHA: "abc", Areas: map[string]bundle.Area{"backend": {Status: "done", Score: &score}}}
+	if err := writePartialTeam(root, time.Date(2026, 9, 24, 0, 0, 0, 0, time.UTC), result); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(root, "teams", "alpha.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var published bundle.Team
+	if err := json.Unmarshal(data, &published); err != nil {
+		t.Fatal(err)
+	}
+	if published.Status != "running" || published.Total != nil || !published.Partial || published.Areas["backend"].Status != "done" || len(published.Areas) != 1 {
+		t.Fatalf("partial team: %+v", published)
+	}
+}
+
 // skillsFixture кладёт на диск скилл ревью: пайплайн читает из него skill_version,
 // поэтому без файла прогон невозможен (спека 003 FR-013e).
 func skillsFixture(t *testing.T, area, version string) string {

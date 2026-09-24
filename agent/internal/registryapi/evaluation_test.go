@@ -40,6 +40,126 @@ func (f *fakeEvaluator) Evaluate(_ context.Context, team registry.Team) error {
 }
 func scorePtr(value float64) *float64 { return &value }
 
+func TestRunningTeamReadsCurrentRunnerOutput(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "registry.yaml")
+	if err := os.WriteFile(path, []byte("version: '1'\nteams:\n  - id: alpha\n    name: Alpha\n    repo: https://github.com/example/alpha\n    branch: main\n    active: true\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	server, err := New(path, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	public := filepath.Join(root, "public")
+	if err := server.ConfigureEvaluation(public, nil, 10); err != nil {
+		t.Fatal(err)
+	}
+	started := time.Now().UTC().Add(-time.Minute)
+	server.evaluation.started["alpha"] = started
+	server.evaluation.states["alpha"] = "running"
+	server.evaluation.jobIDs["alpha"] = "job-123"
+	teamDir := filepath.Join(root, "runs", "job-123", "teams")
+	if err := os.MkdirAll(teamDir, 0750); err != nil {
+		t.Fatal(err)
+	}
+	score := 8.0
+	partial := bundle.Team{BuiltAt: time.Now().UTC().Format(time.RFC3339), TeamID: "alpha", Name: "Alpha", Status: "running", Areas: map[string]bundle.Area{"backend": {Status: "done", Score: &score}}}
+	data, _ := json.Marshal(partial)
+	if err := os.WriteFile(filepath.Join(teamDir, "alpha.json"), data, 0640); err != nil {
+		t.Fatal(err)
+	}
+	handler := server.Handler()
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/bundle/teams/alpha", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("partial team: %d %s", response.Code, response.Body.String())
+	}
+	response = httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/bundle/index", nil))
+	var index bundle.Index
+	if err := json.Unmarshal(response.Body.Bytes(), &index); err != nil {
+		t.Fatal(err)
+	}
+	if len(index.Teams) != 1 || index.Teams[0].Status != "running" || index.Teams[0].Total != nil || index.Teams[0].Areas["backend"] != score {
+		t.Fatalf("partial index: %+v", index.Teams)
+	}
+}
+
+func TestRunningTeamExposesPublishedAreasWithoutFinalScore(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "registry.yaml")
+	if err := os.WriteFile(path, []byte("version: '1'\nteams:\n  - id: alpha\n    name: Alpha\n    repo: https://github.com/example/alpha\n    branch: main\n    active: true\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	server, err := New(path, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	public := filepath.Join(root, "public")
+	if err := os.MkdirAll(filepath.Join(public, "teams"), 0750); err != nil {
+		t.Fatal(err)
+	}
+	index := bundle.Index{BundleSchema: bundle.SchemaVersion, Teams: []bundle.IndexTeam{{TeamID: "alpha", Name: "Alpha", Status: "done", Total: scorePtr(8), Areas: map[string]float64{"backend": 8}}}}
+	data, _ := json.Marshal(index)
+	if err := os.WriteFile(filepath.Join(public, "index.json"), data, 0640); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(public, "teams", "alpha.json"), []byte(`{"team_id":"alpha","areas":{"backend":{"status":"done","score":8}}}`), 0640); err != nil {
+		t.Fatal(err)
+	}
+	if err := server.ConfigureEvaluation(public, nil, 10); err != nil {
+		t.Fatal(err)
+	}
+	server.evaluation.states["alpha"] = "running"
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/bundle/index", nil))
+	if response.Code != 200 {
+		t.Fatalf("index: %d", response.Code)
+	}
+	var live bundle.Index
+	if err := json.Unmarshal(response.Body.Bytes(), &live); err != nil {
+		t.Fatal(err)
+	}
+	if len(live.Teams) != 1 || live.Teams[0].Status != "running" || live.Teams[0].Total != nil || live.Teams[0].Areas["backend"] != 8 {
+		t.Fatalf("live index: %+v", live.Teams)
+	}
+	response = httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/bundle/teams/alpha", nil))
+	if response.Code != 200 {
+		t.Fatalf("published area: %d", response.Code)
+	}
+	server.evaluation.started["alpha"] = time.Now().UTC()
+	response = httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/bundle/index", nil))
+	live = bundle.Index{}
+	if err := json.Unmarshal(response.Body.Bytes(), &live); err != nil {
+		t.Fatal(err)
+	}
+	if len(live.Teams) != 1 || len(live.Teams[0].Areas) != 0 {
+		t.Fatalf("stale areas exposed: %+v", live.Teams)
+	}
+	response = httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/bundle/teams/alpha", nil))
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("stale report exposed: %d", response.Code)
+	}
+	currentBuiltAt := time.Now().UTC().Add(time.Second).Format(time.RFC3339)
+	index.BuiltAt = currentBuiltAt
+	data, _ = json.Marshal(index)
+	if err := os.WriteFile(filepath.Join(public, "index.json"), data, 0640); err != nil {
+		t.Fatal(err)
+	}
+	partial, _ := json.Marshal(bundle.Team{BuiltAt: currentBuiltAt, TeamID: "alpha", Areas: map[string]bundle.Area{"backend": {Status: "done"}}})
+	if err := os.WriteFile(filepath.Join(public, "teams", "alpha.json"), partial, 0640); err != nil {
+		t.Fatal(err)
+	}
+	response = httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/bundle/teams/alpha", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("current partial report unavailable: %d", response.Code)
+	}
+}
+
 func TestCreateQueuesEvaluationAndLiveIndexUpdates(t *testing.T) {
 	root := t.TempDir()
 	path := filepath.Join(root, "registry.yaml")
@@ -81,6 +201,15 @@ func TestCreateQueuesEvaluationAndLiveIndexUpdates(t *testing.T) {
 	if got := getIndex().Teams[0].Status; got != "running" {
 		t.Fatalf("status during evaluation: %s", got)
 	}
+	progressResponse := httptest.NewRecorder()
+	handler.ServeHTTP(progressResponse, httptest.NewRequest(http.MethodGet, "/api/evaluation/progress/new-team", nil))
+	var progress evaluationProgress
+	if err := json.Unmarshal(progressResponse.Body.Bytes(), &progress); err != nil {
+		t.Fatal(err)
+	}
+	if progressResponse.Code != http.StatusOK || progress.Status != "running" || progress.Stage != "dispatching" || progress.StartedAt == "" {
+		t.Fatalf("progress during evaluation: %+v", progress)
+	}
 	close(fake.release)
 	deadline := time.Now().Add(time.Second)
 	for time.Now().Before(deadline) {
@@ -92,6 +221,14 @@ func TestCreateQueuesEvaluationAndLiveIndexUpdates(t *testing.T) {
 	index := getIndex()
 	if len(index.Teams) != 1 || index.Teams[0].Status != "done" || index.Teams[0].Total == nil || *index.Teams[0].Total != 8 {
 		t.Fatalf("completed index: %+v", index.Teams)
+	}
+	progressResponse = httptest.NewRecorder()
+	handler.ServeHTTP(progressResponse, httptest.NewRequest(http.MethodGet, "/api/evaluation/progress/new-team", nil))
+	if err := json.Unmarshal(progressResponse.Body.Bytes(), &progress); err != nil {
+		t.Fatal(err)
+	}
+	if progress.Status != "done" || progress.Stage != "done" {
+		t.Fatalf("completed progress: %+v", progress)
 	}
 	team := httptest.NewRecorder()
 	handler.ServeHTTP(team, httptest.NewRequest(http.MethodGet, "/api/bundle/teams/new-team", nil))
@@ -125,6 +262,15 @@ func TestEvaluationFailureIsVisibleWithoutScore(t *testing.T) {
 		if len(index.Teams) == 1 && index.Teams[0].Status == "failed" {
 			if index.Teams[0].Total != nil {
 				t.Fatal("failed team has score")
+			}
+			progressResponse := httptest.NewRecorder()
+			handler.ServeHTTP(progressResponse, httptest.NewRequest(http.MethodGet, "/api/evaluation/progress/new-team", nil))
+			var progress evaluationProgress
+			if err := json.Unmarshal(progressResponse.Body.Bytes(), &progress); err != nil {
+				t.Fatal(err)
+			}
+			if progress.Status != "failed" || progress.Stage != "dispatching" {
+				t.Fatalf("failed progress: %+v", progress)
 			}
 			return
 		}

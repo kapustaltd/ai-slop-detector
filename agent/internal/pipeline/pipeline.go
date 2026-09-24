@@ -210,6 +210,9 @@ func (Pipeline) Run(ctx context.Context, config Config) (Summary, error) {
 					result.Status = "done"
 				}
 				result.Warnings = append(result.Warnings, item.warnings...)
+				if err := writePartialTeam(config.OutputDir, config.Now(), result); err != nil {
+					logf(config.Logger, "team=%s partial report unavailable: %s", team.ID, sanitizeError(err))
+				}
 				mu.Unlock()
 			}()
 		}
@@ -270,6 +273,28 @@ type areaRunResult struct {
 	costUSD  float64
 	warnings []string
 	meta     *bundle.TeamMeta
+}
+
+func writePartialTeam(output string, builtAt time.Time, result teamRun) error {
+	areas := make(map[string]bundle.Area, len(result.Areas))
+	for name, area := range result.Areas {
+		if area.Max <= 0 {
+			area.Max = 10
+		}
+		if area.Categories == nil {
+			area.Categories = []bundle.Category{}
+		}
+		if area.Metrics == nil {
+			area.Metrics = []bundle.Metric{}
+		}
+		areas[name] = area
+	}
+	return writeJSON(filepath.Join(output, "teams", result.Registry.ID+".json"), bundle.Team{
+		BundleSchema: bundle.SchemaVersion, BuiltAt: builtAt.UTC().Format(time.RFC3339),
+		TeamID: result.Registry.ID, Name: result.Registry.Name, Status: "running",
+		CommitSHA: result.CommitSHA, Total: nil, Partial: true, Meta: result.Meta,
+		Areas: areas, Warnings: unique(result.Warnings),
+	})
 }
 
 func runArea(ctx context.Context, config Config, team registry.Team, prepared gitrepo.Prepared, area, areaPath, rawRoot string) areaRunResult {

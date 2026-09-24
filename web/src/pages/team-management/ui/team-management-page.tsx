@@ -5,9 +5,14 @@ import { Link } from 'react-router-dom'
 import {
   checkRegistryApi,
   createRegistryTeam,
-  getRegistryEvaluationStatus,
+  deleteRegistryTeam,
+  getRegistryEvaluationProgress,
+  getRegistryEvaluationStatuses,
   getRegistryTeams,
   RegistryApiError,
+  updateRegistryTeam,
+  type RegistryEvaluationProgress,
+  type RegistryEvaluationStage,
   type RegistryEvaluationStatus,
   type RegistryTeam,
 } from '@/shared/api'
@@ -34,6 +39,10 @@ export function TeamManagementPage() {
   const [trackedTeam, setTrackedTeam] = useState<TeamDraft | null>(null)
   const [step, setStep] = useState<'repo' | 'details' | 'review'>('repo')
   const [isChecking, setIsChecking] = useState(false)
+  const [editing, setEditing] = useState<RegistryTeam | null>(null)
+  const [deleting, setDeleting] = useState<RegistryTeam | null>(null)
+  const [operatorToken, setOperatorToken] = useState('')
+  const [statuses, setStatuses] = useState<Record<string, RegistryEvaluationStatus>>({})
 
   const checkRepository = async () => {
     if (!draft || isChecking) return
@@ -155,6 +164,60 @@ export function TeamManagementPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!apiAvailable) return
+    let active = true
+    const poll = () => {
+      void getRegistryEvaluationStatuses()
+        .then((next) => {
+          if (active) setStatuses(next)
+        })
+        .catch(() => {})
+    }
+    poll()
+    const timer = window.setInterval(poll, 5000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [apiAvailable])
+
+  const saveEdit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!editing) return
+    setIsSaving(true)
+    setError('')
+    try {
+      await updateRegistryTeam(editing, operatorToken.trim())
+      setEditing(null)
+      setOperatorToken('')
+      await loadTeams()
+      setNotice('Команда обновлена.')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Не удалось обновить команду')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!deleting) return
+    setIsSaving(true)
+    setError('')
+    try {
+      await deleteRegistryTeam(deleting.id, operatorToken.trim())
+      setTrackedTeam((current) => (current?.id === deleting.id ? null : current))
+      setDeleting(null)
+      setOperatorToken('')
+      await loadTeams()
+      setNotice('Команда удалена из реестра.')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Не удалось удалить команду')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const submitTeam = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!draft) return
@@ -194,7 +257,7 @@ export function TeamManagementPage() {
         {apiAvailable ? (
           <button
             className="inline-flex min-h-11 items-center gap-2 rounded-control bg-primary px-4 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={draft !== null || isSaving}
+            disabled={draft !== null || editing !== null || deleting !== null || isSaving}
             type="button"
             onClick={() => {
               setDraft({ ...emptyTeam })
@@ -245,6 +308,130 @@ export function TeamManagementPage() {
         />
       ) : null}
 
+      {editing ? (
+        <form
+          aria-label={`Изменение команды ${editing.name}`}
+          className="space-y-4 rounded-panel border border-line bg-surface p-4"
+          onSubmit={(event) => void saveEdit(event)}
+        >
+          <h2 className="m-0 text-lg font-semibold">Изменить команду {editing.name}</h2>
+          <p className="m-0 text-sm text-fg-muted">ID {editing.id} останется прежним.</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">
+              Название
+              <input
+                className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+                required
+                value={editing.name}
+                onChange={(event) => setEditing({ ...editing, name: event.target.value })}
+              />
+            </label>
+            <label className="text-sm">
+              Репозиторий
+              <input
+                className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+                required
+                type="url"
+                value={editing.repo}
+                onChange={(event) => setEditing({ ...editing, repo: event.target.value })}
+              />
+            </label>
+            <label className="text-sm">
+              Ветка
+              <input
+                className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+                required
+                value={editing.branch}
+                onChange={(event) => setEditing({ ...editing, branch: event.target.value })}
+              />
+            </label>
+            <label className="flex min-h-11 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={editing.active}
+                onChange={(event) => setEditing({ ...editing, active: event.target.checked })}
+              />
+              Активна
+            </label>
+          </div>
+          <label className="block text-sm">
+            Токен оператора
+            <input
+              className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+              required
+              type="password"
+              autoComplete="off"
+              value={operatorToken}
+              onChange={(event) => setOperatorToken(event.target.value)}
+            />
+          </label>
+          <div className="flex gap-2">
+            <button
+              className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
+              disabled={isSaving}
+              type="submit"
+            >
+              Сохранить
+            </button>
+            <button
+              className="min-h-11 rounded-control border border-line px-4"
+              type="button"
+              onClick={() => {
+                setEditing(null)
+                setOperatorToken('')
+                setError('')
+              }}
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      ) : null}
+
+      {deleting ? (
+        <section
+          aria-label={`Удаление команды ${deleting.name}`}
+          className="space-y-3 rounded-panel border border-warn-border bg-warn-bg p-4"
+        >
+          <h2 className="m-0 text-lg font-semibold">Удалить команду {deleting.name}?</h2>
+          <p className="m-0 text-sm">
+            Запись исчезнет из реестра и текущего рейтинга. Сохранённые отчёты останутся на сервере.
+          </p>
+          <label className="block text-sm">
+            Токен оператора
+            <input
+              className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+              required
+              type="password"
+              autoComplete="off"
+              value={operatorToken}
+              onChange={(event) => setOperatorToken(event.target.value)}
+            />
+          </label>
+          <div className="flex gap-2">
+            <button
+              className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
+              disabled={isSaving || !operatorToken.trim()}
+              type="button"
+              onClick={() => void confirmDelete()}
+            >
+              Удалить
+            </button>
+            <button
+              className="min-h-11 rounded-control border border-line px-4"
+              type="button"
+              onClick={() => {
+                setDeleting(null)
+                setOperatorToken('')
+                setError('')
+              }}
+            >
+              Отмена
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       {notice ? (
         <p role="status" className="text-sm text-fg-muted">
           {notice}
@@ -285,6 +472,9 @@ export function TeamManagementPage() {
                     <th scope="col" className="px-4 py-3 font-medium">
                       Оценка
                     </th>
+                    <th scope="col" className="px-4 py-3 font-medium">
+                      Действия
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -300,7 +490,56 @@ export function TeamManagementPage() {
                       <td className="px-4 py-3">
                         <code>{team.branch}</code>
                       </td>
-                      <td className="px-4 py-3">{team.active ? 'Включена' : 'Отключена'}</td>
+                      <td className="px-4 py-3">
+                        {team.active
+                          ? statuses[team.id] === 'done'
+                            ? 'Готова'
+                            : statuses[team.id] === 'failed'
+                              ? 'Ошибка'
+                              : statuses[team.id] === 'running'
+                                ? 'Обрабатывается'
+                                : 'Нет оценки'
+                          : 'Отключена'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            className="min-h-11 text-link"
+                            type="button"
+                            onClick={() => {
+                              setEditing(team)
+                              setDeleting(null)
+                              setDraft(null)
+                              setError('')
+                              setNotice('')
+                            }}
+                          >
+                            Изменить {team.name}
+                          </button>
+                          <button
+                            className="min-h-11 text-warn-fg"
+                            type="button"
+                            onClick={() => {
+                              setDeleting(team)
+                              setEditing(null)
+                              setDraft(null)
+                              setError('')
+                              setNotice('')
+                            }}
+                          >
+                            Удалить {team.name}
+                          </button>
+                          {team.active &&
+                          (statuses[team.id] === 'done' || statuses[team.id] === 'running') ? (
+                            <Link
+                              className="inline-flex min-h-11 items-center text-link"
+                              to={`/team/${encodeURIComponent(team.id)}`}
+                            >
+                              Смотреть {team.name}
+                            </Link>
+                          ) : null}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -313,11 +552,51 @@ export function TeamManagementPage() {
   )
 }
 
+const evaluationStages: { stage: RegistryEvaluationStage; label: string; description: string }[] = [
+  {
+    stage: 'waiting',
+    label: 'Ожидание в очереди',
+    description: 'Команда поставлена в очередь на оценку.',
+  },
+  {
+    stage: 'dispatching',
+    label: 'Передача задания',
+    description: 'Сервер отправляет репозиторий сервису оценки.',
+  },
+  {
+    stage: 'runner_queued',
+    label: 'Ожидание запуска',
+    description: 'Сервис принял задание и ждёт свободного исполнителя.',
+  },
+  {
+    stage: 'analyzing',
+    label: 'Анализ репозитория',
+    description: 'Сервис оценки выполняет проверку кода.',
+  },
+  {
+    stage: 'publishing',
+    label: 'Публикация отчёта',
+    description: 'Оценка завершена, сервер обновляет результаты.',
+  },
+]
+
 function RepositoryProgress({ team }: { team: TeamDraft }) {
-  const [status, setStatus] = useState<RegistryEvaluationStatus>(
-    team.active ? 'running' : 'no_data',
-  )
+  const [progress, setProgress] = useState<RegistryEvaluationProgress>({
+    status: team.active ? 'running' : 'no_data',
+    stage: 'waiting',
+  })
   const [pollError, setPollError] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
+  const [startedAt, setStartedAt] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (progress.status !== 'running') return
+    const timer = setInterval(
+      () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000))),
+      1000,
+    )
+    return () => clearInterval(timer)
+  }, [progress.status, startedAt])
 
   useEffect(() => {
     if (!team.active) return
@@ -325,11 +604,12 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
     let timer: ReturnType<typeof setTimeout>
     const poll = async () => {
       try {
-        const nextStatus = await getRegistryEvaluationStatus(team.id)
+        const nextProgress = await getRegistryEvaluationProgress(team.id)
         if (stopped) return
         setPollError(false)
-        if (nextStatus) setStatus(nextStatus)
-        if (nextStatus === 'done' || nextStatus === 'failed' || nextStatus === 'no_data') return
+        setProgress(nextProgress)
+        if (nextProgress.started_at) setStartedAt(new Date(nextProgress.started_at).getTime())
+        if (nextProgress.status !== 'running') return
       } catch {
         if (stopped) return
         setPollError(true)
@@ -343,9 +623,31 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
     }
   }, [team.active, team.id])
 
-  const processing: ChainOfThoughtStepStatus =
-    status === 'done' ? 'complete' : status === 'running' ? 'active' : 'pending'
-  const report: ChainOfThoughtStepStatus = status === 'done' ? 'complete' : 'pending'
+  const stages = progress.legacy
+    ? [
+        {
+          stage: 'waiting' as const,
+          label: 'Оценка репозитория',
+          description: 'Сервер обрабатывает код и готовит результаты.',
+        },
+      ]
+    : evaluationStages
+  const currentStage = stages.findIndex((item) => item.stage === progress.stage)
+  const statusMessage =
+    progress.status === 'done'
+      ? 'Отчёт готов.'
+      : progress.status === 'failed'
+        ? 'Оценка завершилась с ошибкой.'
+        : progress.status === 'no_data'
+          ? 'Оценка не запущена или пока недоступна.'
+          : pollError
+            ? 'Связь со статусом прервана. Повторяем проверку…'
+            : `${stages[currentStage]?.label ?? 'Оценка репозитория'}. Статус обновляется автоматически.`
+  const stageStatus = (index: number): ChainOfThoughtStepStatus => {
+    if (progress.status === 'done' || index < currentStage) return 'complete'
+    if (index > currentStage || progress.status === 'no_data') return 'pending'
+    return progress.status === 'failed' ? 'failed' : 'active'
+  }
 
   return (
     <section
@@ -359,33 +661,31 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
         <ChainOfThoughtContent>
           <ChainOfThoughtStep label="Проверка ссылки и реестра" status="complete" />
           <ChainOfThoughtStep label="Добавление команды" status="complete" />
-          <ChainOfThoughtStep
-            label="Оценка репозитория"
-            description={
-              status === 'running' ? 'Сервер обрабатывает код и готовит результаты.' : undefined
-            }
-            status={processing}
-          />
-          <ChainOfThoughtStep label="Публикация отчёта" status={report} />
+          {stages.map((item, index) => (
+            <ChainOfThoughtStep
+              key={item.stage}
+              label={item.label}
+              description={stageStatus(index) === 'active' ? item.description : undefined}
+              status={stageStatus(index)}
+            />
+          ))}
         </ChainOfThoughtContent>
       </ChainOfThought>
       <p role="status" className="mb-0 mt-3 text-sm text-fg-muted">
-        {status === 'done'
-          ? 'Отчёт готов.'
-          : status === 'failed'
-            ? 'Оценка завершилась с ошибкой.'
-            : status === 'no_data'
-              ? 'Оценка не запущена или пока недоступна.'
-              : pollError
-                ? 'Связь со статусом прервана. Повторяем проверку…'
-                : 'Оценка выполняется. Статус обновляется автоматически.'}
+        {statusMessage}
       </p>
-      {status === 'done' ? (
+      {progress.status === 'running' ? (
+        <p className="mb-0 mt-1 text-sm text-fg-muted">
+          Прошло {Math.floor(elapsed / 60)} мин {String(elapsed % 60).padStart(2, '0')} с.
+        </p>
+      ) : null}
+      {progress.status === 'done' || progress.status === 'running' ? (
         <Link
           className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm text-link"
           to={`/team/${encodeURIComponent(team.id)}`}
         >
-          Открыть отчёт <ArrowRight aria-hidden="true" size={16} />
+          {progress.status === 'running' ? 'Смотреть обработанную часть' : 'Открыть отчёт'}{' '}
+          <ArrowRight aria-hidden="true" size={16} />
         </Link>
       ) : null}
     </section>
