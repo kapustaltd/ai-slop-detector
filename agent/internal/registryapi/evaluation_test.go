@@ -46,7 +46,7 @@ func TestRunningTeamReadsCurrentRunnerOutput(t *testing.T) {
 	if err := os.WriteFile(path, []byte("version: '1'\nteams:\n  - id: alpha\n    name: Alpha\n    repo: https://github.com/example/alpha\n    branch: main\n    active: true\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	server, err := New(path, "")
+	server, err := New(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestRunningTeamReadsCompletedAreaStateFromDeployedRunner(t *testing.T) {
 	if err := os.WriteFile(path, []byte("version: '1'\nteams:\n  - id: alpha\n    name: Alpha\n    repo: https://github.com/example/alpha\n    branch: main\n    active: true\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	server, err := New(path, "")
+	server, err := New(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +128,7 @@ func TestRunningTeamExposesPublishedAreasWithoutFinalScore(t *testing.T) {
 	if err := os.WriteFile(path, []byte("version: '1'\nteams:\n  - id: alpha\n    name: Alpha\n    repo: https://github.com/example/alpha\n    branch: main\n    active: true\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	server, err := New(path, "")
+	server, err := New(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func TestCreateQueuesEvaluationAndLiveIndexUpdates(t *testing.T) {
 	if err := os.WriteFile(path, []byte("version: '1'\nteams: []\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	server, err := New(path, "")
+	server, err := New(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -280,7 +280,7 @@ func TestEvaluationFailureIsVisibleWithoutScore(t *testing.T) {
 	if err := os.WriteFile(path, []byte("version: '1'\nteams: []\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	server, _ := New(path, "")
+	server, _ := New(path)
 	fake := &fakeEvaluator{started: make(chan struct{}), release: make(chan struct{}), publicDir: filepath.Join(root, "public"), fail: true}
 	if err := server.ConfigureEvaluation(fake.publicDir, fake, 10); err != nil {
 		t.Fatal(err)

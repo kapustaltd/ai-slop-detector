@@ -1,14 +1,12 @@
 package registryapi
 
 import (
-	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 	"sync"
 
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/registry"
@@ -16,19 +14,15 @@ import (
 
 type Server struct {
 	registryPath string
-	token        string
 	writeMu      sync.Mutex
 	evaluation   *evaluationService
 }
 
-func New(registryPath, token string) (*Server, error) {
-	if token != "" && len(token) < 32 {
-		return nil, errors.New("REGISTRY_API_TOKEN must contain at least 32 characters")
-	}
+func New(registryPath string) (*Server, error) {
 	if _, err := registry.Load(registryPath); err != nil {
 		return nil, err
 	}
-	return &Server{registryPath: registryPath, token: token}, nil
+	return &Server{registryPath: registryPath}, nil
 }
 
 func (s *Server) Handler() http.Handler {
@@ -44,26 +38,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/teams", s.createTeam)
 	mux.HandleFunc("PUT /api/teams/{id}", s.updateTeam)
 	mux.HandleFunc("DELETE /api/teams/{id}", s.deleteTeam)
-	return securityHeaders(s.authorize(mux))
-}
-
-func (s *Server) authorize(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/healthz" || (r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/api/teams/")) || (r.Method == http.MethodGet && (strings.HasPrefix(r.URL.Path, "/api/bundle/") || strings.HasPrefix(r.URL.Path, "/api/evaluation/progress/"))) || (r.URL.Path == "/api/teams" && (r.Method == http.MethodGet || r.Method == http.MethodPost)) {
-			next.ServeHTTP(w, r)
-			return
-		}
-		if s.token == "" {
-			writeError(w, http.StatusForbidden, "Редактирование и удаление отключены")
-			return
-		}
-		provided := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		if subtle.ConstantTimeCompare([]byte(provided), []byte(s.token)) != 1 {
-			writeError(w, http.StatusUnauthorized, "Неверный или отсутствующий токен")
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+	return securityHeaders(mux)
 }
 
 func securityHeaders(next http.Handler) http.Handler {

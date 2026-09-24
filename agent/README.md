@@ -20,11 +20,10 @@ CLI на Go, который превращает репозитории кома
 ## Управление реестром из веб-интерфейса
 
 Скопируйте `registry.example.yaml` в корень проекта как `registry.yaml`, если рабочего реестра ещё
-нет. Затем задайте случайный bearer-токен и запустите API из каталога `agent`:
+нет, затем запустите API из каталога `agent`:
 
 ```sh
 test -f ../registry.yaml || cp ../registry.example.yaml ../registry.yaml
-export REGISTRY_API_TOKEN="$(openssl rand -hex 32)"
 go run ./cmd/registry-api --registry ../registry.yaml --listen 127.0.0.1:8080
 ```
 

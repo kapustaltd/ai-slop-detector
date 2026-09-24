@@ -19,12 +19,11 @@ npm run dev
 
 ```bash
 test -f ../registry.yaml || cp ../registry.example.yaml ../registry.yaml
-export REGISTRY_API_TOKEN="$(openssl rand -hex 32)"
 go run ./cmd/registry-api --registry ../registry.yaml --listen 127.0.0.1:8080
 ```
 
-Открой `http://localhost:5173/#/manage/teams`. Список и добавление команды доступны без токена;
-изменение и удаление требуют токен. Для автоматической оценки API запускается с параметрами из
+Открой `http://localhost:5173/#/manage/teams`. Список, добавление, изменение и удаление команды
+доступны без токена. Для автоматической оценки API запускается с параметрами из
 `deploy/registry-api.service.example` и с настроенным провайдером.
 
 ## Команды

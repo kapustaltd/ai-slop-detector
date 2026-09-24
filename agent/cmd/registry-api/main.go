@@ -21,7 +21,7 @@ func main() {
 	dailyLimit := flags.Int("daily-limit", 10, "maximum automatic evaluations per UTC day")
 	_ = flags.Parse(os.Args[1:])
 
-	server, err := registryapi.New(*registryPath, os.Getenv("REGISTRY_API_TOKEN"))
+	server, err := registryapi.New(*registryPath)
 	if err != nil {
 		fail(err)
 	}

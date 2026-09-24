@@ -9,8 +9,7 @@ The static site and registry API are deployed separately. With automatic evaluat
 the API runs the existing pipeline for each new active team and serves the published result at
 `/api/bundle/`. Without a configured provider, it shows the registered team as unevaluated.
 
-The registry API serves `GET`, `POST`, and `DELETE /api/teams/{id}` without a token. `PUT /api/teams/{id}` requires `REGISTRY_API_TOKEN`.
-Public additions and deletions must be monitored because anyone who can reach the site can change the team registry.
+The registry API serves `GET` and `POST /api/teams` plus `PUT` and `DELETE /api/teams/{id}` without a token. Anyone who can reach the API can change the team registry, so restrict access at the network or reverse-proxy layer when needed.
 
 ## One-time server setup
 
@@ -46,7 +45,7 @@ configuration is `deploy/nginx.docker.conf.example`. Proxy `/api/bundle/` and
 Install the current `registry-api` binary and the revised systemd unit from
 `deploy/registry-api.service.example`. The service account needs write access to
 `/var/lib/ai-slop-detector`. The unit reads `/etc/ai-slop-detector/registry-bridge.env`, containing
-only `WEB_RUNNER_TOKEN` with the same value configured for the web runner, and delegates model work to the internal web runner at
+`WEB_RUNNER_TOKEN` with the same value configured for the web runner. It delegates model work to the internal web runner at
 `172.17.0.1:8081` on the server's Docker bridge. The token stays server-side. Configure model credentials and model selection
 on that existing runner service; the registry API needs no model key or CLI.
 

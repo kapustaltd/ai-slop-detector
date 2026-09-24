@@ -11,12 +11,12 @@ import (
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/registry"
 )
 
-func TestAnonymousTeamCreationKeepsOtherWritesProtected(t *testing.T) {
+func TestAnonymousTeamCreationUpdateAndDeletion(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "registry.yaml")
 	if err := os.WriteFile(path, []byte("version: '1'\nteams:\n  - id: existing\n    name: Existing\n    repo: https://github.com/example/existing\n    branch: main\n    active: true\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	server, err := New(path, "")
+	server, err := New(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,8 +32,8 @@ func TestAnonymousTeamCreationKeepsOtherWritesProtected(t *testing.T) {
 	}
 	update := httptest.NewRecorder()
 	handler.ServeHTTP(update, httptest.NewRequest(http.MethodPut, "/api/teams/new-team", strings.NewReader(`{"name":"Updated","repo":"https://github.com/example/new","branch":"main","active":true}`)))
-	if update.Code != http.StatusForbidden {
-		t.Errorf("anonymous PUT: got %d, want 403", update.Code)
+	if update.Code != http.StatusOK {
+		t.Errorf("anonymous PUT: got %d, want 200: %s", update.Code, update.Body.String())
 	}
 	remove := httptest.NewRecorder()
 	handler.ServeHTTP(remove, httptest.NewRequest(http.MethodDelete, "/api/teams/new-team", nil))
@@ -47,7 +47,7 @@ func TestAnonymousTeamCreationFromEmptyRegistry(t *testing.T) {
 	if err := os.WriteFile(path, []byte("version: '1'\nteams: []\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	server, err := New(path, "")
+	server, err := New(path)
 	if err != nil {
 		t.Fatal(err)
 	}
