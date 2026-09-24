@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { getLeaderboardIndex, loadLeaderboardIndex, type LeaderboardIndexStub } from '@/shared/api'
 import { formatTeamCount, SCORE_SCALE_LEGEND } from '@/shared/lib'
 import { EmptyState } from '@/shared/ui'
+import { LeaderboardSkeleton } from './leaderboard-skeleton'
 import {
   LeaderboardRowCard,
   LeaderboardTable,
@@ -13,9 +14,8 @@ import {
 
 /**
  * Главная — рейтинг команд (спека 005). Композиция и значения —
- * `design/reference/screens/01-03-leaderboard-*.html`. Индекс читается синхронно (бандл уже в
- * основном чанке), поэтому реального состояния «загрузка» на первом кадре нет (research.md) —
- * `isLoading` используется только веткой повторного чтения после ошибки.
+ * `design/reference/screens/01-03-leaderboard-*.html`. Пока production-индекс читается, skeleton
+ * сохраняет форму desktop-таблицы и мобильных карточек.
  */
 
 function readIndex() {
@@ -84,12 +84,7 @@ export function LeaderboardPage() {
     )
   }
 
-  if (!index)
-    return (
-      <main className="mx-auto max-w-[1600px] p-6" aria-busy="true">
-        Загружаем рейтинг…
-      </main>
-    )
+  if (!index) return <LeaderboardSkeleton />
 
   const builtAt = index.meta?.built_at ?? index.built_at
 

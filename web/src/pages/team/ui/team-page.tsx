@@ -27,11 +27,12 @@ import {
 } from '@/widgets/taxonomy-tree'
 import { TeamHeader, teamRankContext } from '@/widgets/team-header'
 import { EvaluationProgressView } from '@/widgets/evaluation-progress'
+import { TeamSkeleton } from './team-skeleton'
 
 /**
  * Страница команды (спека 006). Композиция и значения — `design/reference/screens/04-06-team-*
- * .html`. Состояния — FR-020: `loading` (текст, без скелетона — короткий переход, но всё же
- * реальная асинхронная загрузка отдельного чанка, в отличие от синхронного индекса 005), `missing`
+ * .html`. Состояния — FR-020: `loading` (скелетон страницы на время асинхронной загрузки отдельного
+ * чанка), `missing`
  * (команды нет в бандле), `error` (сбой чтения бандла).
  */
 
@@ -142,11 +143,7 @@ export function TeamPage() {
   }
 
   if (!teamId || state === 'loading') {
-    return (
-      <main className="mx-auto max-w-[1600px] p-6" aria-busy="true">
-        <p className="text-[15px] text-fg-muted">Загрузка команды…</p>
-      </main>
-    )
+    return <TeamSkeleton />
   }
 
   if (state === 'pending') {
