@@ -32,6 +32,7 @@ export interface AreaProfileProps {
 }
 
 const tooltipNumber = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 })
+const MIN_COMPARISON_SAMPLE = 5
 
 function AreaChartTooltip({ active, payload, label }: TooltipContentProps) {
   if (!active || !payload?.length) return null
@@ -56,8 +57,9 @@ function AreaChartTooltip({ active, payload, label }: TooltipContentProps) {
 }
 
 export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
-  const data = areaChartData(area, stats)
-  const insufficientData = !stats || stats.insufficient_data
+  const sampleSize = stats?.sample_size ?? 0
+  const insufficientData = !stats || stats.insufficient_data || sampleSize < MIN_COMPARISON_SAMPLE
+  const data = areaChartData(area, insufficientData ? undefined : stats)
 
   return (
     <section
@@ -104,12 +106,11 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
         <div className="flex flex-col gap-2">
           <h3 className="text-[15px] font-medium">Команда против среднего</h3>
           {insufficientData ? (
-            <div className="flex h-96 flex-col items-center justify-center gap-2 rounded-panel border border-dashed border-line-strong bg-muted-surface p-6 text-center">
-              <p className="max-w-[360px] text-[15px] leading-[1.6] text-fg-muted">
-                Недостаточно оценённых команд для сравнения (нужно хотя бы 2). Профиль команды
-                остаётся виден на лепестковой диаграмме.
-              </p>
-            </div>
+            <p className="m-0 max-w-[42ch] text-sm leading-6 text-fg-muted">
+              {sampleSize > 0
+                ? `Для сравнения нужно не менее ${MIN_COMPARISON_SAMPLE} оценённых команд. Сейчас их ${sampleSize}; профиль этой команды остаётся виден.`
+                : `Для сравнения нужно не менее ${MIN_COMPARISON_SAMPLE} оценённых команд. Профиль этой команды остаётся виден.`}
+            </p>
           ) : (
             <div className="h-96" aria-label={`Сравнение со средним — ${areaName}`}>
               <ResponsiveContainer width="100%" height="100%">
@@ -130,12 +131,7 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
 
       <div className="overflow-hidden rounded-panel border border-line">
         <div className="flex items-center justify-between border-b border-line bg-muted-surface px-3 py-2.5">
-          <h4 className="m-0 text-[14.5px] font-medium">
-            Те же значения таблицей — текстовая альтернатива обоим графикам
-          </h4>
-          <span className="text-[13px] text-fg-subtle">
-            всегда развёрнута, не спрятана под кнопку
-          </span>
+          <h4 className="m-0 text-[14.5px] font-medium">Категории</h4>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -159,18 +155,22 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
                 >
                   Балл
                 </th>
-                <th
-                  scope="col"
-                  className="text-overline px-3 py-2 text-right text-fg-muted uppercase"
-                >
-                  Медиана
-                </th>
-                <th
-                  scope="col"
-                  className="text-overline px-3 py-2 text-right text-fg-muted uppercase"
-                >
-                  Среднее
-                </th>
+                {insufficientData ? null : (
+                  <>
+                    <th
+                      scope="col"
+                      className="text-overline px-3 py-2 text-right text-fg-muted uppercase"
+                    >
+                      Медиана
+                    </th>
+                    <th
+                      scope="col"
+                      className="text-overline px-3 py-2 text-right text-fg-muted uppercase"
+                    >
+                      Среднее
+                    </th>
+                  </>
+                )}
                 <th
                   scope="col"
                   className="text-overline px-3 py-2 text-right text-fg-muted uppercase"
@@ -197,12 +197,16 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
                   <td className="px-3 py-2 text-right text-[14.5px] font-medium tabular-nums">
                     {row.score.toFixed(1)}
                   </td>
-                  <td className="px-3 py-2 text-right text-[14.5px] text-fg-muted tabular-nums">
-                    {row.median != null ? row.median.toFixed(1) : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-right text-[14.5px] text-fg-muted tabular-nums">
-                    {row.mean != null ? row.mean.toFixed(1) : '—'}
-                  </td>
+                  {insufficientData ? null : (
+                    <>
+                      <td className="px-3 py-2 text-right text-[14.5px] text-fg-muted tabular-nums">
+                        {row.median != null ? row.median.toFixed(1) : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-right text-[14.5px] text-fg-muted tabular-nums">
+                        {row.mean != null ? row.mean.toFixed(1) : '—'}
+                      </td>
+                    </>
+                  )}
                   <td className="px-3 py-2 text-right text-[14.5px] text-fg-muted tabular-nums">
                     {row.contribution.toFixed(2)}
                   </td>

@@ -15,15 +15,7 @@ import {
   type RegistryEvaluationStatus,
   type RegistryTeam,
 } from '@/shared/api'
-import { evaluationStages } from '../model/evaluation-progress'
 import { EvaluationProgressView } from '@/widgets/evaluation-progress'
-import {
-  ChainOfThought,
-  ChainOfThoughtContent,
-  ChainOfThoughtHeader,
-  ChainOfThoughtStep,
-  type ChainOfThoughtStepStatus,
-} from '@/shared/ui/shadcn/chain-of-thought'
 
 type TeamDraft = Pick<RegistryTeam, 'id' | 'name' | 'repo' | 'branch' | 'active'>
 
@@ -237,7 +229,7 @@ export function TeamManagementPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
+    <main className="mx-auto max-w-[1400px] space-y-6 p-4 sm:p-6">
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4 pr-12">
         <div>
           <Link
@@ -418,7 +410,7 @@ export function TeamManagementPage() {
         <section
           aria-busy={isLoading}
           aria-label="Реестр команд"
-          className="divide-y divide-line rounded-panel border border-line bg-surface"
+          className="divide-y divide-line border-y border-line"
         >
           {isLoading ? (
             <div className="p-4 text-sm text-fg-muted">
@@ -431,7 +423,7 @@ export function TeamManagementPage() {
           ) : null}
           {!isLoading && teams.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[580px] border-collapse text-left text-sm">
+              <table className="w-full min-w-[820px] border-collapse text-left text-sm">
                 <thead className="bg-muted-surface text-xs text-fg-muted">
                   <tr>
                     <th scope="col" className="px-4 py-3 font-medium">
@@ -455,8 +447,19 @@ export function TeamManagementPage() {
                   {teams.map((team) => (
                     <tr key={team.id}>
                       <th scope="row" className="px-4 py-3 font-medium">
-                        <span className="block">{team.name}</span>
-                        <code className="text-xs font-normal text-fg-muted">{team.id}</code>
+                        {team.active && statuses[team.id] === 'done' ? (
+                          <Link
+                            className="block min-h-8 content-center text-link underline-offset-2 hover:underline"
+                            to={`/team/${encodeURIComponent(team.id)}`}
+                          >
+                            {team.name}
+                          </Link>
+                        ) : (
+                          <span className="block min-h-8 content-center">{team.name}</span>
+                        )}
+                        {team.name === team.id ? null : (
+                          <code className="text-xs font-normal text-fg-muted">{team.id}</code>
+                        )}
                       </th>
                       <td className="max-w-[22rem] truncate px-4 py-3">
                         <RepositoryLink value={team.repo} />
@@ -465,18 +468,31 @@ export function TeamManagementPage() {
                         <code>{team.branch}</code>
                       </td>
                       <td className="px-4 py-3">
-                        {team.active
-                          ? statuses[team.id] === 'done'
-                            ? 'Готова'
-                            : statuses[team.id] === 'failed'
-                              ? 'Ошибка'
-                              : statuses[team.id] === 'running'
-                                ? 'Обрабатывается'
-                                : 'Нет оценки'
-                          : 'Отключена'}
+                        <div className="flex flex-col items-start gap-1">
+                          <span>
+                            {team.active
+                              ? statuses[team.id] === 'done'
+                                ? 'Готова'
+                                : statuses[team.id] === 'failed'
+                                  ? 'Ошибка'
+                                  : statuses[team.id] === 'running'
+                                    ? 'Обрабатывается'
+                                    : 'Нет оценки'
+                              : 'Отключена'}
+                          </span>
+                          {team.active &&
+                          (statuses[team.id] === 'done' || statuses[team.id] === 'running') ? (
+                            <Link
+                              className="inline-flex min-h-9 items-center text-sm text-link"
+                              to={`/team/${encodeURIComponent(team.id)}`}
+                            >
+                              {statuses[team.id] === 'running' ? 'Ход оценки' : 'Открыть отчёт'}
+                            </Link>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex items-center gap-1">
                           <button
                             aria-label={`Изменить ${team.name}`}
                             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-link transition-colors hover:bg-muted-surface hover:text-link-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
@@ -507,15 +523,6 @@ export function TeamManagementPage() {
                           >
                             <Trash2 aria-hidden="true" size={18} strokeWidth={2} />
                           </button>
-                          {team.active &&
-                          (statuses[team.id] === 'done' || statuses[team.id] === 'running') ? (
-                            <Link
-                              className="inline-flex min-h-11 items-center text-link"
-                              to={`/team/${encodeURIComponent(team.id)}`}
-                            >
-                              Смотреть {team.name}
-                            </Link>
-                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -580,65 +587,36 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
     }
   }, [team.active, team.id])
 
-  const stages = progress?.legacy
-    ? [
-        {
-          stage: 'waiting' as const,
-          label: 'Оценка репозитория',
-          description: 'Сервер обрабатывает код и готовит результаты.',
-        },
-      ]
-    : evaluationStages
-  const currentStage = progress ? stages.findIndex((item) => item.stage === progress.stage) : -1
   const statusMessage = !progress
     ? pollError
-      ? 'Не удалось получить статус. Повторяем проверку…'
-      : 'Получаем актуальный статус…'
-    : progress.status === 'done'
-      ? 'Отчёт готов.'
-      : progress.status === 'failed'
-        ? 'Оценка завершилась с ошибкой.'
-        : progress.status === 'no_data'
-          ? 'Оценка не запущена или пока недоступна.'
-          : pollError
-            ? 'Связь со статусом прервана. Повторяем проверку…'
-            : `${stages[currentStage]?.label ?? 'Оценка репозитория'}. Статус обновляется автоматически.`
-  const stageStatus = (index: number): ChainOfThoughtStepStatus => {
-    if (progress?.status === 'done' || (progress && index < currentStage)) return 'complete'
-    if (!progress || index > currentStage || progress.status === 'no_data') return 'pending'
-    return progress.status === 'failed' ? 'failed' : 'active'
-  }
+      ? 'Не удалось получить статус. Повторяем запрос.'
+      : 'Получаем статус оценки…'
+    : progress.status === 'no_data'
+      ? 'Оценка ещё не запущена или пока недоступна.'
+      : null
 
   return (
     <section
       aria-label={`Обработка репозитория ${team.name}`}
-      className="rounded-panel border border-line bg-surface p-4 sm:p-5"
+      className="border-y border-line py-4"
     >
-      <h2 className="m-0 text-lg font-semibold">Обработка репозитория</h2>
-      <p className="mb-2 mt-1 text-sm text-fg-muted break-all">{team.repo}</p>
-      {progress ? (
-        <ChainOfThought defaultOpen>
-          <ChainOfThoughtHeader>Этапы обработки</ChainOfThoughtHeader>
-          <ChainOfThoughtContent>
-            <ChainOfThoughtStep label="Проверка ссылки и реестра" status="complete" />
-            <ChainOfThoughtStep label="Добавление команды" status="complete" />
-            {stages.map((item, index) => (
-              <ChainOfThoughtStep
-                key={item.stage}
-                label={item.label}
-                description={stageStatus(index) === 'active' ? item.description : undefined}
-                status={stageStatus(index)}
-              />
-            ))}
-          </ChainOfThoughtContent>
-        </ChainOfThought>
-      ) : null}
-      {progress?.status === 'running' ? (
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2 className="m-0 text-base font-semibold">Оценка репозитория</h2>
+        <RepositoryLink value={team.repo} />
+      </div>
+      {progress && progress.status !== 'no_data' ? (
         <EvaluationProgressView progress={progress} className="mt-3" />
       ) : null}
-      <p role="status" className="mb-0 mt-3 text-sm text-fg-muted">
-        {statusMessage}
-      </p>
+      {statusMessage ? (
+        <p role="status" className="mb-0 mt-3 text-sm text-fg-muted">
+          {statusMessage}
+        </p>
+      ) : null}
+      {pollError && progress ? (
+        <p role="status" className="mb-0 mt-3 text-sm text-fg-muted">
+          Не удалось обновить статус. Показываем последнее полученное состояние.
+        </p>
+      ) : null}
       {progress?.status === 'running' ? (
         <p className="mb-0 mt-1 text-sm text-fg-muted">
           Прошло {Math.floor(elapsed / 60)} мин {String(elapsed % 60).padStart(2, '0')} с.
@@ -698,51 +676,67 @@ function TeamForm({
   const button =
     'inline-flex min-h-11 items-center gap-2 rounded-control bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50'
   return (
-    <section
-      aria-label="Добавление команды"
-      className="rounded-panel border border-line bg-surface p-4 sm:p-5"
-    >
-      <div className="mb-5 flex items-start justify-between gap-4 border-b border-line pb-4">
+    <section aria-label="Добавление команды" className="py-4">
+      <div className="mb-4 flex items-start justify-between gap-4 border-b border-line pb-3">
         <div>
-          <h2 className="m-0 text-lg font-semibold">Добавление команды</h2>
-          <p className="mb-0 mt-1 text-sm text-fg-muted">Проверим данные до записи в реестр.</p>
+          <h2 className="m-0 text-base font-semibold">
+            {step === 'repo'
+              ? 'Новый репозиторий'
+              : step === 'details'
+                ? 'Данные команды'
+                : 'Проверка записи'}
+          </h2>
+          <p className="mb-0 mt-1 text-sm text-fg-muted">
+            {step === 'repo'
+              ? 'Укажите GitHub-ссылку.'
+              : step === 'details'
+                ? 'Название и ветка, которые попадут в реестр.'
+                : 'Проверьте запись перед сохранением.'}
+          </p>
         </div>
         <button
           className="min-h-11 rounded-control px-3 text-sm text-fg-muted"
           type="button"
           onClick={onCancel}
         >
-          Закрыть
+          Отмена
         </button>
       </div>
-      <div data-slot="conversation" className="flex flex-col gap-4" aria-live="polite">
-        <div
-          data-slot="conversation-bubble"
-          className="max-w-[90%] rounded-panel bg-muted-surface px-4 py-3 text-sm sm:max-w-[75%]"
-        >
-          <span className="mb-1 block text-xs font-semibold text-fg-muted">Помощник</span>С какого
-          репозитория начать? Нужна ссылка на GitHub.
-        </div>
-        {step !== 'repo' && (
-          <div
-            data-slot="conversation-bubble"
-            className="self-end max-w-[90%] rounded-panel bg-brand-soft px-4 py-3 text-sm break-all sm:max-w-[75%]"
-          >
-            <span className="mb-1 block text-xs font-semibold text-fg-muted">Вы</span>
-            {draft.repo}
-          </div>
-        )}
-        {step !== 'repo' && (
-          <div
-            data-slot="conversation-bubble"
-            className="max-w-[90%] rounded-panel bg-muted-surface px-4 py-3 text-sm sm:max-w-[75%]"
-          >
-            <span className="mb-1 block text-xs font-semibold text-fg-muted">Помощник</span>
-            Репозитория нет в реестре. Уточните имя команды и ветку. Код и доступ к нему пока не
-            проверялись.
-          </div>
-        )}
-      </div>
+      <ol
+        aria-label="Шаги добавления команды"
+        className="mb-5 mt-0 flex max-w-3xl list-none gap-3 p-0 text-sm"
+      >
+        {[
+          ['repo', 'Репозиторий'],
+          ['details', 'Данные'],
+          ['review', 'Подтверждение'],
+        ].map(([key, label], index) => {
+          const stepIndex = ['repo', 'details', 'review'].indexOf(step)
+          const status = index < stepIndex ? 'done' : index === stepIndex ? 'current' : 'pending'
+          return (
+            <li
+              key={key}
+              aria-current={status === 'current' ? 'step' : undefined}
+              data-status={status}
+              className={`flex items-center gap-2 ${status === 'pending' ? 'text-fg-subtle' : 'text-fg'}`}
+            >
+              <span
+                aria-hidden="true"
+                className={`flex size-6 items-center justify-center rounded-full border text-xs tabular-nums ${
+                  status === 'current'
+                    ? 'border-brand bg-brand text-on-accent'
+                    : status === 'done'
+                      ? 'border-line-strong text-fg-muted'
+                      : 'border-line text-fg-subtle'
+                }`}
+              >
+                {index + 1}
+              </span>
+              {label}
+            </li>
+          )
+        })}
+      </ol>
       {error && (
         <p role="alert" className="mt-4 rounded-control bg-warn-bg p-3 text-sm text-warn-fg">
           {error}
@@ -793,6 +787,9 @@ function TeamForm({
             onStep('review')
           }}
         >
+          <p role="status" className="mb-0 text-sm text-fg-muted">
+            Эта ссылка ещё не зарегистрирована. Код репозитория пока не сканировался.
+          </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-1.5 text-sm font-medium">
               Название команды
@@ -852,8 +849,7 @@ function TeamForm({
       )}
       {step === 'review' && (
         <div className="mt-5 space-y-4">
-          <div className="rounded-panel bg-muted-surface p-4 text-sm">
-            <h3 className="m-0 mb-3 text-base font-semibold">Что попадёт в реестр</h3>
+          <div className="border-y border-line py-3 text-sm">
             <dl className="m-0 grid gap-2 sm:grid-cols-[9rem_1fr]">
               <dt className="text-fg-muted">Команда</dt>
               <dd className="m-0">
@@ -868,9 +864,8 @@ function TeamForm({
             </dl>
           </div>
           <p className="m-0 text-sm text-fg-muted">
-            После сохранения команда появится в рейтинге. Если на сервере включена обработка,
-            начнётся проверка кода выбранной ветки по рубрикам. Результат появится после её
-            завершения.
+            После сохранения команда попадёт в рейтинг. Если автооценка включена, сервер проверит
+            выбранную ветку.
           </p>
           {isSaving && <LoadingBar />}
           <form onSubmit={onSubmit} className="flex flex-wrap gap-2">
@@ -912,11 +907,20 @@ function loadErrorMessage(cause: unknown) {
 
 function RepositoryLink({ value }: { value: string }) {
   const href = safeRepositoryHref(value)
-  return href ? (
-    <a className="block break-all text-sm" href={href} rel="noreferrer" target="_blank">
-      {value}
+  if (!href) return <code className="block break-all text-sm">{value}</code>
+
+  const url = new URL(href)
+  const display = `${url.host}${url.pathname.replace(/\/$/, '')}`
+  return (
+    <a
+      aria-label={value}
+      className="block truncate text-sm"
+      href={href}
+      rel="noreferrer"
+      target="_blank"
+      title={value}
+    >
+      {display}
     </a>
-  ) : (
-    <code className="block break-all text-sm">{value}</code>
   )
 }

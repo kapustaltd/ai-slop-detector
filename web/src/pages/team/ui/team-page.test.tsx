@@ -80,8 +80,8 @@ describe('TeamPage', () => {
       }),
     )
     renderTeam()
-    expect(await screen.findByRole('region', { name: 'Ход анализа' })).toBeInTheDocument()
-    expect(screen.getByText('46 файлов включено в проверку')).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
+    expect(screen.getByText(/46 файлов · 3 пропущено/)).toBeInTheDocument()
     expect(screen.getByText('Структура файлов проверена')).toBeInTheDocument()
     expect(await screen.findByText('Разбор по рубрике · backend')).toBeInTheDocument()
     expect(screen.queryByText('Разбор по рубрике · frontend')).not.toBeInTheDocument()
@@ -139,9 +139,9 @@ describe('TeamPage', () => {
     expect(
       await screen.findByRole('heading', { name: 'Оценка команды выполняется' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Ход анализа' })).toBeInTheDocument()
-    expect(screen.getByText('Архитектура и структура')).toBeInTheDocument()
-    expect(screen.getAllByText('В очереди').length).toBeGreaterThan(0)
+    expect(screen.getByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
+    expect(screen.getAllByText('Backend').length).toBeGreaterThan(0)
+    expect(screen.getByText('Ожидает запуска')).toBeInTheDocument()
     expect(screen.getByText('Структура файлов проверена')).toBeInTheDocument()
   })
 
@@ -209,14 +209,13 @@ describe('TeamPage', () => {
     expect(screen.getByText('Последнее подтверждённое событие')).toBeInTheDocument()
   }, 12_000)
 
-  it('показывает заголовок, дисклеймер, итог и метаданные', async () => {
+  it('показывает заголовок, итог и метаданные', async () => {
     renderTeam()
 
     await waitFor(
       () => expect(screen.getByRole('heading', { name: 'Команда 01' })).toBeInTheDocument(),
       { timeout: 10_000 },
     )
-    expect(screen.getByText('Это вспомогательная метрика, а не вердикт')).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Метаданные оценки' })).toBeInTheDocument()
   })
 

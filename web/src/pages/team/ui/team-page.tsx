@@ -15,7 +15,6 @@ import {
   type RegistryEvaluationProgress,
 } from '@/shared/api'
 import { EmptyState } from '@/shared/ui'
-import { DisclaimerBanner } from '@/widgets/disclaimer-banner'
 import { AreaProfile } from '@/widgets/area-profile'
 import { EvaluationMeta } from '@/widgets/evaluation-meta'
 import { countFindings, FindingsSummary } from '@/widgets/findings-summary'
@@ -162,7 +161,7 @@ export function TeamPage() {
         </h1>
         {progress ? (
           <>
-            <EvaluationProgressView progress={progress} rubrics={rubrics} />
+            <EvaluationProgressView progress={progress} />
             {pollError ? (
               <p role="status" className="text-sm text-fg-muted">
                 Не удалось обновить ход оценки. Последние подтверждённые данные сохранены.
@@ -233,7 +232,7 @@ export function TeamPage() {
         liveStatus === 'failed' ||
         progress.areas.some((area) => area.status === 'failed')) ? (
         <>
-          <EvaluationProgressView progress={progress} rubrics={rubrics} />
+          <EvaluationProgressView progress={progress} />
           {pollError ? (
             <p role="status" className="text-sm text-fg-muted">
               Не удалось обновить ход оценки. Последние подтверждённые данные сохранены.
@@ -241,8 +240,6 @@ export function TeamPage() {
           ) : null}
         </>
       ) : null}
-      <DisclaimerBanner />
-
       {doneAreas.length === 0 ? (
         liveStatus === 'running' || liveStatus === 'failed' ? (
           <div className="rounded-panel border border-line bg-surface p-4 text-sm text-fg-muted">

@@ -1,10 +1,9 @@
-import { BarChart3, ChartSpline, CloudOff, SearchX } from 'lucide-react'
+import { BarChart3, CloudOff, SearchX } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
 import { getLeaderboardIndex, loadLeaderboardIndex, type LeaderboardIndexStub } from '@/shared/api'
 import { formatTeamCount, SCORE_SCALE_LEGEND } from '@/shared/lib'
 import { EmptyState } from '@/shared/ui'
-import { DisclaimerBanner } from '@/widgets/disclaimer-banner'
 import {
   LeaderboardRowCard,
   LeaderboardTable,
@@ -99,21 +98,14 @@ export function LeaderboardPage() {
       {/* pr-* резервирует место под фиксированную кнопку темы (ThemeProvider) — иначе на
           некоторых ширинах она перекрывает текст справа (найдено визуальной проверкой FR-015). */}
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line pr-[52px] pb-4 md:pr-[46px]">
-        <div className="flex items-center gap-3">
-          <div className="flex h-[30px] w-[30px] items-center justify-center rounded-control bg-brand-soft text-brand">
-            <ChartSpline aria-hidden="true" size={17} strokeWidth={1.9} />
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <h1 className="text-[17px] font-semibold tracking-[-0.01em]">Рейтинг команд</h1>
-            <p className="text-[13.5px] text-fg-subtle">{formatTeamCount(total)}</p>
-          </div>
+        <div className="flex flex-col gap-0.5">
+          <h1 className="text-[17px] font-semibold tracking-[-0.01em]">Рейтинг команд</h1>
+          <p className="text-[13.5px] text-fg-subtle">{formatTeamCount(total)}</p>
         </div>
         <p className="text-[14px] text-fg-muted">
           Данные собраны {new Date(builtAt).toLocaleString('ru-RU')}
         </p>
       </header>
-
-      <DisclaimerBanner />
 
       {loadFailed ? (
         <p role="status" className="text-sm text-warn-fg">

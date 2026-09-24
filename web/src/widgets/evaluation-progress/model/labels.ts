@@ -1,4 +1,4 @@
-import type { RegistryEvaluationProgress, RubricBundle } from '@/shared/api'
+import type { RegistryEvaluationProgress } from '@/shared/api'
 
 export type EvaluationAreaName = 'backend' | 'frontend'
 
@@ -11,10 +11,6 @@ export function getAreaProgress(progress: RegistryEvaluationProgress, area: Eval
   return progress.areas.find((item) => item.area === area)
 }
 
-export function getAreaCategories(rubric: RubricBundle | undefined) {
-  return rubric?.categories ?? []
-}
-
 export function getCurrentAction(progress: RegistryEvaluationProgress) {
   const active = progress.areas.filter((area) => area.status === 'running')
   if (active.length === 1) return `Проверяется область ${areaLabels[active[0].area]}.`
@@ -25,15 +21,6 @@ export function getCurrentAction(progress: RegistryEvaluationProgress) {
   if (progress.status === 'failed') return 'Оценка остановилась с ошибкой.'
   if (progress.stage === 'waiting') return 'Задание ожидает запуска.'
   if (progress.stage === 'dispatching') return 'Задание передаётся сервису оценки.'
-  if (progress.stage === 'runner_queued') return 'Задание ожидает свободного runner.'
+  if (progress.stage === 'runner_queued') return 'Задание ожидает свободного исполнителя.'
   return 'Подготавливаю репозиторий к анализу.'
-}
-
-export function getNextAction(progress: RegistryEvaluationProgress) {
-  if (progress.status === 'done') return 'Результаты доступны в отчёте команды.'
-  if (progress.status === 'failed') return 'Последние подтверждённые события сохранены выше.'
-  const queued = progress.areas.find((area) => area.status === 'queued')
-  return queued
-    ? `Далее начнётся проверка области ${areaLabels[queued.area]}.`
-    : 'После проверки области результаты появятся в отчёте.'
 }

@@ -166,31 +166,14 @@ describe('guided team entry', () => {
     await user.click(await screen.findByRole('button', { name: 'Посмотреть итог' }))
     await user.click(screen.getByRole('button', { name: 'Добавить в реестр' }))
 
-    expect(await screen.findByText('Ожидание в очереди')).toBeInTheDocument()
-    expect(screen.getByText('Ожидание в очереди').closest('li')).toHaveAttribute(
-      'data-status',
-      'active',
-    )
-    expect(screen.getByText('Анализ репозитория').closest('li')).toHaveAttribute(
-      'data-status',
-      'pending',
-    )
-    expect(screen.getByText('Публикация отчёта').closest('li')).toHaveAttribute(
-      'data-status',
-      'pending',
-    )
-
-    expect(await screen.findByRole('region', { name: 'Ход анализа' })).toBeInTheDocument()
+    expect(await screen.findByText('Задание ожидает запуска.')).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Смотреть ход оценки' })).toHaveAttribute(
       'href',
       '/team/project',
     )
     await waitFor(() => expect(progressCalls).toBeGreaterThan(1), { timeout: 5000 })
-    expect(await screen.findByText('Отчёт готов.')).toBeInTheDocument()
-    expect(screen.getByText('Публикация отчёта').closest('li')).toHaveAttribute(
-      'data-status',
-      'complete',
-    )
+    expect(await screen.findByText('Оценка завершена.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Открыть отчёт' })).toHaveAttribute(
       'href',
       '/team/project',

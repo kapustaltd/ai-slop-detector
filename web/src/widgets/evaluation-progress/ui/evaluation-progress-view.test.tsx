@@ -1,13 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { loadRubric, type RegistryEvaluationProgress } from '@/shared/api'
+import type { RegistryEvaluationProgress } from '@/shared/api'
 
 import { EvaluationProgressView } from './evaluation-progress-view'
 
 describe('EvaluationProgressView', () => {
-  it('shows confirmed observations, verified source links and the rubric skeleton', async () => {
-    const backend = await loadRubric('backend.v1')
+  it('shows area progress, confirmed events and verified source links', () => {
     const progress: RegistryEvaluationProgress = {
       status: 'running',
       stage: 'analyzing',
@@ -55,15 +54,16 @@ describe('EvaluationProgressView', () => {
       ],
     }
 
-    render(<EvaluationProgressView progress={progress} rubrics={{ backend }} />)
+    render(<EvaluationProgressView progress={progress} />)
 
-    expect(screen.getByRole('region', { name: 'Ход анализа' })).toBeInTheDocument()
-    expect(screen.getByText('Архитектура и структура')).toBeInTheDocument()
-    expect(screen.getByText(/Включено 46 файлов, исключено 3\./)).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
+    expect(screen.getByText('Анализируется')).toBeInTheDocument()
+    expect(screen.getByText(/0 из 5 категорий/)).toBeInTheDocument()
+    expect(screen.getByText(/46 файлов · 3 пропущено/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'src/agent.ts:18' })).toHaveAttribute(
       'href',
       'https://github.com/acme/repo/blob/abc/src/agent.ts#L18-L24',
     )
-    expect(screen.getAllByText('В очереди').length).toBeGreaterThan(0)
+    expect(screen.getByText('Ожидает запуска')).toBeInTheDocument()
   })
 })

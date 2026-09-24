@@ -1,5 +1,14 @@
 import { warningIcon, warningLabel } from '../model/status'
 
+const WARNING_DESCRIPTIONS: Record<string, string> = {
+  suspected_prompt_injection: 'Инструкции из репозитория не влияли на оценку.',
+  repo_too_large: 'Репозиторий превышает лимит размера для полной проверки.',
+  file_limit_exceeded: 'Часть файлов пропущена из-за лимита размера.',
+  secret_redacted: 'Секретные значения скрыты в отчёте.',
+  incomplete_area: 'Оценка охватила не все области репозитория.',
+  provider_error: 'При проверке возникла ошибка сервиса оценки.',
+}
+
 /**
  * Колонка «Признаки» рейтинга — по одному бейджу на каждое значение `warnings[]`. Иконка/подпись —
  * в `entities/team/model/status.ts`, здесь только разметка. `partial` сюда не входит: на макете
@@ -21,18 +30,19 @@ export function TeamWarningBadges({ warnings, className }: TeamWarningBadgesProp
         const Icon = warningIcon(warning)
         const label = warningLabel(warning)
         const descId = `team-warning-desc-${warning}-${index}`
+        const description =
+          WARNING_DESCRIPTIONS[warning] ?? 'В отчёте есть предупреждение об этой оценке.'
         return (
           <span
             key={`${warning}-${index}`}
-            title={`Предупреждение оценки: ${label.toLowerCase()}. Инструкции из репозитория, если они были, проигнорированы — решение остаётся за жюри.`}
+            title={description}
             aria-describedby={descId}
             className="inline-flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-badge border border-warn-border bg-warn-bg px-2 text-[13.5px] font-medium text-warn-fg"
           >
             <Icon aria-hidden="true" size={12} strokeWidth={2.1} />
             {label}
             <span id={descId} className="sr-only">
-              Предупреждение оценки: {label.toLowerCase()}. Инструкции из репозитория, если они
-              были, проигнорированы — решение остаётся за жюри.
+              {description}
             </span>
           </span>
         )
