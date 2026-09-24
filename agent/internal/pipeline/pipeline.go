@@ -577,6 +577,49 @@ func toBundleArea(value savedEvaluation) bundle.Area {
 	return result
 }
 
+// ReadPartialTeam exposes completed areas from an in-progress runner job.
+// The caller must select the current job directory; this never reads a previous run.
+func ReadPartialTeam(output, teamID string) (bundle.Team, error) {
+	result := bundle.Team{BundleSchema: bundle.SchemaVersion, TeamID: teamID, Status: "running", Partial: true, Areas: map[string]bundle.Area{}}
+	var latest time.Time
+	for _, area := range []string{"backend", "frontend"} {
+		path := filepath.Join(output, "state", teamID, area+".json")
+		info, err := os.Stat(path)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return bundle.Team{}, err
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return bundle.Team{}, err
+		}
+		var saved savedEvaluation
+		if err := json.Unmarshal(data, &saved); err != nil {
+			return bundle.Team{}, err
+		}
+		if saved.TeamID != teamID || saved.Area != area || saved.Status != "done" {
+			continue
+		}
+		result.Areas[area] = toBundleArea(saved)
+		result.Warnings = append(result.Warnings, saved.Warnings...)
+		result.CommitSHA = saved.CommitSHA
+		if result.Meta == nil {
+			result.Meta = metaFromReport(saved.Report)
+		}
+		if info.ModTime().After(latest) {
+			latest = info.ModTime()
+		}
+	}
+	if len(result.Areas) == 0 {
+		return bundle.Team{}, os.ErrNotExist
+	}
+	result.BuiltAt = latest.UTC().Format(time.RFC3339Nano)
+	result.Warnings = unique(result.Warnings)
+	return result, nil
+}
+
 func metaFromReport(report contract.Report) *bundle.TeamMeta {
 	if report.Meta.SchemaVersion == "" {
 		return nil

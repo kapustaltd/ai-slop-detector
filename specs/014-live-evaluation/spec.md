@@ -15,8 +15,9 @@
 - A running team with an already published area can open that available report. The page refreshes
   while evaluation continues and never presents unfinished areas as scored.
 - The pipeline writes an atomic partial team file after each area finishes. The live API reads it
-  from the current runner job's output directory under the same data root as its public bundle;
-  an older file from a previous run is ignored until this run publishes a new one.
+  from the current runner job's output directory under the same data root as its public bundle.
+  For older deployed runners, the API reconstructs the available area from the job's saved state.
+  An older file from a previous run is ignored until this run publishes a new one.
 - Existing static fixture pages and tests continue to work when the API is absent.
 
 ## Verification

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/bundle"
+	"github.com/kapustaltd/ai-slop-detector/agent/internal/pipeline"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/registry"
 )
 
@@ -294,6 +295,12 @@ func (e *evaluationService) partialTeam(id string) (bundle.Team, bool) {
 			return team, true
 		}
 	}
+	if state == "running" && safeJobID.MatchString(jobID) {
+		team, err := pipeline.ReadPartialTeam(filepath.Join(filepath.Dir(e.publicDir), "runs", jobID), id)
+		if err == nil && e.reportIsCurrent(id, team.BuiltAt) {
+			return team, true
+		}
+	}
 	return bundle.Team{}, false
 }
 
@@ -411,6 +418,12 @@ func (s *Server) liveTeam(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		writeError(w, http.StatusNotFound, "Оценка команды ещё не готова")
 		return
+	}
+	for _, team := range registered.Teams {
+		if team.ID == id {
+			saved.Name = team.Name
+			break
+		}
 	}
 	writeJSON(w, http.StatusOK, saved)
 }

@@ -85,6 +85,43 @@ func TestRunningTeamReadsCurrentRunnerOutput(t *testing.T) {
 	}
 }
 
+func TestRunningTeamReadsCompletedAreaStateFromDeployedRunner(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "registry.yaml")
+	if err := os.WriteFile(path, []byte("version: '1'\nteams:\n  - id: alpha\n    name: Alpha\n    repo: https://github.com/example/alpha\n    branch: main\n    active: true\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	server, err := New(path, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := server.ConfigureEvaluation(filepath.Join(root, "public"), nil, 10); err != nil {
+		t.Fatal(err)
+	}
+	server.evaluation.started["alpha"] = time.Now().UTC().Add(-time.Minute)
+	server.evaluation.states["alpha"] = "running"
+	server.evaluation.jobIDs["alpha"] = "job-123"
+	stateDir := filepath.Join(root, "runs", "job-123", "state", "alpha")
+	if err := os.MkdirAll(stateDir, 0750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(stateDir, "backend.json"), []byte(`{"team_id":"alpha","area":"backend","status":"done","aggregate":{"score":8,"max":10}}`), 0640); err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/bundle/teams/alpha", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("state partial: %d %s", response.Code, response.Body.String())
+	}
+	var team bundle.Team
+	if err := json.Unmarshal(response.Body.Bytes(), &team); err != nil {
+		t.Fatal(err)
+	}
+	if team.Name != "Alpha" || team.Total != nil || team.Areas["backend"].Score == nil || *team.Areas["backend"].Score != 8 {
+		t.Fatalf("partial from state: %+v", team)
+	}
+}
+
 func TestRunningTeamExposesPublishedAreasWithoutFinalScore(t *testing.T) {
 	root := t.TempDir()
 	path := filepath.Join(root, "registry.yaml")
