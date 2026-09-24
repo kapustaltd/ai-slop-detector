@@ -91,11 +91,7 @@ export async function getRegistryEvaluationStatuses(): Promise<
   return Object.fromEntries(index.teams?.map((team) => [team.team_id, team.status]) ?? [])
 }
 
-async function request<T>(
-  url: string,
-  method = 'GET',
-  body?: RegistryTeam,
-): Promise<T> {
+async function request<T>(url: string, method = 'GET', body?: RegistryTeam): Promise<T> {
   let response: Response
   try {
     response = await fetch(url, {
