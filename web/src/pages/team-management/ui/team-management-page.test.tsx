@@ -64,7 +64,51 @@ describe('guided team entry', () => {
     expect(triggers[1]).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getByRole('menu', { name: 'Действия команды Альфа' })).toBeVisible()
     expect(screen.getByRole('menuitem', { name: 'Изменить Альфа' })).toBeVisible()
+    expect(
+      screen.queryByRole('menuitem', { name: 'Повторить анализ Альфа' }),
+    ).not.toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Изменить Бета' })).not.toBeInTheDocument()
+
+    await user.click(triggers[0])
+    await user.click(triggers[1])
+    expect(screen.getByRole('menuitem', { name: 'Повторить анализ Бета' })).toBeVisible()
+  })
+
+  it('retries a failed evaluation from the actions menu', async () => {
+    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
+      if (url === '/api/bundle/index') {
+        return json({ teams: [{ team_id: 'beta', status: 'failed' }] })
+      }
+      if (url === '/api/teams/beta/retry' && options?.method === 'POST') {
+        return json({ team_id: 'beta', status: 'running' }, 202)
+      }
+      return json([
+        {
+          id: 'beta',
+          name: 'Бета',
+          repo: 'https://github.com/org/beta',
+          branch: 'main',
+          active: true,
+        },
+      ])
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Действия' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Повторить анализ Бета' }))
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/teams/beta/retry',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(await screen.findByText('Повторный анализ команды Бета запущен.')).toBeInTheDocument()
+    expect(screen.getByText('Проверяется')).toBeInTheDocument()
   })
 
   it('updates and deletes a team without an operator token', async () => {

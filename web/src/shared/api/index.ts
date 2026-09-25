@@ -28,6 +28,7 @@ export {
   getRegistryEvaluationStatus,
   getRegistryEvaluationStatuses,
   getRegistryTeams,
+  retryRegistryEvaluation,
   updateRegistryTeam,
   RegistryApiError,
   type RegistryEvaluationProgress,

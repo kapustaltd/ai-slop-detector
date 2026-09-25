@@ -19,10 +19,11 @@ function team(overrides: Partial<LeaderboardTeam>): LeaderboardTeam {
 
 describe('statusLabel', () => {
   it('возвращает подпись на каждый статус', () => {
-    expect(statusLabel('done')).toBe('Оценка готова')
-    expect(statusLabel('failed')).toBe('Проверка прервана')
-    expect(statusLabel('no_data')).toBe('Нет данных')
+    expect(statusLabel('done')).toBe('Готово')
+    expect(statusLabel('failed')).toBe('Ошибка')
+    expect(statusLabel('no_data')).toBe('В очереди')
     expect(statusLabel('running')).toBe('Проверяется')
+    expect(statusLabel('partial')).toBe('Частично')
   })
 })
 

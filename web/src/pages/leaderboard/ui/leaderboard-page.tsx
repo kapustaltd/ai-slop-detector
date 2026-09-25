@@ -81,7 +81,7 @@ export function LeaderboardPage() {
 
   const { teams, total, sort, filters, onSort, onFiltersChange } = useLeaderboardState(index)
 
-  const resetFilters = () => onFiltersChange({ status: 'all', warningsOnly: false })
+  const resetFilters = () => onFiltersChange({ status: 'all', warningsOnly: false, query: '' })
 
   const openTeamDetails = async (team: LeaderboardTeam) => {
     setSelectedTeam(team)

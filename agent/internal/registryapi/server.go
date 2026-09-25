@@ -36,9 +36,51 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/bundle/teams/{id}", s.liveTeam)
 	mux.HandleFunc("GET /api/evaluation/progress/{id}", s.liveProgress)
 	mux.HandleFunc("POST /api/teams", s.createTeam)
+	mux.HandleFunc("POST /api/teams/{id}/retry", s.retryTeam)
 	mux.HandleFunc("PUT /api/teams/{id}", s.updateTeam)
 	mux.HandleFunc("DELETE /api/teams/{id}", s.deleteTeam)
 	return securityHeaders(mux)
+}
+
+func (s *Server) retryTeam(w http.ResponseWriter, r *http.Request) {
+	id, err := url.PathUnescape(r.PathValue("id"))
+	if err != nil || !safeTeamID.MatchString(id) {
+		writeError(w, http.StatusBadRequest, "Некорректный ID команды")
+		return
+	}
+	if s.evaluation == nil {
+		writeError(w, http.StatusServiceUnavailable, "Оценка временно недоступна")
+		return
+	}
+	registered, err := registry.Load(s.registryPath)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Не удалось прочитать реестр команд")
+		return
+	}
+	found := false
+	for _, team := range registered.Teams {
+		if team.ID == id && team.Active {
+			found = true
+			break
+		}
+	}
+	if !found {
+		writeError(w, http.StatusNotFound, "Команда не найдена")
+		return
+	}
+
+	s.evaluation.mu.RLock()
+	state := s.evaluation.states[id]
+	s.evaluation.mu.RUnlock()
+	if state != "failed" {
+		writeError(w, http.StatusConflict, "Повторный анализ доступен только для завершившейся с ошибкой проверки")
+		return
+	}
+	if !s.evaluation.enqueue(id) {
+		writeError(w, http.StatusConflict, "Не удалось поставить повторный анализ в очередь")
+		return
+	}
+	writeJSON(w, http.StatusAccepted, map[string]string{"team_id": id, "status": "running"})
 }
 
 func securityHeaders(next http.Handler) http.Handler {

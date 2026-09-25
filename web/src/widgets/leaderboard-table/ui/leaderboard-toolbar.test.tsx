@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -8,7 +8,7 @@ describe('LeaderboardToolbar', () => {
   it('показывает счётчик показанных строк через aria-live', () => {
     render(
       <LeaderboardToolbar
-        filters={{ status: 'all', warningsOnly: false }}
+        filters={{ status: 'all', warningsOnly: false, query: '' }}
         onFiltersChange={vi.fn()}
         sort={{ key: 'rank', direction: 'asc' }}
         onSort={vi.fn()}
@@ -26,7 +26,7 @@ describe('LeaderboardToolbar', () => {
     const user = userEvent.setup()
     render(
       <LeaderboardToolbar
-        filters={{ status: 'all', warningsOnly: false }}
+        filters={{ status: 'all', warningsOnly: false, query: '' }}
         onFiltersChange={onFiltersChange}
         sort={{ key: 'rank', direction: 'asc' }}
         onSort={vi.fn()}
@@ -44,7 +44,7 @@ describe('LeaderboardToolbar', () => {
     const user = userEvent.setup()
     render(
       <LeaderboardToolbar
-        filters={{ status: 'all', warningsOnly: false }}
+        filters={{ status: 'all', warningsOnly: false, query: '' }}
         onFiltersChange={onFiltersChange}
         sort={{ key: 'rank', direction: 'asc' }}
         onSort={vi.fn()}
@@ -57,12 +57,31 @@ describe('LeaderboardToolbar', () => {
     expect(onFiltersChange).toHaveBeenCalledWith({ warningsOnly: true })
   })
 
+  it('сообщает об изменении поиска команды', () => {
+    const onFiltersChange = vi.fn()
+    render(
+      <LeaderboardToolbar
+        filters={{ status: 'all', warningsOnly: false, query: '' }}
+        onFiltersChange={onFiltersChange}
+        sort={{ key: 'rank', direction: 'asc' }}
+        onSort={vi.fn()}
+        shown={24}
+        total={24}
+      />,
+    )
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Поиск команды' }), {
+      target: { value: 'альфа' },
+    })
+    expect(onFiltersChange).toHaveBeenLastCalledWith({ query: 'альфа' })
+  })
+
   it('позволяет изменить направление сортировки на мобильном экране', async () => {
     const onSort = vi.fn()
     const user = userEvent.setup()
     render(
       <LeaderboardToolbar
-        filters={{ status: 'all', warningsOnly: false }}
+        filters={{ status: 'all', warningsOnly: false, query: '' }}
         onFiltersChange={vi.fn()}
         sort={{ key: 'backend', direction: 'desc' }}
         onSort={onSort}

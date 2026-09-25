@@ -86,14 +86,14 @@ func (s *Server) ConfigureEvaluation(publicDir string, evaluator TeamEvaluator, 
 	return nil
 }
 
-func (e *evaluationService) enqueue(id string) {
+func (e *evaluationService) enqueue(id string) bool {
 	if e.evaluator == nil {
-		return
+		return false
 	}
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.states[id] == "running" {
-		return
+		return false
 	}
 	today := time.Now().UTC().Format("2006-01-02")
 	count := 0
@@ -104,18 +104,18 @@ func (e *evaluationService) enqueue(id string) {
 	}
 	if count >= e.limit || len(e.queue) == cap(e.queue) {
 		e.states[id] = "no_data"
-		return
+		return false
 	}
 	e.started[id] = time.Now().UTC()
 	data, err := json.Marshal(e.started)
 	if err != nil {
 		e.states[id] = "failed"
-		return
+		return false
 	}
 	temp, err := os.CreateTemp(filepath.Dir(e.budgetPath), ".evaluation-budget-")
 	if err != nil {
 		e.states[id] = "failed"
-		return
+		return false
 	}
 	defer os.Remove(temp.Name())
 	if _, err = temp.Write(data); err == nil {
@@ -128,11 +128,12 @@ func (e *evaluationService) enqueue(id string) {
 	}
 	if err != nil {
 		e.states[id] = "failed"
-		return
+		return false
 	}
 	e.states[id] = "running"
 	e.progress[id] = evaluationProgress{Status: "running", Stage: "waiting", StartedAt: e.started[id].Format(time.RFC3339), Areas: []contract.AreaProgress{}, Events: []contract.Event{}}
 	e.queue <- id
+	return true
 }
 
 func (e *evaluationService) setStage(id, stage string) {

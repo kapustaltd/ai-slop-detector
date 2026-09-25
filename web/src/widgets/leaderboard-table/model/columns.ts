@@ -1,6 +1,5 @@
 import { statusLabel } from '@/entities/team'
-import type { SortKey } from '@/entities/team'
-import type { EvaluationStatus } from '@/shared/api'
+import type { LeaderboardStatus, SortKey } from '@/entities/team'
 
 /** Конфигурация колонок и опций фильтра/сортировки — данные, а не разметка. */
 
@@ -11,9 +10,9 @@ export const SORT_COLUMNS: { key: SortKey; label: string; align?: 'right' }[] = 
   { key: 'frontend', label: 'Frontend', align: 'right' },
 ]
 
-const FILTERABLE_STATUSES: EvaluationStatus[] = ['done', 'failed', 'no_data', 'running']
+const FILTERABLE_STATUSES: LeaderboardStatus[] = ['running', 'no_data', 'done', 'partial', 'failed']
 
-export const STATUS_OPTIONS: { value: EvaluationStatus | 'all'; label: string }[] = [
+export const STATUS_OPTIONS: { value: LeaderboardStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Статус: все' },
   ...FILTERABLE_STATUSES.map((value) => ({ value, label: statusLabel(value) })),
 ]

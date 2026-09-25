@@ -1,7 +1,6 @@
-import { ArrowDownUp } from 'lucide-react'
+import { ArrowDownUp, Search } from 'lucide-react'
 
-import type { SortDirection, SortKey } from '@/entities/team'
-import type { EvaluationStatus } from '@/shared/api'
+import type { LeaderboardStatus, SortDirection, SortKey } from '@/entities/team'
 
 import { MOBILE_SORT_OPTIONS, STATUS_OPTIONS } from '../model/columns'
 import type { FilterState } from '../model/use-leaderboard-state'
@@ -36,7 +35,7 @@ export function LeaderboardToolbar({
         <select
           value={filters.status}
           onChange={(event) =>
-            onFiltersChange({ status: event.target.value as EvaluationStatus | 'all' })
+            onFiltersChange({ status: event.target.value as LeaderboardStatus | 'all' })
           }
           className="min-h-11 rounded-control border border-line-strong bg-surface px-3 text-[15px] text-fg xl:min-h-10"
         >
@@ -46,6 +45,23 @@ export function LeaderboardToolbar({
             </option>
           ))}
         </select>
+      </label>
+
+      <label className="relative flex min-h-11 min-w-[220px] flex-1 items-center xl:min-h-10 xl:max-w-[280px]">
+        <Search
+          aria-hidden="true"
+          size={16}
+          className="pointer-events-none absolute left-3 text-fg-subtle"
+        />
+        <span className="sr-only">Поиск команды</span>
+        <input
+          type="search"
+          value={filters.query}
+          onChange={(event) => onFiltersChange({ query: event.target.value })}
+          placeholder="Поиск команды"
+          aria-label="Поиск команды"
+          className="min-h-11 w-full rounded-control border border-line-strong bg-surface pl-9 pr-3 text-[15px] text-fg placeholder:text-fg-subtle xl:min-h-10"
+        />
       </label>
 
       <label className="flex min-h-11 items-center gap-2 text-[15px] text-fg xl:min-h-10">

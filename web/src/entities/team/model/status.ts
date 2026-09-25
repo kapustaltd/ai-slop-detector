@@ -22,20 +22,27 @@ import type { EvaluationStatus, LeaderboardTeam } from '@/shared/api'
 
 export type SortKey = 'rank' | 'total' | 'backend' | 'frontend'
 export type SortDirection = 'asc' | 'desc'
+export type LeaderboardStatus = EvaluationStatus | 'partial'
 
 const STATUS_LABELS: Record<EvaluationStatus, string> = {
-  done: 'Оценка готова',
-  failed: 'Проверка прервана',
-  no_data: 'Нет данных',
+  done: 'Готово',
+  failed: 'Ошибка',
+  no_data: 'В очереди',
   running: 'Проверяется',
 }
 
-export function statusLabel(status: EvaluationStatus): string {
-  return STATUS_LABELS[status]
+export function statusLabel(status: LeaderboardStatus): string {
+  return status === 'partial' ? 'Частично' : STATUS_LABELS[status]
 }
 
 export function normalizeStatus(value: string): EvaluationStatus {
   return value in STATUS_LABELS ? (value as EvaluationStatus) : 'no_data'
+}
+
+export function displayStatus(
+  team: Pick<LeaderboardTeam, 'status' | 'partial'>,
+): LeaderboardStatus {
+  return team.status === 'done' && team.partial ? 'partial' : team.status
 }
 
 export type StatusTone = 'strength' | 'critical' | 'info' | 'neutral'
@@ -83,7 +90,7 @@ export function describeStatus(status: EvaluationStatus, partial: boolean): Stat
       icon: CircleX,
       tone: 'critical',
       label: statusLabel(status),
-      description: 'Проверка прервана. Повторный запуск доступен оператору.',
+      description: 'Проверка завершилась с ошибкой. Повторный запуск доступен оператору.',
     }
   }
   if (status === 'running') {
@@ -98,7 +105,7 @@ export function describeStatus(status: EvaluationStatus, partial: boolean): Stat
     icon: Minus,
     tone: 'neutral',
     label: statusLabel(status),
-    description: 'Данных нет — оценка ещё не проводилась.',
+    description: 'Команда ожидает проверки.',
   }
 }
 

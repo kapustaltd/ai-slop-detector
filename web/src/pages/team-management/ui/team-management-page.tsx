@@ -19,6 +19,7 @@ import {
   getRegistryEvaluationStatuses,
   getRegistryTeams,
   RegistryApiError,
+  retryRegistryEvaluation,
   updateRegistryTeam,
   type RegistryEvaluationProgress,
   type RegistryEvaluationStatus,
@@ -44,6 +45,7 @@ export function TeamManagementPage() {
   const [isChecking, setIsChecking] = useState(false)
   const [editing, setEditing] = useState<RegistryTeam | null>(null)
   const [deleting, setDeleting] = useState<RegistryTeam | null>(null)
+  const [retryingTeamId, setRetryingTeamId] = useState<string | null>(null)
   const [statuses, setStatuses] = useState<Record<string, RegistryEvaluationStatus>>({})
 
   const checkRepository = async () => {
@@ -215,6 +217,22 @@ export function TeamManagementPage() {
       setError(cause instanceof Error ? cause.message : 'Не удалось удалить команду')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const retryEvaluation = async (team: RegistryTeam) => {
+    if (retryingTeamId) return
+    setRetryingTeamId(team.id)
+    setError('')
+    setNotice('')
+    try {
+      await retryRegistryEvaluation(team.id)
+      setStatuses((current) => ({ ...current, [team.id]: 'running' }))
+      setNotice(`Повторный анализ команды ${team.name} запущен.`)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Не удалось повторить анализ')
+    } finally {
+      setRetryingTeamId(null)
     }
   }
 
@@ -511,6 +529,9 @@ export function TeamManagementPage() {
                       <td className="px-4 py-3">
                         <TeamActionsMenu
                           team={team}
+                          canRetry={statuses[team.id] === 'failed'}
+                          isRetrying={retryingTeamId === team.id}
+                          onRetry={() => void retryEvaluation(team)}
                           onEdit={() => {
                             setEditing(team)
                             setDeleting(null)
@@ -541,10 +562,16 @@ export function TeamManagementPage() {
 
 function TeamActionsMenu({
   team,
+  canRetry,
+  isRetrying,
+  onRetry,
   onEdit,
   onDelete,
 }: {
   team: RegistryTeam
+  canRetry: boolean
+  isRetrying: boolean
+  onRetry: () => void
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -668,6 +695,21 @@ function TeamActionsMenu({
               }}
               onKeyDown={handleMenuKeyDown}
             >
+              {canRetry ? (
+                <button
+                  aria-label={`Повторить анализ ${team.name}`}
+                  className="min-h-10 rounded-control px-3 text-left text-sm hover:bg-muted-surface disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={isRetrying}
+                  role="menuitem"
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false)
+                    onRetry()
+                  }}
+                >
+                  {isRetrying ? 'Запуск…' : 'Повторить анализ'}
+                </button>
+              ) : null}
               <button
                 aria-label={`Изменить ${team.name}`}
                 className="min-h-10 rounded-control px-3 text-left text-sm hover:bg-muted-surface"

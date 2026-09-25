@@ -89,4 +89,28 @@ describe('useLeaderboardState', () => {
     expect(result.current.teams.map((t) => t.team_id)).toEqual(['a'])
     expect(result.current.total).toBe(3)
   })
+
+  it('фильтрует команды по поисковому запросу без учёта регистра', () => {
+    const teams = [
+      team({ team_id: 'alpha', name: 'Альфа' }),
+      team({ team_id: 'beta', name: 'Бета' }),
+    ]
+    const { result } = renderHook(() => useLeaderboardState(index(teams)), {
+      wrapper: wrapper(['/?q=АЛЬФА']),
+    })
+
+    expect(result.current.teams.map((t) => t.team_id)).toEqual(['alpha'])
+  })
+
+  it('фильтрует частичные оценки как отдельный статус', () => {
+    const teams = [
+      team({ team_id: 'full', status: 'done', partial: false }),
+      team({ team_id: 'partial', status: 'done', partial: true }),
+    ]
+    const { result } = renderHook(() => useLeaderboardState(index(teams)), {
+      wrapper: wrapper(['/?status=partial']),
+    })
+
+    expect(result.current.teams.map((t) => t.team_id)).toEqual(['partial'])
+  })
 })

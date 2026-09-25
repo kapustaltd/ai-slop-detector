@@ -16,7 +16,7 @@
 | `rank` | `number \| null` | `null` → «нет данных», ранг не присваивается |
 | `total` | `number \| null` | `null` → прочерк, не 0 |
 | `areas` | `{[area]: number}` | ключи `backend`/`frontend`; отсутствующий ключ ≠ `0`, а «нет данных» |
-| `status` | `'done' \| 'failed' \| 'no_data' \| 'running'` | определяет бейдж статуса и группу в сортировке (нет-данных/failed — в конец) |
+| `status` | `'done' \| 'failed' \| 'no_data' \| 'running'` | сырой статус контракта; UI-представление получает общий словарь статусов |
 | `warnings` | `string[]?` | наличие непустого массива → бейдж «есть предупреждения» |
 | `partial` | `boolean` | true → бейдж «частичная оценка», дорожка ScoreGauge заштрихована |
 
@@ -24,8 +24,10 @@
 
 ### `TeamStatusView` (entities/team/model)
 
-Чистая функция `LeaderboardTeam['status'] → { label: string; tone: StatusTone }`, где `StatusTone`
-— замкнутый union `'done' | 'failed' | 'no_data' | 'running'`, используемый только для выбора
+Чистая функция `(status, partial) → { label: string; tone: StatusTone }`, где `done + partial` получает
+подпись «Частично», а только `done` — «Готово». Общий словарь подписей также включает «В очереди»,
+«Проверяется» и «Ошибка». `StatusTone`
+— замкнутый union `'strength' | 'critical' | 'info' | 'neutral'`, используемый только для выбора
 токенов `--ds-sev-*`/`--ds-warn-*`, не для новой бизнес-логики.
 
 ### `SortState` (widgets/leaderboard-table/model)
@@ -44,7 +46,7 @@ URL через `useSearchParams` — нет отдельного React state, к
 
 ```ts
 interface FilterState {
-  status: EvaluationStatus | 'all'
+  status: LeaderboardStatus | 'all'
   warningsOnly: boolean
 }
 ```

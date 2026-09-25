@@ -12,6 +12,8 @@
 - The worker has one active run, a bounded queue and a configurable daily submission limit. Anonymous registration must not create unlimited model spend. A missing worker configuration is shown as `no_data` and never described as processing.
 - Registration success, queue state, evaluation failure and publication failure are distinct. A failed evaluation does not produce a fake score.
 - A completed row links to its team page. Pending and failed rows show their status without a broken detail link.
+- A failed row exposes «Повторить анализ» in its actions menu. The action starts a new evaluation for
+  that team and immediately returns the row to the running state; it is unavailable for other states.
 - A running team with an already published area can open that available report. The page refreshes
   while evaluation continues and never presents unfinished areas as scored.
 - The pipeline writes an atomic partial team file after each area finishes. The live API reads it
@@ -24,4 +26,5 @@
 
 - API test: create team -> pending/running index -> successful published score; failed evaluation -> failed row.
 - Web test: live index supersedes static fixtures, pending team appears, polling updates to completed row.
+- API and web tests: a failed evaluation can be queued again from the row actions menu.
 - Go and web quality gates pass.

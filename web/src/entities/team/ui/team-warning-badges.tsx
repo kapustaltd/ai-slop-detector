@@ -19,40 +19,59 @@ const WARNING_DESCRIPTIONS: Record<string, string> = {
 export interface TeamWarningBadgesProps {
   warnings: string[] | undefined
   className?: string
+  compact?: boolean
 }
 
-export function TeamWarningBadges({ warnings, className }: TeamWarningBadgesProps) {
+export function TeamWarningBadges({
+  warnings,
+  className,
+  compact = false,
+}: TeamWarningBadgesProps) {
   if (!warnings || warnings.length === 0) return null
 
-  return (
-    <div className={`flex flex-wrap gap-1.5 ${className ?? ''}`}>
-      {warnings.map((warning, index) => {
-        const Icon = warningIcon(warning)
-        const label = warningLabel(warning)
-        const descId = `team-warning-desc-${warning}-${index}`
-        const description =
-          WARNING_DESCRIPTIONS[warning] ?? 'В отчёте есть предупреждение об этой оценке.'
-        const tone =
-          warning === 'provider_error' || warning === 'suspected_prompt_injection'
-            ? 'border-sev-critical-border bg-sev-critical-bg text-sev-critical-fg'
-            : warning === 'secret_redacted'
-              ? 'border-sev-info-border bg-sev-info-bg text-sev-info-fg'
-              : 'border-warn-border bg-warn-bg text-warn-fg'
-        return (
-          <span
-            key={`${warning}-${index}`}
-            title={description}
-            aria-describedby={descId}
-            className={`inline-flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-badge border px-2 text-[13.5px] font-medium ${tone}`}
-          >
-            <Icon aria-hidden="true" size={12} strokeWidth={2.1} />
-            {label}
-            <span id={descId} className="sr-only">
-              {description}
-            </span>
-          </span>
-        )
-      })}
-    </div>
-  )
+  const badges = warnings.map((warning, index) => {
+    const Icon = warningIcon(warning)
+    const label = warningLabel(warning)
+    const descId = `team-warning-desc-${warning}-${index}`
+    const description =
+      WARNING_DESCRIPTIONS[warning] ?? 'В отчёте есть предупреждение об этой оценке.'
+    const tone =
+      warning === 'provider_error' || warning === 'suspected_prompt_injection'
+        ? 'border-sev-critical-border bg-sev-critical-bg text-sev-critical-fg'
+        : warning === 'secret_redacted'
+          ? 'border-sev-info-border bg-sev-info-bg text-sev-info-fg'
+          : 'border-warn-border bg-warn-bg text-warn-fg'
+    return (
+      <span
+        key={`${warning}-${index}`}
+        title={description}
+        aria-describedby={descId}
+        className={`inline-flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-badge border px-2 text-[13.5px] font-medium ${tone}`}
+      >
+        <Icon aria-hidden="true" size={12} strokeWidth={2.1} />
+        {label}
+        <span id={descId} className="sr-only">
+          {description}
+        </span>
+      </span>
+    )
+  })
+
+  if (compact) {
+    const countLabel =
+      warnings.length === 1 ? '1 предупреждение' : `${warnings.length} предупреждения`
+    return (
+      <details
+        className={`text-[13.5px] ${className ?? ''}`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <summary className="inline-flex min-h-[22px] cursor-pointer items-center rounded-badge border border-warn-border bg-warn-bg px-2 text-warn-fg marker:text-warn-fg">
+          {countLabel}
+        </summary>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">{badges}</div>
+      </details>
+    )
+  }
+
+  return <div className={`flex flex-wrap gap-1.5 ${className ?? ''}`}>{badges}</div>
 }

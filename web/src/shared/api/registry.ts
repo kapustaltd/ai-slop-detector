@@ -43,6 +43,13 @@ export async function deleteRegistryTeam(teamId: string) {
   return request<void>(`/api/teams/${encodeURIComponent(teamId)}`, 'DELETE')
 }
 
+export async function retryRegistryEvaluation(teamId: string) {
+  return request<{ team_id: string; status: RegistryEvaluationStatus }>(
+    `/api/teams/${encodeURIComponent(teamId)}/retry`,
+    'POST',
+  )
+}
+
 export type RegistryEvaluationStatus = EvaluationProgress['status']
 export type RegistryEvaluationStage = EvaluationProgress['stage']
 export type RegistryEvaluationProgress = EvaluationProgress & { legacy?: boolean }

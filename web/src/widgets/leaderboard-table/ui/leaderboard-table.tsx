@@ -146,8 +146,8 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                   <div className="flex justify-end">
                     <ScoreGauge
                       value={team.total}
-                      size="inline"
-                      trackWidth={58}
+                      size="row"
+                      trackWidth={72}
                       showMax={false}
                       showWord={false}
                       partial={team.partial}
@@ -190,7 +190,7 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                   </div>
                 </td>
                 <td className="px-4 py-2.5">
-                  <TeamWarningBadges warnings={team.warnings} />
+                  <TeamWarningBadges warnings={team.warnings} compact />
                 </td>
               </tr>
             )

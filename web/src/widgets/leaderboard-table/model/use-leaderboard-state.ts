@@ -1,8 +1,14 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import { sortTeams, type SortDirection, type SortKey } from '@/entities/team'
-import type { EvaluationStatus, LeaderboardIndexStub, LeaderboardTeam } from '@/shared/api'
+import {
+  displayStatus,
+  sortTeams,
+  type LeaderboardStatus,
+  type SortDirection,
+  type SortKey,
+} from '@/entities/team'
+import type { LeaderboardIndexStub, LeaderboardTeam } from '@/shared/api'
 
 /**
  * Единственное место, читающее/пишущее `useSearchParams` для рейтинга — контракт
@@ -11,11 +17,12 @@ import type { EvaluationStatus, LeaderboardIndexStub, LeaderboardTeam } from '@/
  */
 
 const SORT_KEYS: SortKey[] = ['rank', 'total', 'backend', 'frontend']
-const STATUS_VALUES: EvaluationStatus[] = ['done', 'failed', 'no_data', 'running']
+const STATUS_VALUES: LeaderboardStatus[] = ['done', 'failed', 'no_data', 'running', 'partial']
 
 export interface FilterState {
-  status: EvaluationStatus | 'all'
+  status: LeaderboardStatus | 'all'
   warningsOnly: boolean
+  query: string
 }
 
 export interface SortState {
@@ -32,9 +39,9 @@ function parseDirection(value: string | null, key: SortKey): SortDirection {
   return key === 'rank' ? 'asc' : 'desc'
 }
 
-function parseStatus(value: string | null): EvaluationStatus | 'all' {
+function parseStatus(value: string | null): LeaderboardStatus | 'all' {
   return value != null && (STATUS_VALUES as string[]).includes(value)
-    ? (value as EvaluationStatus)
+    ? (value as LeaderboardStatus)
     : 'all'
 }
 
@@ -48,6 +55,7 @@ export function useLeaderboardState(index: LeaderboardIndexStub | null) {
   const filters: FilterState = {
     status: parseStatus(searchParams.get('status')),
     warningsOnly: searchParams.get('warnings') === '1',
+    query: searchParams.get('q') ?? '',
   }
 
   const updateParams = (updates: Record<string, string | null>) => {
@@ -74,17 +82,24 @@ export function useLeaderboardState(index: LeaderboardIndexStub | null) {
     const updates: Record<string, string | null> = {}
     if ('status' in next) updates.status = next.status === 'all' ? null : (next.status ?? null)
     if ('warningsOnly' in next) updates.warnings = next.warningsOnly ? '1' : null
+    if ('query' in next) {
+      const query = next.query?.trim() ?? ''
+      updates.q = query.length > 0 ? query : null
+    }
     updateParams(updates)
   }
 
   const teams = useMemo<LeaderboardTeam[]>(() => {
     const filtered = (index?.teams ?? []).filter((team) => {
-      const matchesStatus = filters.status === 'all' || team.status === filters.status
+      const matchesStatus = filters.status === 'all' || displayStatus(team) === filters.status
       const matchesWarnings = !filters.warningsOnly || (team.warnings?.length ?? 0) > 0
-      return matchesStatus && matchesWarnings
+      const matchesQuery =
+        filters.query.length === 0 ||
+        team.name.toLocaleLowerCase().includes(filters.query.toLocaleLowerCase())
+      return matchesStatus && matchesWarnings && matchesQuery
     })
     return sortTeams(filtered, sort.key, sort.direction)
-  }, [index, filters.status, filters.warningsOnly, sort.key, sort.direction])
+  }, [index, filters.status, filters.warningsOnly, filters.query, sort.key, sort.direction])
 
   return { teams, total: index?.teams.length ?? 0, sort, filters, onSort, onFiltersChange }
 }

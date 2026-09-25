@@ -24,4 +24,11 @@ describe('TeamWarningBadges', () => {
     expect(screen.getByText('Лимит размера')).toBeInTheDocument()
     expect(screen.getByText('Секрет скрыт')).toBeInTheDocument()
   })
+
+  it('в компактном режиме сворачивает предупреждения в счётчик', () => {
+    render(<TeamWarningBadges warnings={['repo_too_large', 'secret_redacted']} compact />)
+
+    expect(screen.getByText('2 предупреждения')).toBeInTheDocument()
+    expect(screen.queryByText('Лимит размера')).not.toBeVisible()
+  })
 })
