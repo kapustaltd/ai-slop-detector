@@ -51,20 +51,20 @@ describe('guided team entry', () => {
       </MemoryRouter>,
     )
 
-    const summaries = await waitFor(() => {
-      const elements = Array.from(document.querySelectorAll('summary'))
+    const triggers = await waitFor(() => {
+      const elements = screen.getAllByRole('button', { name: 'Действия' })
       expect(elements).toHaveLength(2)
       return elements
     })
-    expect(document.querySelectorAll('details[open]')).toHaveLength(0)
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
 
-    await user.click(summaries[0])
+    await user.click(triggers[0])
 
-    expect(document.querySelectorAll('details[open]')).toHaveLength(1)
-    expect(summaries[0].closest('details')).toHaveAttribute('open')
-    expect(summaries[1].closest('details')).not.toHaveAttribute('open')
-    expect(screen.getByRole('button', { name: 'Изменить Альфа' })).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Изменить Бета' })).not.toBeVisible()
+    expect(triggers[0]).toHaveAttribute('aria-expanded', 'true')
+    expect(triggers[1]).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('menu', { name: 'Действия команды Альфа' })).toBeVisible()
+    expect(screen.getByRole('menuitem', { name: 'Изменить Альфа' })).toBeVisible()
+    expect(screen.queryByRole('menuitem', { name: 'Изменить Бета' })).not.toBeInTheDocument()
   })
 
   it('updates and deletes a team without an operator token', async () => {
@@ -99,7 +99,8 @@ describe('guided team entry', () => {
       </MemoryRouter>,
     )
 
-    await user.click(await screen.findByRole('button', { name: 'Изменить Альфа' }))
+    await user.click((await screen.findAllByRole('button', { name: 'Действия' }))[0])
+    await user.click(await screen.findByRole('menuitem', { name: 'Изменить Альфа' }))
     expect(screen.queryByLabelText('Токен оператора')).not.toBeInTheDocument()
     await user.clear(screen.getByRole('textbox', { name: 'Ветка' }))
     await user.type(screen.getByRole('textbox', { name: 'Ветка' }), 'release')
@@ -107,7 +108,8 @@ describe('guided team entry', () => {
     expect(await screen.findByText('Команда обновлена.')).toBeInTheDocument()
     expect(screen.getByText('release')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Удалить Альфа' }))
+    await user.click((await screen.findAllByRole('button', { name: 'Действия' }))[0])
+    await user.click(screen.getByRole('menuitem', { name: 'Удалить Альфа' }))
     expect(screen.queryByLabelText('Токен оператора')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Удалить команду' }))
     expect(await screen.findByText('Команда удалена из реестра.')).toBeInTheDocument()

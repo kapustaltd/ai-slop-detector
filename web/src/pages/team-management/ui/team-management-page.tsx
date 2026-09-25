@@ -1,5 +1,14 @@
 import { ArrowRight, Check, MoreHorizontal, Plus } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { createPortal } from 'react-dom'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 import { Link } from 'react-router-dom'
 
 import {
@@ -500,42 +509,23 @@ export function TeamManagementPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <details className="relative inline-block">
-                          <summary className="flex min-h-11 list-none cursor-pointer items-center gap-1 rounded-control border border-line px-2.5 text-sm text-fg-muted hover:bg-muted-surface">
-                            <MoreHorizontal aria-hidden="true" size={17} />
-                            Действия
-                          </summary>
-                          <div className="absolute right-0 top-[calc(100%+4px)] z-10 flex min-w-40 flex-col gap-1 rounded-panel border border-line bg-surface p-1 shadow-lg">
-                            <button
-                              aria-label={`Изменить ${team.name}`}
-                              className="min-h-10 rounded-control px-3 text-left text-sm hover:bg-muted-surface"
-                              type="button"
-                              onClick={() => {
-                                setEditing(team)
-                                setDeleting(null)
-                                setDraft(null)
-                                setError('')
-                                setNotice('')
-                              }}
-                            >
-                              Изменить
-                            </button>
-                            <button
-                              aria-label={`Удалить ${team.name}`}
-                              className="min-h-10 rounded-control px-3 text-left text-sm text-sev-critical-fg hover:bg-sev-critical-bg"
-                              type="button"
-                              onClick={() => {
-                                setDeleting(team)
-                                setEditing(null)
-                                setDraft(null)
-                                setError('')
-                                setNotice('')
-                              }}
-                            >
-                              Удалить
-                            </button>
-                          </div>
-                        </details>
+                        <TeamActionsMenu
+                          team={team}
+                          onEdit={() => {
+                            setEditing(team)
+                            setDeleting(null)
+                            setDraft(null)
+                            setError('')
+                            setNotice('')
+                          }}
+                          onDelete={() => {
+                            setDeleting(team)
+                            setEditing(null)
+                            setDraft(null)
+                            setError('')
+                            setNotice('')
+                          }}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -546,6 +536,167 @@ export function TeamManagementPage() {
         </section>
       ) : null}
     </main>
+  )
+}
+
+function TeamActionsMenu({
+  team,
+  onEdit,
+  onDelete,
+}: {
+  team: RegistryTeam
+  onEdit: () => void
+  onDelete: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current
+    const menu = menuRef.current
+    if (!trigger || !menu) return
+
+    const triggerRect = trigger.getBoundingClientRect()
+    const menuRect = menu.getBoundingClientRect()
+    const gap = 4
+    const viewportPadding = 8
+    const opensBelow =
+      triggerRect.bottom + gap + menuRect.height <= window.innerHeight - viewportPadding
+    const top = opensBelow
+      ? triggerRect.bottom + gap
+      : Math.max(viewportPadding, triggerRect.top - menuRect.height - gap)
+    const left = Math.min(
+      Math.max(viewportPadding, triggerRect.right - menuRect.width),
+      Math.max(viewportPadding, window.innerWidth - menuRect.width - viewportPadding),
+    )
+
+    setPosition({ top, left })
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!isOpen) return
+    updatePosition()
+
+    const reposition = () => updatePosition()
+    window.addEventListener('resize', reposition)
+    window.addEventListener('scroll', reposition, true)
+    return () => {
+      window.removeEventListener('resize', reposition)
+      window.removeEventListener('scroll', reposition, true)
+    }
+  }, [isOpen, updatePosition])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const firstItem = menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')
+    firstItem?.focus()
+
+    const closeOnPointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (
+        target instanceof Node &&
+        (triggerRef.current?.contains(target) || menuRef.current?.contains(target))
+      ) {
+        return
+      }
+      setIsOpen(false)
+    }
+    const closeOnKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setIsOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('pointerdown', closeOnPointerDown)
+    document.addEventListener('keydown', closeOnKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnPointerDown)
+      document.removeEventListener('keydown', closeOnKeyDown)
+    }
+  }, [isOpen])
+
+  const handleMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [],
+    )
+    if (items.length === 0) return
+
+    const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement)
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      const direction = event.key === 'ArrowDown' ? 1 : -1
+      items[(currentIndex + direction + items.length) % items.length]?.focus()
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      items[0]?.focus()
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      items.at(-1)?.focus()
+    }
+  }
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        className="flex min-h-11 items-center gap-1 rounded-control border border-line px-2.5 text-sm text-fg-muted hover:bg-muted-surface"
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        <MoreHorizontal aria-hidden="true" size={17} />
+        Действия
+      </button>
+      {isOpen
+        ? createPortal(
+            <div
+              ref={menuRef}
+              aria-label={`Действия команды ${team.name}`}
+              className="fixed z-50 flex min-w-40 flex-col gap-1 rounded-panel border border-line bg-surface p-1 shadow-lg"
+              role="menu"
+              tabIndex={-1}
+              style={{
+                left: position?.left ?? 0,
+                top: position?.top ?? 0,
+                visibility: position ? 'visible' : 'hidden',
+              }}
+              onKeyDown={handleMenuKeyDown}
+            >
+              <button
+                aria-label={`Изменить ${team.name}`}
+                className="min-h-10 rounded-control px-3 text-left text-sm hover:bg-muted-surface"
+                role="menuitem"
+                type="button"
+                onClick={() => {
+                  setIsOpen(false)
+                  onEdit()
+                }}
+              >
+                Изменить
+              </button>
+              <button
+                aria-label={`Удалить ${team.name}`}
+                className="min-h-10 rounded-control px-3 text-left text-sm text-sev-critical-fg hover:bg-sev-critical-bg"
+                role="menuitem"
+                type="button"
+                onClick={() => {
+                  setIsOpen(false)
+                  onDelete()
+                }}
+              >
+                Удалить
+              </button>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   )
 }
 
