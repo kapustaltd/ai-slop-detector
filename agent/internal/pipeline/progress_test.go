@@ -9,6 +9,7 @@ import (
 
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/contract"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/enrichment"
+	"github.com/kapustaltd/ai-slop-detector/agent/internal/provider"
 )
 
 func TestProgressRecorderWritesBoundedConfirmedEvents(t *testing.T) {
@@ -39,5 +40,14 @@ func TestProgressRecorderWritesBoundedConfirmedEvents(t *testing.T) {
 	last := snapshot["events"].([]any)[maxProgressEvents-1].(map[string]any)
 	if last["kind"] != "finding" || last["source"].(map[string]any)["file"] != "main.go" {
 		t.Fatalf("verified finding not retained: %+v", last)
+	}
+}
+
+func TestToolCompletionUpdatesExistingEvent(t *testing.T) {
+	p := newProgressRecorder(t.TempDir(), "alpha", time.Now, progressAreas(nil))
+	p.activity("backend", provider.Activity{Kind: "tool", Title: "Read", Detail: "src/main.go", ToolID: "t1", State: "running"})
+	p.activity("backend", provider.Activity{Kind: "tool", Title: "Read", ToolID: "t1", State: "done"})
+	if len(p.value.Events) != 1 || p.value.Events[0].State != "done" || p.value.Events[0].Detail != "src/main.go" {
+		t.Fatalf("completion lost tool input or duplicated row: %+v", p.value.Events)
 	}
 }

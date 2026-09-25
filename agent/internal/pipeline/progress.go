@@ -9,10 +9,11 @@ import (
 
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/contract"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/enrichment"
+	"github.com/kapustaltd/ai-slop-detector/agent/internal/provider"
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/rubric"
 )
 
-const maxProgressEvents = 20
+const maxProgressEvents = 500
 
 // progressRecorder persists a small, user-facing trace for the active evaluation.
 // It deliberately stores pipeline facts and verified report references only.
@@ -97,15 +98,20 @@ func (p *progressRecorder) areaStatus(area string) string {
 	return ""
 }
 
-func (p *progressRecorder) verifiedFinding(area string, finding enrichment.EnrichedFinding) {
+func (p *progressRecorder) verifiedFinding(area string, finding enrichment.EnrichedFinding, categoryID ...string) {
 	if p == nil || finding.LinkStatus != "verified" || finding.Permalink == "" {
 		return
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	category := ""
+	if len(categoryID) > 0 {
+		category = categoryID[0]
+	}
 	p.sequence++
 	p.value.Events = append(p.value.Events, contract.Event{
-		Sequence: p.sequence, At: p.now().UTC().Format(time.RFC3339), Kind: "finding",
+		CategoryID: category,
+		Sequence:   p.sequence, At: p.now().UTC().Format(time.RFC3339), Kind: "finding",
 		Title: shortText(finding.Title, 160), Detail: shortText(finding.Explanation, 500), Area: area,
 		Source: &contract.Source{File: finding.File, LineStart: finding.LineStart, LineEnd: finding.LineEnd, Permalink: finding.Permalink},
 	})
@@ -162,4 +168,44 @@ func shortText(value string, limit int) string {
 		return string(runes[:limit])
 	}
 	return value
+}
+
+// activity persists live public events. Tool completion updates its existing row.
+func (p *progressRecorder) activity(area string, activity provider.Activity) {
+	if p == nil {
+		return
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if activity.ToolID != "" {
+		for i := range p.value.Events {
+			event := &p.value.Events[i]
+			if event.Area == area && event.ToolID == activity.ToolID {
+				event.State = activity.State
+				_ = writeJSON(p.path, p.value)
+				return
+			}
+		}
+	}
+	p.sequence++
+	p.value.Events = append(p.value.Events, contract.Event{Sequence: p.sequence, At: p.now().UTC().Format(time.RFC3339), Kind: activity.Kind, Title: shortText(activity.Title, 160), Detail: shortText(activity.Detail, 500), Area: area, CategoryID: activity.CategoryID, ToolID: activity.ToolID, State: activity.State})
+	if len(p.value.Events) > maxProgressEvents {
+		p.value.Events = append([]contract.Event(nil), p.value.Events[len(p.value.Events)-maxProgressEvents:]...)
+	}
+	_ = writeJSON(p.path, p.value)
+}
+
+func (p *progressRecorder) usage(area string, usage provider.Usage) {
+	if p == nil {
+		return
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for i := range p.value.Areas {
+		if p.value.Areas[i].Area == area {
+			p.value.Areas[i].InputTokens = usage.InputTokens
+			p.value.Areas[i].OutputTokens = usage.OutputTokens
+		}
+	}
+	_ = writeJSON(p.path, p.value)
 }

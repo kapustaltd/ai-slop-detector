@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -19,6 +20,9 @@ type Request struct {
 	RubricVersion string
 	RubricPath    string
 	Prompt        string
+	OnActivity    func(Activity)
+	Categories    map[string]string
+	OnUsage       func(Usage)
 }
 
 type Usage struct {
@@ -76,6 +80,9 @@ func (p CommandProvider) arguments(request Request) []string {
 		disallowed = defaultDisallowedTools
 	}
 	args := []string{"-p", request.Prompt, "--output-format", "json"}
+	if request.OnActivity != nil {
+		args = []string{"-p", request.Prompt, "--output-format", "stream-json", "--verbose"}
+	}
 	if request.RepoPath != "" {
 		args = append(args, "--add-dir", request.RepoPath)
 	}
@@ -100,7 +107,33 @@ func (p CommandProvider) Evaluate(parent context.Context, request Request) (Resp
 	cmd := exec.CommandContext(ctx, p.Binary, p.arguments(request)...)
 	cmd.Dir = p.ProjectDir
 	cmd.Env = safeEnv(p.Env)
-	raw, err := cmd.Output()
+	var raw []byte
+	var err error
+	if request.OnActivity != nil && len(p.Args) == 0 {
+		var stdout io.ReadCloser
+		stdout, err = cmd.StdoutPipe()
+		if err == nil {
+			err = cmd.Start()
+		}
+		if err == nil {
+			raw, err = readStream(stdout, request)
+			if err != nil {
+				contextErr := ctx.Err()
+				cancel()
+				_ = cmd.Wait()
+				if contextErr != nil {
+					return Response{}, fmt.Errorf("provider timeout: %w", contextErr)
+				}
+				return Response{}, fmt.Errorf("read provider stream: %w", err)
+			}
+			waitErr := cmd.Wait()
+			if err == nil {
+				err = waitErr
+			}
+		}
+	} else {
+		raw, err = cmd.Output()
+	}
 	if err != nil {
 		if ctx.Err() != nil {
 			return Response{}, fmt.Errorf("provider timeout: %w", ctx.Err())

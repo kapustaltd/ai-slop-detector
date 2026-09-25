@@ -66,6 +66,8 @@ export function TeamPage() {
   useEffect(() => {
     if (!teamId) return
     let cancelled = false
+    let delay = 1000
+    let timer: ReturnType<typeof setTimeout>
     const refresh = async () => {
       let currentStatus: RegistryEvaluationStatus | null = null
       try {
@@ -75,6 +77,7 @@ export function TeamPage() {
         setLiveStatus(nextProgress.status)
         setPollError(false)
         currentStatus = nextProgress.status
+        delay = nextProgress.status === 'running' ? 1000 : 5000
       } catch {
         setPollError(true)
         try {
@@ -117,11 +120,14 @@ export function TeamPage() {
         setRubrics((current) => ({ ...current, frontend: frontend.value }))
       if (loadedStats.status === 'fulfilled') setStats(loadedStats.value)
     }
-    void refresh()
-    const timer = window.setInterval(() => void refresh(), 5000)
+    const poll = async () => {
+      await refresh()
+      if (!cancelled) timer = setTimeout(() => void poll(), delay)
+    }
+    void poll()
     return () => {
       cancelled = true
-      window.clearInterval(timer)
+      clearTimeout(timer)
     }
   }, [teamId, retryKey])
 

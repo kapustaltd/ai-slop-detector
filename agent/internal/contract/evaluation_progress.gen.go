@@ -17,16 +17,21 @@ type AreaProgress struct {
 	ExcludedFiles       int    `json:"excluded_files"`
 	CompletedCategories int    `json:"completed_categories"`
 	TotalCategories     int    `json:"total_categories"`
+	InputTokens         int    `json:"input_tokens,omitempty"`
+	OutputTokens        int    `json:"output_tokens,omitempty"`
 }
 
 type Event struct {
-	Sequence int     `json:"sequence"`
-	At       string  `json:"at"`
-	Kind     string  `json:"kind"`
-	Title    string  `json:"title"`
-	Detail   string  `json:"detail,omitempty"`
-	Area     string  `json:"area,omitempty"`
-	Source   *Source `json:"source,omitempty"`
+	Sequence   int     `json:"sequence"`
+	At         string  `json:"at"`
+	Kind       string  `json:"kind"`
+	Title      string  `json:"title"`
+	Detail     string  `json:"detail,omitempty"`
+	Area       string  `json:"area,omitempty"`
+	Source     *Source `json:"source,omitempty"`
+	CategoryID string  `json:"category_id,omitempty"`
+	ToolID     string  `json:"tool_id,omitempty"`
+	State      string  `json:"state,omitempty"`
 }
 
 type Source struct {

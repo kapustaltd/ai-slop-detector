@@ -1,18 +1,8 @@
 import { AlertCircle, Check, CircleDashed, LoaderCircle } from 'lucide-react'
 
 import type { RegistryEvaluationProgress } from '@/shared/api'
-import {
-  Timeline,
-  TimelineConnector,
-  TimelineContent,
-  TimelineDescription,
-  TimelineHeader,
-  TimelineItem,
-  TimelineMarker,
-  TimelineRail,
-  TimelineTime,
-  TimelineTitle,
-} from '@/shared/ui/shadcn/timeline'
+import { Context, ContextTrigger, ContextContent } from '@/shared/ui'
+import { AgentActivity } from './agent-activity'
 
 import { areaLabels, getCurrentAction, type EvaluationAreaName } from '../model/labels'
 
@@ -30,8 +20,6 @@ const statusLabels: Record<RegistryEvaluationProgress['status'], string> = {
 }
 
 export function EvaluationProgressView({ progress, className = '' }: EvaluationProgressViewProps) {
-  const events = progress.events.slice(-8)
-
   return (
     <section aria-label="Ход оценки" className={`border-y border-line py-4 ${className}`}>
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -56,72 +44,41 @@ export function EvaluationProgressView({ progress, className = '' }: EvaluationP
                 <AreaState area={area} status={status} />
               </div>
               {result ? (
-                <p className="mb-0 mt-1 text-sm text-fg-muted">
-                  {result.completed_categories} из {result.total_categories} категорий
-                  {result.included_files > 0 ? ` · ${result.included_files} файлов` : ''}
-                  {result.excluded_files > 0 ? ` · ${result.excluded_files} пропущено` : ''}
-                </p>
+                <div>
+                  <p className="mb-0 mt-1 text-sm text-fg-muted">
+                    {result.completed_categories} из {result.total_categories} категорий
+                    {result.included_files > 0 ? ` · ${result.included_files} файлов` : ''}
+                    {result.excluded_files > 0 ? ` · ${result.excluded_files} пропущено` : ''}
+                  </p>
+                  <Context usedTokens={result.input_tokens ?? 0}>
+                    <ContextTrigger>
+                      <button
+                        type="button"
+                        className="mt-2 text-xs text-link underline decoration-dotted underline-offset-4"
+                      >
+                        Контекст проверки
+                      </button>
+                    </ContextTrigger>
+                    <ContextContent className="text-sm">
+                      <p className="font-medium">{areaLabels[area]} · Контекст</p>
+                      <p>
+                        {result.included_files} файлов включено, {result.excluded_files} исключено.
+                      </p>
+                      <p>
+                        {result.input_tokens !== undefined
+                          ? `Вход: ${result.input_tokens.toLocaleString('ru-RU')} токенов · выход: ${(result.output_tokens ?? 0).toLocaleString('ru-RU')}`
+                          : 'Расход токенов появится после ответа модели.'}
+                      </p>
+                    </ContextContent>
+                  </Context>
+                </div>
               ) : null}
             </li>
           )
         })}
       </ul>
 
-      <div className="mt-1 border-t border-line pt-3">
-        <h3 className="m-0 text-sm font-medium">События проверки</h3>
-        {events.length > 0 ? (
-          <Timeline aria-label="Хронология проверки" className="mt-3">
-            {events.map((event) => {
-              const isError = event.kind === 'error'
-              return (
-                <TimelineItem key={event.sequence} status={isError ? 'default' : 'done'}>
-                  <TimelineRail>
-                    <TimelineMarker
-                      className={isError ? 'border-sev-critical-border text-sev-critical-fg' : ''}
-                    >
-                      {isError ? <AlertCircle aria-hidden="true" /> : null}
-                    </TimelineMarker>
-                    <TimelineConnector />
-                  </TimelineRail>
-                  <TimelineContent>
-                    <TimelineHeader>
-                      <TimelineTitle className={isError ? 'text-sev-critical-fg' : ''}>
-                        {event.title}
-                      </TimelineTitle>
-                      <TimelineTime dateTime={event.at}>{formatEventTime(event.at)}</TimelineTime>
-                    </TimelineHeader>
-                    {event.detail || event.source ? (
-                      <TimelineDescription>
-                        {event.detail}
-                        {event.source ? (
-                          <>
-                            {event.detail ? ' · ' : null}
-                            {event.source.permalink ? (
-                              <a className="text-link" href={event.source.permalink}>
-                                {event.source.file}:{event.source.line_start}
-                              </a>
-                            ) : (
-                              <span className="font-mono">
-                                {event.source.file}:{event.source.line_start}
-                              </span>
-                            )}
-                          </>
-                        ) : null}
-                      </TimelineDescription>
-                    ) : null}
-                  </TimelineContent>
-                </TimelineItem>
-              )
-            })}
-          </Timeline>
-        ) : (
-          <p className="mb-0 mt-2 text-sm text-fg-muted">
-            {progress.status === 'running'
-              ? 'События проверки появятся здесь.'
-              : 'Для этой проверки события не записаны.'}
-          </p>
-        )}
-      </div>
+      <AgentActivity progress={progress} />
     </section>
   )
 }
@@ -185,11 +142,4 @@ function AreaState({ area, status }: { area: EvaluationAreaName; status: string 
       {label}
     </span>
   )
-}
-
-function formatEventTime(value: string) {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(date)
 }

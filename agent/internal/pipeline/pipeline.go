@@ -401,6 +401,15 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 	trace.setArea(area, "running", included, excluded, 0, categoryCount(config.Rubrics, area))
 	trace.update("analyzing", "scan", "Структура файлов проверена", fmt.Sprintf("Включено %d %s, исключено %d.", included, pluralFiles(included), excluded), area)
 	instruction := buildInstruction(team, area, prepared.CommitSHA, config.RubricPaths[rubricValue.Version], root, reviewSkill)
+	categories := map[string]string{}
+	for _, category := range rubricValue.Categories {
+		for _, sub := range category.Subcategories {
+			for _, metric := range sub.Metrics {
+				categories[metric.ID] = metric.Name
+			}
+		}
+	}
+	instruction += "\nВо время проверки перед вызовами инструментов публикуй короткие пояснения для пользователя: отдельная строка PROGRESS {\"category\":\"ID метрики рубрики\",\"summary\":\"Что проверяешь и какие факты обнаружены\"}. Это публичный статус, не внутренние рассуждения. Не включай секреты, содержимое файлов и неподтверждённые оценки. Финальный ответ — только полный JSON отчёта."
 	started := time.Now()
 	maxAttempts := config.MaxRetries + 1
 	if maxAttempts < 1 {
@@ -424,6 +433,10 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 			_ = saveAttempt(rawDir, attemptRecord{Attempt: attempt, StartedAt: attemptStarted.Format(time.RFC3339), Error: lastErr.Error()})
 			continue
 		}
+		request.Categories = categories
+		request.OnUsage = func(usage provider.Usage) { trace.usage(area, usage) }
+		request.OnActivity = func(activity provider.Activity) { trace.activity(area, activity) }
+		trace.update("analyzing", "stage", "Агент проверяет код", fmt.Sprintf("Попытка %d. Чтение файлов и проверка критериев рубрики.", attempt), area)
 		response, err = config.Provider.Evaluate(ctx, request)
 		record := attemptRecord{Attempt: attempt, StartedAt: attemptStarted.Format(time.RFC3339)}
 		if err != nil {
@@ -470,8 +483,17 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 		_ = writeJSON(filepath.Join(rawDir, "evaluation.json"), saved)
 		return areaRunResult{area: bundle.Area{Status: "failed", Error: sanitizeError(lastErr), DurationMS: duration.Milliseconds(), RawAttempts: attempts}}
 	}
+	for _, metric := range report.Metrics {
+		trace.activity(area, provider.Activity{Kind: "response", Title: categories[metric.ID], CategoryID: metric.ID, Detail: fmt.Sprintf("%.1f / %.1f · %s", metric.Score, metric.Max, metric.Summary), State: "done"})
+	}
+	trace.usage(area, response.Usage)
+	trace.update("analyzing", "context", "Использование модели", fmt.Sprintf("Вход: %d токенов · выход: %d токенов", response.Usage.InputTokens, response.Usage.OutputTokens), area)
 	enriched := enrichment.Enrich(report, enrichment.Options{RepoRoot: root, RepoURL: prepared.RepoURL, CommitSHA: prepared.CommitSHA, Templates: config.Templates, MaxSnippetLines: config.MaxSnippetLines, MaxSnippetBytes: config.MaxSnippetBytes})
-	traceFinding := firstVerifiedFinding(enriched)
+	for _, metric := range enriched.Metrics {
+		for _, finding := range metric.Findings {
+			trace.verifiedFinding(area, finding, metric.ID)
+		}
+	}
 	aggregate, err := aggregation.Area(rubricValue, report)
 	if err != nil {
 		return failedArea(config, team, area, rawRoot, err)
@@ -485,7 +507,7 @@ func runArea(ctx context.Context, config Config, team registry.Team, prepared gi
 	if err := writeJSON(filepath.Join(config.OutputDir, "state", team.ID, area+".json"), saved); err != nil {
 		return areaRunResult{area: bundle.Area{Status: "failed", Error: err.Error()}}
 	}
-	return areaRunResult{area: toBundleArea(saved), costUSD: response.Usage.CostUSD, warnings: warnings, meta: metaFromReport(report), traceFinding: traceFinding}
+	return areaRunResult{area: toBundleArea(saved), costUSD: response.Usage.CostUSD, warnings: warnings, meta: metaFromReport(report)}
 }
 
 func firstVerifiedFinding(enriched enrichment.Result) *enrichment.EnrichedFinding {

@@ -14,15 +14,20 @@ export interface AreaProgress {
   excluded_files: number;
   completed_categories: number;
   total_categories: number;
+  input_tokens?: number;
+  output_tokens?: number;
 }
 export interface Event {
   sequence: number;
   at: string;
-  kind: "stage" | "scan" | "area" | "finding" | "report" | "error";
+  kind: "stage" | "scan" | "area" | "finding" | "report" | "error" | "tool" | "reasoning" | "response" | "context";
   title: string;
   detail?: string;
   area?: "backend" | "frontend";
   source?: Source;
+  category_id?: string;
+  tool_id?: string;
+  state?: "running" | "done" | "failed";
 }
 export interface Source {
   file: string;

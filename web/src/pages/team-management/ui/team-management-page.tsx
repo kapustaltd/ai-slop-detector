@@ -577,7 +577,7 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
         if (stopped) return
         setPollError(true)
       }
-      timer = setTimeout(() => void poll(), 3000)
+      timer = setTimeout(() => void poll(), 1000)
     }
     void poll()
     return () => {
