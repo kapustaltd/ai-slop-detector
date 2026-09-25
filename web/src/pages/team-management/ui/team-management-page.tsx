@@ -1,5 +1,5 @@
 import { ArrowRight, Check, MoreHorizontal, Plus } from 'lucide-react'
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
@@ -500,7 +500,7 @@ export function TeamManagementPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <details open className="relative inline-block">
+                        <details className="relative inline-block">
                           <summary className="flex min-h-11 list-none cursor-pointer items-center gap-1 rounded-control border border-line px-2.5 text-sm text-fg-muted hover:bg-muted-surface">
                             <MoreHorizontal aria-hidden="true" size={17} />
                             Действия
@@ -556,6 +556,7 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
   const [pollError, setPollError] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [startedAt, setStartedAt] = useState<number | null>(null)
+  const noDataPolls = useRef(0)
 
   useEffect(() => {
     if (progress?.status !== 'running' || startedAt === null) return
@@ -576,6 +577,11 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
         if (stopped) return
         setPollError(false)
         setProgress(nextProgress)
+        if (nextProgress.status === 'no_data') {
+          noDataPolls.current += 1
+        } else {
+          noDataPolls.current = 0
+        }
         if (nextProgress.started_at) {
           const timestamp = new Date(nextProgress.started_at).getTime()
           if (Number.isFinite(timestamp)) {
@@ -585,7 +591,14 @@ function RepositoryProgress({ team }: { team: TeamDraft }) {
         } else if (nextProgress.status === 'running') {
           setStartedAt((current) => current ?? Date.now())
         }
-        if (nextProgress.status !== 'running') return
+        // Right after creation the registry can briefly answer `no_data` while
+        // the queued job becomes visible. Keep observing that transient state
+        // so the first submission does not require a second user action.
+        if (
+          nextProgress.status !== 'running' &&
+          (nextProgress.status !== 'no_data' || noDataPolls.current >= 30)
+        )
+          return
       } catch {
         if (stopped) return
         setPollError(true)

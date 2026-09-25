@@ -15,6 +15,58 @@ function json(data: unknown, status = 200) {
 }
 
 describe('guided team entry', () => {
+  it('keeps action menus closed until their row is opened', async () => {
+    const teams = [
+      {
+        id: 'alpha',
+        name: 'Альфа',
+        repo: 'https://github.com/org/alpha',
+        branch: 'main',
+        active: true,
+      },
+      {
+        id: 'beta',
+        name: 'Бета',
+        repo: 'https://github.com/org/beta',
+        branch: 'main',
+        active: true,
+      },
+    ]
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url === '/api/bundle/index') {
+        return json({
+          teams: [
+            { team_id: 'alpha', status: 'done' },
+            { team_id: 'beta', status: 'failed' },
+          ],
+        })
+      }
+      return json(teams)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>,
+    )
+
+    const summaries = await waitFor(() => {
+      const elements = Array.from(document.querySelectorAll('summary'))
+      expect(elements).toHaveLength(2)
+      return elements
+    })
+    expect(document.querySelectorAll('details[open]')).toHaveLength(0)
+
+    await user.click(summaries[0])
+
+    expect(document.querySelectorAll('details[open]')).toHaveLength(1)
+    expect(summaries[0].closest('details')).toHaveAttribute('open')
+    expect(summaries[1].closest('details')).not.toHaveAttribute('open')
+    expect(screen.getByRole('button', { name: 'Изменить Альфа' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Изменить Бета' })).not.toBeVisible()
+  })
+
   it('updates and deletes a team without an operator token', async () => {
     const existing = {
       id: 'alpha',
@@ -178,5 +230,43 @@ describe('guided team entry', () => {
       'href',
       '/team/project',
     )
+  })
+
+  it('continues polling when the first status is temporarily unavailable', async () => {
+    let progressCalls = 0
+    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
+      if (url === '/api/evaluation/progress/project') {
+        progressCalls++
+        return json(
+          progressCalls === 1
+            ? { status: 'no_data', stage: 'waiting', areas: [], events: [] }
+            : { status: 'done', stage: 'done', areas: [], events: [] },
+        )
+      }
+      if (options?.method === 'POST') return json({ id: 'project' }, 201)
+      return json([])
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Добавить команду' }))
+    await user.type(
+      screen.getByRole('textbox', { name: 'Ссылка на репозиторий' }),
+      'https://github.com/org/project',
+    )
+    await user.click(screen.getByRole('button', { name: 'Продолжить' }))
+    await user.click(await screen.findByRole('button', { name: 'Посмотреть итог' }))
+    await user.click(screen.getByRole('button', { name: 'Сохранить команду' }))
+
+    expect(
+      await screen.findByText('Оценка ещё не запущена или пока недоступна.'),
+    ).toBeInTheDocument()
+    await waitFor(() => expect(progressCalls).toBeGreaterThan(1), { timeout: 5000 })
+    expect(await screen.findByText('Оценка готова.')).toBeInTheDocument()
   })
 })
