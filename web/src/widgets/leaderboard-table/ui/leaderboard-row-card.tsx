@@ -12,9 +12,10 @@ import { ScoreGauge } from '@/shared/ui'
 
 export interface LeaderboardRowCardProps {
   team: LeaderboardTeam
+  onSelectTeam?: () => void
 }
 
-export function LeaderboardRowCard({ team }: LeaderboardRowCardProps) {
+export function LeaderboardRowCard({ team, onSelectTeam }: LeaderboardRowCardProps) {
   const hasBadges = team.status !== 'done' || team.partial || (team.warnings?.length ?? 0) > 0
 
   const content = (
@@ -62,6 +63,31 @@ export function LeaderboardRowCard({ team }: LeaderboardRowCardProps) {
           <TeamWarningBadges warnings={team.warnings} />
         </div>
       ) : null}
+    </>
+  )
+  const className =
+    'flex flex-col gap-[9px] rounded-card border border-line bg-surface px-[13px] py-3 no-underline'
+  return (
+    <article className={`${className} ${onSelectTeam ? 'transition-colors' : ''}`}>
+      {onSelectTeam ? (
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label={`Быстрый просмотр ${team.name}`}
+          className="cursor-pointer rounded-control hover:bg-muted-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          onClick={onSelectTeam}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              onSelectTeam()
+            }
+          }}
+        >
+          {content}
+        </div>
+      ) : (
+        content
+      )}
       {team.status === 'running' || team.status === 'done' ? (
         <Link
           className="inline-flex min-h-10 items-center text-sm text-link"
@@ -70,9 +96,6 @@ export function LeaderboardRowCard({ team }: LeaderboardRowCardProps) {
           {team.status === 'running' ? 'Смотреть ход оценки' : 'Открыть отчёт'}
         </Link>
       ) : null}
-    </>
+    </article>
   )
-  const className =
-    'flex flex-col gap-[9px] rounded-card border border-line bg-surface px-[13px] py-3 no-underline'
-  return <article className={className}>{content}</article>
 }

@@ -1,4 +1,4 @@
-import { CloudOff, FileQuestion } from 'lucide-react'
+import { ArrowUpRight, BookOpen, CloudOff, FileQuestion, Minus, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
@@ -271,6 +271,7 @@ export function TeamPage() {
             return (
               <div key={areaName} className="flex flex-col gap-[18px]">
                 <AreaProfile areaName={areaName} area={area} stats={areaStats} />
+                <AreaAssessment areaName={areaName} area={area} />
                 <FindingsSummary
                   counts={findingCounts}
                   activeSeverity={findingsFilter.severity}
@@ -295,5 +296,88 @@ export function TeamPage() {
 
       <EvaluationMeta team={team} />
     </main>
+  )
+}
+
+function AreaAssessment({
+  areaName,
+  area,
+}: {
+  areaName: string
+  area: TeamBundle['areas'][string]
+}) {
+  const metrics = area.categories.flatMap((category) =>
+    category.subcategories.flatMap((subcategory) => subcategory.metrics),
+  )
+  const findings = metrics.flatMap((metric) => metric.findings)
+  const strengths = findings.filter((finding) => finding.kind === 'strength').slice(0, 3)
+  const issues = findings.filter((finding) => finding.kind === 'issue').slice(0, 3)
+
+  return (
+    <section aria-label={`Почему такая оценка: ${areaName}`} className="border-y border-line py-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <h3 className="m-0 text-strong">Почему {area.score?.toFixed(1) ?? '—'}</h3>
+          <p className="m-0 mt-1 text-sm text-fg-muted">
+            Короткое объяснение оценки {areaName}. Доказательства доступны по конкретным файлам.
+          </p>
+        </div>
+        <span className="text-sm text-fg-muted">{findings.length} доказательств</span>
+      </div>
+
+      {strengths.length || issues.length ? (
+        <ul className="mt-4 grid list-none gap-2 p-0 sm:grid-cols-2">
+          {strengths.map((finding) => (
+            <li
+              key={`strength-${finding.file}-${finding.line_start}-${finding.title}`}
+              className="flex gap-2 text-sm"
+            >
+              <Plus aria-hidden="true" size={16} className="mt-0.5 shrink-0 text-sev-strength-fg" />
+              <span>{finding.title}</span>
+            </li>
+          ))}
+          {issues.map((finding) => (
+            <li
+              key={`issue-${finding.file}-${finding.line_start}-${finding.title}`}
+              className="flex gap-2 text-sm"
+            >
+              <Minus aria-hidden="true" size={16} className="mt-0.5 shrink-0 text-sev-major-fg" />
+              <span>{finding.title}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <details className="mt-4 border-t border-line pt-3">
+        <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 text-sm font-medium text-link">
+          <BookOpen aria-hidden="true" size={15} />
+          Показать доказательства ({findings.length})
+        </summary>
+        <div className="mt-3 grid gap-3">
+          {findings.slice(0, 8).map((finding) => (
+            <article
+              key={`${finding.file}-${finding.line_start}-${finding.title}`}
+              className="border-l-2 border-line-strong pl-3"
+            >
+              <p className="m-0 text-sm font-medium">{finding.title}</p>
+              <p className="m-0 mt-1 text-sm text-fg-muted">{finding.explanation}</p>
+              <a
+                className="mt-2 inline-flex items-center gap-1 font-mono text-xs text-link"
+                href={
+                  finding.permalink && /^https?:\/\//.test(finding.permalink)
+                    ? finding.permalink
+                    : undefined
+                }
+                target={finding.permalink ? '_blank' : undefined}
+                rel={finding.permalink ? 'noreferrer' : undefined}
+              >
+                {finding.file}:{finding.line_start}–{finding.line_end}
+                {finding.permalink ? <ArrowUpRight aria-hidden="true" size={13} /> : null}
+              </a>
+            </article>
+          ))}
+        </div>
+      </details>
+    </section>
   )
 }

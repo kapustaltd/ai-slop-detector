@@ -32,6 +32,8 @@ export function EvaluationProgressView({ progress, className = '' }: EvaluationP
         <ProgressStatus progress={progress} />
       </header>
 
+      <Pipeline progress={progress} />
+
       <ul aria-label="Области оценки" className="m-0 mt-4 grid list-none p-0 sm:grid-cols-2">
         {areas.map((area) => {
           const result = progress.areas.find((item) => item.area === area)
@@ -81,6 +83,108 @@ export function EvaluationProgressView({ progress, className = '' }: EvaluationP
       <AgentActivity progress={progress} />
     </section>
   )
+}
+
+type PipelineStatus = 'pending' | 'running' | 'done' | 'warning' | 'failed'
+
+const pipelineSteps = [
+  ['repo', 'Получен репозиторий'],
+  ['clone', 'Клонирование'],
+  ['analyze', 'Анализ структуры'],
+  ['backend', 'Backend'],
+  ['frontend', 'Frontend'],
+  ['report', 'Формирование итоговой оценки'],
+] as const
+
+function Pipeline({ progress }: { progress: RegistryEvaluationProgress }) {
+  const order: Record<string, number> = {
+    waiting: 0,
+    dispatching: 1,
+    runner_queued: 1,
+    analyzing: 2,
+    publishing: 5,
+    done: 6,
+  }
+  const current = order[progress.stage] ?? 0
+  const hasEvents = progress.events.length > 0
+  const backend = progress.areas.find((area) => area.area === 'backend')
+  const frontend = progress.areas.find((area) => area.area === 'frontend')
+  const statusFor = (key: string): PipelineStatus => {
+    if (
+      progress.status === 'failed' &&
+      (key === 'report' || progress.events.at(-1)?.kind === 'error')
+    )
+      return 'failed'
+    if (key === 'repo')
+      return hasEvents || current > 0
+        ? 'done'
+        : progress.status === 'running'
+          ? 'running'
+          : 'pending'
+    if (key === 'clone') return current > 1 ? 'done' : current === 1 ? 'running' : 'pending'
+    if (key === 'analyze') return current > 2 ? 'done' : current === 2 ? 'running' : 'pending'
+    if (key === 'backend') return areaPipelineStatus(backend)
+    if (key === 'frontend') return areaPipelineStatus(frontend)
+    if (progress.status === 'done') return 'done'
+    return current >= 5 ? 'running' : 'pending'
+  }
+
+  return (
+    <ol aria-label="Этапы проверки" className="m-0 mt-5 grid list-none gap-0 p-0 sm:grid-cols-6">
+      {pipelineSteps.map(([key, label], index) => {
+        const status = statusFor(key)
+        const Icon =
+          status === 'done'
+            ? Check
+            : status === 'failed'
+              ? AlertCircle
+              : status === 'running'
+                ? LoaderCircle
+                : CircleDashed
+        return (
+          <li key={key} className="relative flex gap-2 pb-3 sm:block sm:pb-0 sm:pr-2">
+            {index < pipelineSteps.length - 1 ? (
+              <span
+                aria-hidden="true"
+                className="absolute left-[7px] top-4 hidden h-px w-[calc(100%-12px)] bg-line sm:block"
+              />
+            ) : null}
+            <div className="relative flex items-center gap-2 bg-surface pr-2">
+              <span
+                className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${pipelineTone(status)}`}
+              >
+                <Icon
+                  size={10}
+                  aria-hidden="true"
+                  className={status === 'running' ? 'animate-spin motion-reduce:animate-none' : ''}
+                />
+              </span>
+              <span className={`text-xs ${status === 'pending' ? 'text-fg-subtle' : 'text-fg'}`}>
+                {label}
+              </span>
+            </div>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+function areaPipelineStatus(
+  area: RegistryEvaluationProgress['areas'][number] | undefined,
+): PipelineStatus {
+  if (!area) return 'pending'
+  if (area.status === 'done') return 'done'
+  if (area.status === 'failed') return 'failed'
+  if (area.status === 'running') return 'running'
+  return 'pending'
+}
+
+function pipelineTone(status: PipelineStatus) {
+  if (status === 'done') return 'border-sev-strength-fg bg-sev-strength-fg text-surface'
+  if (status === 'running') return 'border-brand bg-brand text-on-accent'
+  if (status === 'failed') return 'border-sev-critical-fg bg-sev-critical-bg text-sev-critical-fg'
+  return 'border-line-strong bg-surface text-fg-subtle'
 }
 
 function ProgressStatus({ progress }: { progress: RegistryEvaluationProgress }) {

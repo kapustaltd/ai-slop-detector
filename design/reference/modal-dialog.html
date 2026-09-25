@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Modal dialogs · Northstar</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      --page: #0b0d11;
+      --panel: #11141a;
+      --panel-raised: #171a21;
+      --line: rgba(255, 255, 255, .085);
+      --muted: #9299a8;
+      --text: #f3f5f8;
+      --cyan: #00c4ff;
+      --cyan-dark: #04202a;
+      --red: #ff5b68;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--page); }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 78% 0%, rgba(0, 196, 255, .09), transparent 35rem),
+        linear-gradient(180deg, #101319 0%, var(--page) 48rem);
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    a { color: #79ddff; }
+    :focus-visible, :focus {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+      box-shadow: 0 0 0 5px rgba(0, 196, 255, .2);
+    }
+    .page-shell { width: min(1080px, calc(100% - 48px)); margin: 0 auto; }
+    .topbar {
+      height: 72px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, .07);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; color: #f4f6f8; font-weight: 650; letter-spacing: -.025em; }
+    .brand-mark { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid rgba(0,196,255,.26); border-radius: 9px; color: var(--cyan); background: rgba(0,196,255,.08); }
+    .workspace-label { color: #a5acb9; font-size: 13px; }
+    main { padding: 74px 0 92px; }
+    .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 18px; color: #8b95a4; font-size: 12px; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; }
+    .eyebrow::before { width: 18px; height: 1px; background: var(--cyan); content: ""; }
+    h1 { max-width: 720px; margin: 0; color: #f6f7f9; font-size: clamp(36px, 5.4vw, 58px); font-weight: 620; letter-spacing: -.055em; line-height: 1.04; }
+    .intro { max-width: 610px; margin: 20px 0 0; color: #a2a9b5; font-size: 16px; line-height: 1.7; }
+    .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 52px; }
+    .demo-card { position: relative; overflow: hidden; min-height: 248px; padding: 25px; border: 1px solid var(--line); border-radius: 17px; background: linear-gradient(145deg, rgba(24,28,36,.96), rgba(16,19,25,.92)); box-shadow: 0 15px 50px rgba(0,0,0,.16); }
+    .demo-card::after { position: absolute; width: 180px; height: 180px; top: -100px; right: -80px; border: 1px solid rgba(255,255,255,.055); border-radius: 50%; box-shadow: 0 0 0 24px rgba(255,255,255,.018), 0 0 0 48px rgba(255,255,255,.012); content: ""; pointer-events: none; }
+    .card-index { display: inline-flex; align-items: center; gap: 7px; color: #8c96a5; font-size: 11px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; }
+    .card-index span { display: grid; width: 20px; height: 20px; place-items: center; border: 1px solid rgba(255,255,255,.12); border-radius: 6px; color: #c4cbd4; font-size: 10px; }
+    .demo-card h2 { margin: 20px 0 8px; font-size: 21px; font-weight: 570; letter-spacing: -.03em; }
+    .demo-card p { max-width: 390px; min-height: 48px; margin: 0; color: #a1a9b7; font-size: 13px; line-height: 1.65; }
+    .card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 25px; }
+    .meta { display: flex; align-items: center; gap: 7px; color: #828b99; font-size: 11px; }
+    .meta-dot { width: 6px; height: 6px; border-radius: 50%; background: #2ed4a5; box-shadow: 0 0 10px rgba(46,212,165,.45); }
+    .launch-button, .button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 8px; padding: 0 15px; border: 1px solid transparent; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 650; transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease; }
+    .launch-button { position: relative; z-index: 1; border-color: rgba(0,196,255,.24); color: #dff8ff; background: rgba(0,196,255,.1); }
+    .launch-button:hover { border-color: rgba(0,196,255,.46); background: rgba(0,196,255,.16); transform: translateY(-1px); }
+    .launch-button svg { width: 14px; height: 14px; }
+    .feature-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; overflow: hidden; margin-top: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--line); }
+    .feature { min-height: 86px; padding: 18px 19px; background: rgba(17,20,26,.92); }
+    .feature strong { display: block; margin-bottom: 5px; font-size: 12px; font-weight: 600; }
+    .feature span { color: #9099a7; font-size: 11px; line-height: 1.45; }
+    .page-spacer { display: flex; align-items: center; justify-content: center; min-height: 240px; margin-top: 18px; border: 1px dashed rgba(255,255,255,.09); border-radius: 15px; color: #717a89; font-size: 12px; }
+
+    /* Modal component styles */
+    .md-overlay {
+      position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center;
+      overflow-y: auto; padding: 24px; background: rgba(0, 0, 0, .6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      opacity: 0; transition: opacity 180ms ease;
+    }
+    .md-overlay[hidden] { display: none; }
+    .md-overlay.is-open { opacity: 1; }
+    .md-dialog {
+      position: relative; width: min(100%, 420px); max-height: calc(100vh - 48px); overflow-y: auto;
+      padding: 24px; border: 1px solid rgba(255,255,255,.1); border-radius: 16px;
+      color: #f3f5f8; background: rgba(22,22,26,.98); box-shadow: 0 24px 70px rgba(0,0,0,.55);
+      transform: scale(.97) translateY(8px); transition: transform 200ms cubic-bezier(.16, 1, .3, 1);
+    }
+    .md-overlay.is-open .md-dialog { transform: scale(1) translateY(0); }
+    .md-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 9px; }
+    .md-title { margin: 3px 0 0; font-size: 20px; font-weight: 620; letter-spacing: -.035em; line-height: 1.25; }
+    .md-close { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; margin: -7px -7px 0 0; border: 1px solid rgba(255,255,255,.09); border-radius: 9px; color: #aab1bd; background: rgba(255,255,255,.035); cursor: pointer; font-size: 22px; line-height: 1; transition: color .15s ease, border-color .15s ease, background-color .15s ease; }
+    .md-close:hover { border-color: rgba(255,91,104,.42); color: #fff; background: rgba(255,91,104,.2); }
+    .md-description { margin: 0 0 22px; color: #a3aab5; font-size: 13px; line-height: 1.65; }
+    .md-form { display: grid; gap: 16px; }
+    .md-field { display: grid; gap: 7px; }
+    .md-field label { color: #d7dbe2; font-size: 12px; font-weight: 570; }
+    .md-field input, .md-field select { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 9px; color: #f2f4f7; background: #101217; font-size: 13px; }
+    .md-field input::placeholder { color: #707988; }
+    .md-field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%2399A3B2' stroke-width='1.5'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    .md-helper { margin: -2px 0 0; color: #808997; font-size: 11px; line-height: 1.55; }
+    .md-footer { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
+    .button { min-height: 42px; }
+    .button-ghost { border-color: rgba(255,255,255,.12); color: #d0d5dc; background: rgba(255,255,255,.035); }
+    .button-ghost:hover { border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.08); }
+    .button-primary { color: #06212a; background: var(--cyan); }
+    .button-primary:hover { background: #43d4ff; }
+    .button-danger { color: #fff; background: #d63d4c; }
+    .button-danger:hover { background: #ed4c5b; }
+    .danger-art { display: grid; width: 42px; height: 42px; place-items: center; margin: 2px 0 15px; border: 1px solid rgba(255,91,104,.24); border-radius: 12px; color: #ff7180; background: rgba(255,91,104,.1); }
+    .danger-art svg { width: 19px; height: 19px; }
+    .record-row { display: flex; align-items: center; gap: 12px; margin: 17px 0 2px; padding: 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: rgba(255,255,255,.035); }
+    .record-icon { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; border: 1px solid rgba(255,255,255,.08); border-radius: 9px; color: #9dddf0; background: rgba(0,196,255,.08); font-size: 12px; font-weight: 650; }
+    .record-name { color: #e7eaf0; font-size: 12px; font-weight: 570; }
+    .record-note { margin-top: 4px; color: #8e97a5; font-size: 11px; }
+    .md-status { min-height: 20px; margin: 12px 0 0; color: #7ee1bf; font-size: 12px; }
+    .md-status:empty { display: none; }
+    @media (max-width: 700px) {
+      .page-shell { width: min(100% - 32px, 520px); }
+      .topbar { height: 62px; }
+      main { padding-top: 54px; }
+      .demo-grid { grid-template-columns: 1fr; gap: 12px; margin-top: 36px; }
+      .demo-card { min-height: 226px; padding: 21px; }
+      .feature-strip { grid-template-columns: 1fr; }
+      .feature { min-height: auto; }
+      .workspace-label { font-size: 11px; }
+    }
+    @media (max-width: 420px) {
+      .md-overlay { padding: 16px; }
+      .md-dialog { max-height: calc(100vh - 32px); padding: 21px; }
+      .card-bottom { align-items: flex-start; flex-direction: column; }
+      .launch-button { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">N</span> Northstar</div>
+      <div class="workspace-label">Workspace settings <span aria-hidden="true">/</span> Team</div>
+    </header>
+    <main>
+      <p class="eyebrow">Interface patterns · 02</p>
+      <h1>Thoughtful dialogs for focused work.</h1>
+      <p class="intro">A small, accessible modal system for the moments that need a clear decision. Explore a lightweight form and a destructive confirmation, both powered by the same zero-dependency component.</p>
+
+      <section class="demo-grid" aria-label="Modal dialog demonstrations">
+        <article class="demo-card">
+          <div class="card-index"><span>01</span> Collect information</div>
+          <h2>Invite a teammate</h2>
+          <p>Gather the details you need, keep the task contained, and return focus to the invite action when it’s done.</p>
+          <div class="card-bottom">
+            <span class="meta"><span class="meta-dot" aria-hidden="true"></span> Form dialog · focus trap</span>
+            <button class="launch-button" type="button" data-md-open="invite-dialog">
+              Open invite form
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </article>
+
+        <article class="demo-card">
+          <div class="card-index"><span>02</span> Confirm a change</div>
+          <h2>Remove a project</h2>
+          <p>Make irreversible actions explicit, explain what changes, and place the safest choice within easy reach.</p>
+          <div class="card-bottom">
+            <span class="meta"><span class="meta-dot" aria-hidden="true"></span> Destructive dialog · Escape</span>
+            <button class="launch-button" type="button" data-md-open="delete-dialog">
+              Review removal
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <section class="feature-strip" aria-label="Accessibility features">
+        <div class="feature"><strong>Keyboard first</strong><span>Visible focus, contained tab order, and Escape to close.</span></div>
+        <div class="feature"><strong>Page stays in place</strong><span>Scroll is locked and the original page spacing is restored.</span></div>
+        <div class="feature"><strong>Motion aware</strong><span>Transitions respect your reduced-motion preference.</span></div>
+      </section>
+      <div class="page-spacer">Page content stays still while a dialog is open</div>
+    </main>
+  </div>
+
+  <div class="md-overlay" id="invite-dialog" hidden>
+    <section class="md-dialog" role="dialog" aria-modal="true" aria-labelledby="invite-title" aria-describedby="invite-description" tabindex="-1">
+      <header class="md-header">
+        <h2 class="md-title" id="invite-title">Invite a teammate</h2>
+        <button class="md-close" type="button" aria-label="Close dialog" data-md-close>&times;</button>
+      </header>
+      <p class="md-description" id="invite-description">Add someone to your workspace. They’ll receive an email with a link to join your team.</p>
+      <form class="md-form" id="invite-form">
+        <div class="md-field">
+          <label for="invite-email">Email address</label>
+          <input id="invite-email" name="email" type="email" placeholder="alex@company.com" autocomplete="email" required autofocus>
+        </div>
+        <div class="md-field">
+          <label for="invite-role">Workspace role</label>
+          <select id="invite-role" name="role">
+            <option value="member">Member · can collaborate</option>
+            <option value="admin">Admin · can manage workspace</option>
+            <option value="viewer">Viewer · read only</option>
+          </select>
+        </div>
+        <p class="md-helper">You can change this person’s role anytime in workspace settings.</p>
+        <p class="md-status" id="invite-status" role="status" aria-live="polite"></p>
+        <footer class="md-footer">
+          <button class="button button-ghost" type="button" data-md-close>Cancel</button>
+          <button class="button button-primary" type="submit">Send invitation</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <div class="md-overlay" id="delete-dialog" hidden>
+    <section class="md-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby="delete-description" tabindex="-1">
+      <header class="md-header">
+        <span aria-hidden="true"></span>
+        <button class="md-close" type="button" aria-label="Close dialog" data-md-close>&times;</button>
+      </header>
+      <div class="danger-art" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M5.5 7l1 13h11l1-13M9 7V4h6v3"/></svg>
+      </div>
+      <h2 class="md-title" id="delete-title">Remove this project?</h2>
+      <p class="md-description" id="delete-description" style="margin-top:10px">This will permanently remove the project and its associated data from your workspace. This action can’t be undone.</p>
+      <div class="record-row">
+        <span class="record-icon" aria-hidden="true">A</span>
+        <div><div class="record-name">Atlas mobile redesign</div><div class="record-note">Project · 12 members · Updated yesterday</div></div>
+      </div>
+      <p class="md-status" id="delete-status" role="status" aria-live="polite"></p>
+      <footer class="md-footer">
+        <button class="button button-ghost" type="button" data-md-close>Keep project</button>
+        <button class="button button-danger" type="button" id="confirm-delete">Remove project</button>
+      </footer>
+    </section>
+  </div>
+
+  <script>
+    class Modal {
+      static openStack = [];
+      static scrollLockCount = 0;
+      static savedScrollStyles = null;
+
+      constructor(overlay, options = {}) {
+        if (!(overlay instanceof Element)) throw new TypeError('Modal expects an overlay Element.');
+        this.overlay = overlay;
+        this.dialog = overlay.querySelector('[role="dialog"]');
+        if (!this.dialog) throw new TypeError('The overlay must contain an element with role="dialog".');
+        this.options = {
+          onOpen: () => {},
+          onClose: () => {},
+          closeOnBackdrop: true,
+          closeOnEscape: true,
+          ...options
+        };
+        this._open = false;
+        this._returnTarget = null;
+        this._closeTimer = null;
+        this._onKeydown = this._onKeydown.bind(this);
+        this._onPointerdown = this._onPointerdown.bind(this);
+        this._onClick = this._onClick.bind(this);
+        this.overlay.addEventListener('pointerdown', this._onPointerdown);
+        this.overlay.addEventListener('click', this._onClick);
+        document.addEventListener('keydown', this._onKeydown);
+      }
+
+      static _lockScroll() {
+        const root = document.documentElement;
+        if (Modal.scrollLockCount === 0) {
+          Modal.savedScrollStyles = {
+            overflow: { value: root.style.getPropertyValue('overflow'), priority: root.style.getPropertyPriority('overflow') },
+            paddingRight: { value: root.style.getPropertyValue('padding-right'), priority: root.style.getPropertyPriority('padding-right') }
+          };
+          const scrollbarWidth = Math.max(0, window.innerWidth - root.clientWidth);
+          const currentPadding = parseFloat(getComputedStyle(root).paddingRight) || 0;
+          root.style.setProperty('overflow', 'hidden');
+          if (scrollbarWidth > 0) root.style.setProperty('padding-right', `${currentPadding + scrollbarWidth}px`);
+        }
+        Modal.scrollLockCount += 1;
+      }
+
+      static _unlockScroll() {
+        Modal.scrollLockCount = Math.max(0, Modal.scrollLockCount - 1);
+        if (Modal.scrollLockCount !== 0 || !Modal.savedScrollStyles) return;
+        const root = document.documentElement;
+        for (const [property, saved] of Object.entries({ overflow: Modal.savedScrollStyles.overflow, 'padding-right': Modal.savedScrollStyles.paddingRight })) {
+          if (saved.value) root.style.setProperty(property, saved.value, saved.priority);
+          else root.style.removeProperty(property);
+        }
+        Modal.savedScrollStyles = null;
+      }
+
+      _focusableElements() {
+        const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        return [...this.dialog.querySelectorAll(selector)].filter((element) => {
+          if (element.closest('[hidden], [inert], [aria-hidden="true"]') || element.disabled) return false;
+          const style = getComputedStyle(element);
+          return style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0;
+        });
+      }
+
+      open() {
+        if (this._open || this._destroyed) return;
+        this._returnTarget = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        if (this._closeTimer) clearTimeout(this._closeTimer);
+        this._closeTimer = null;
+        this.overlay.hidden = false;
+        this.overlay.classList.remove('is-open');
+        Modal._lockScroll();
+        this._open = true;
+        Modal.openStack = Modal.openStack.filter((item) => item !== this);
+        Modal.openStack.push(this);
+        this.overlay.style.zIndex = String(2147483000 + Modal.openStack.length);
+        requestAnimationFrame(() => {
+          if (!this._open) return;
+          this.overlay.classList.add('is-open');
+          const autofocus = [...this.dialog.querySelectorAll('[autofocus]')].find((element) => {
+            const style = getComputedStyle(element);
+            return !element.disabled && style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0;
+          });
+          const target = autofocus || this._focusableElements()[0] || this.dialog;
+          target.focus();
+        });
+        this.overlay.dispatchEvent(new CustomEvent('modal:open', { bubbles: true }));
+        this.options.onOpen.call(this, this.overlay);
+      }
+
+      close() {
+        if (!this._open) return;
+        this._open = false;
+        this.overlay.classList.remove('is-open');
+        Modal.openStack = Modal.openStack.filter((item) => item !== this);
+        this.overlay.style.zIndex = '';
+        Modal._unlockScroll();
+        const returnTarget = this._returnTarget;
+        this._returnTarget = null;
+        if (returnTarget && returnTarget.isConnected && typeof returnTarget.focus === 'function') returnTarget.focus();
+        this.overlay.dispatchEvent(new CustomEvent('modal:close', { bubbles: true }));
+        this.options.onClose.call(this, this.overlay);
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion) {
+          this.overlay.hidden = true;
+        } else {
+          this._closeTimer = window.setTimeout(() => {
+            if (!this._open) this.overlay.hidden = true;
+            this._closeTimer = null;
+          }, 210);
+        }
+      }
+
+      isOpen() { return this._open; }
+
+      _onPointerdown(event) {
+        if (this._open && this.options.closeOnBackdrop && Modal.openStack.at(-1) === this && event.target === this.overlay) this.close();
+      }
+
+      _onClick(event) {
+        if (!this._open || Modal.openStack.at(-1) !== this) return;
+        if (event.target instanceof Element && event.target.closest('[data-md-close]') && this.overlay.contains(event.target)) this.close();
+      }
+
+      _onKeydown(event) {
+        if (!this._open || Modal.openStack.at(-1) !== this) return;
+        if (event.key === 'Escape' && this.options.closeOnEscape) {
+          event.preventDefault();
+          this.close();
+          return;
+        }
+        if (event.key !== 'Tab') return;
+        const focusable = this._focusableElements();
+        if (focusable.length === 0) {
+          event.preventDefault();
+          this.dialog.focus();
+          return;
+        }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !this.dialog.contains(document.activeElement))) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || !this.dialog.contains(document.activeElement))) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+
+      destroy() {
+        if (this._destroyed) return;
+        if (this._open) this.close();
+        if (this._closeTimer) {
+          clearTimeout(this._closeTimer);
+          this._closeTimer = null;
+          this.overlay.hidden = true;
+        }
+        this.overlay.removeEventListener('pointerdown', this._onPointerdown);
+        this.overlay.removeEventListener('click', this._onClick);
+        document.removeEventListener('keydown', this._onKeydown);
+        Modal.openStack = Modal.openStack.filter((item) => item !== this);
+        this._destroyed = true;
+      }
+    }
+
+    const modals = new Map();
+    document.querySelectorAll('.md-overlay[id]').forEach((overlay) => modals.set(overlay.id, new Modal(overlay)));
+    document.addEventListener('click', (event) => {
+      const trigger = event.target instanceof Element ? event.target.closest('[data-md-open]') : null;
+      if (!trigger) return;
+      const modal = modals.get(trigger.getAttribute('data-md-open'));
+      if (modal) modal.open();
+    });
+
+    const inviteForm = document.getElementById('invite-form');
+    inviteForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!inviteForm.reportValidity()) return;
+      const email = document.getElementById('invite-email').value.trim();
+      document.getElementById('invite-status').textContent = `Invitation ready for ${email}.`;
+    });
+    document.getElementById('confirm-delete').addEventListener('click', () => {
+      document.getElementById('delete-status').textContent = 'Project removal confirmed for this demo.';
+    });
+  </script>
+</body>
+</html>

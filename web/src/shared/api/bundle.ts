@@ -52,6 +52,14 @@ const statsModules = import.meta.glob<{ default: StatsBundle }>('/data/stats.jso
 
 export class BundleError extends Error {}
 
+async function readJson<T>(response: Response): Promise<T | null> {
+  try {
+    return JSON.parse(await response.clone().text()) as T
+  } catch {
+    return null
+  }
+}
+
 /** Индекс рейтинга. Доступен синхронно: он всегда в основном чанке. */
 export function getLeaderboardIndex(): LeaderboardIndexStub {
   const mod = Object.values(indexModules)[0]
@@ -114,11 +122,26 @@ export async function loadTeam(teamId: string): Promise<TeamBundle> {
     const response = await fetch(`/api/bundle/teams/${encodeURIComponent(teamId)}`, {
       cache: 'no-store',
     })
-    if (response.ok) return (await response.json()) as TeamBundle
-    if (response.status !== 404) throw new BundleError('Не удалось загрузить оценку команды')
+    if (response.ok) {
+      const liveTeam = await readJson<Partial<TeamBundle>>(response)
+      if (liveTeam && typeof liveTeam === 'object' && 'team_id' in liveTeam) {
+        return liveTeam as TeamBundle
+      }
+    }
+    if (
+      !response.ok &&
+      response.status !== 404 &&
+      (response.headers.get('content-type') ?? '').includes('application/json')
+    )
+      throw new BundleError('Не удалось загрузить оценку команды')
     const indexResponse = await fetch('/api/bundle/index', { cache: 'no-store' })
     if (indexResponse.ok) {
-      liveIndexAvailable = true
+      const liveIndex = await readJson<{
+        bundle_schema?: string
+        teams?: unknown[]
+      }>(indexResponse)
+      liveIndexAvailable =
+        liveIndex?.bundle_schema === SUPPORTED_BUNDLE_SCHEMA || Array.isArray(liveIndex?.teams)
     }
   } catch (cause) {
     if (cause instanceof BundleError) throw cause
@@ -128,7 +151,25 @@ export async function loadTeam(teamId: string): Promise<TeamBundle> {
   if (!loader) {
     throw new BundleError(`В бандле нет файла команды ${teamId}`)
   }
-  return (await loader()).default
+  try {
+    const module = await loader()
+    const bundledTeam = (module.default ?? module) as TeamBundle
+    if (bundledTeam && typeof bundledTeam === 'object' && 'team_id' in bundledTeam) {
+      return bundledTeam
+    }
+  } catch {
+    // The static JSON fallback below keeps dev servers and older static hosts resilient.
+  }
+  const staticResponse = await fetch(`/data/teams/${encodeURIComponent(teamId)}.json`, {
+    cache: 'no-store',
+  })
+  if (staticResponse.ok) {
+    const staticTeam = await readJson<Partial<TeamBundle>>(staticResponse)
+    if (staticTeam && typeof staticTeam === 'object' && 'team_id' in staticTeam) {
+      return staticTeam as TeamBundle
+    }
+  }
+  throw new BundleError(`Не удалось прочитать данные команды ${teamId}`)
 }
 
 export async function loadRubric(rubricVersion: string): Promise<RubricBundle> {

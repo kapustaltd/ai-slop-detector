@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowRight, Check, MoreHorizontal, Plus } from 'lucide-react'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -230,18 +230,11 @@ export function TeamManagementPage() {
   }
 
   return (
-    <main className="mx-auto max-w-[1200px] space-y-6 p-4 sm:p-6">
+    <main className="mx-auto max-w-[1040px] space-y-4 p-4 sm:p-6">
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
         <div>
-          <Link
-            className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm text-fg-muted no-underline"
-            to="/"
-          >
-            <ArrowLeft aria-hidden="true" size={16} />
-            Рейтинг
-          </Link>
           <h1 className="text-h1 m-0">Команды</h1>
-          <p className="mt-1 text-sm text-fg-muted">Добавьте репозиторий команды для проверки.</p>
+          <p className="mt-1 text-sm text-fg-muted">Реестр команд и запуск новых проверок.</p>
         </div>
         {apiAvailable ? (
           <button
@@ -278,123 +271,139 @@ export function TeamManagementPage() {
       ) : null}
 
       {draft ? (
-        <TeamForm
-          draft={draft}
-          isSaving={isSaving}
-          isChecking={isChecking}
-          step={step}
-          error={error}
-          onStep={setStep}
-          existingIds={teams.map((team) => team.id)}
-          onCheck={() => void checkRepository()}
-          onCancel={() => {
-            setDraft(null)
-            setError('')
-            setStep('repo')
-          }}
-          onChange={setDraft}
-          onSubmit={submitTeam}
-        />
+        <div className="sheet-overlay" role="presentation">
+          <div
+            className="sheet-panel sheet-wide"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Добавление команды"
+          >
+            <TeamForm
+              draft={draft}
+              isSaving={isSaving}
+              isChecking={isChecking}
+              step={step}
+              error={error}
+              onStep={setStep}
+              existingIds={teams.map((team) => team.id)}
+              onCheck={() => void checkRepository()}
+              onCancel={() => {
+                setDraft(null)
+                setError('')
+                setStep('repo')
+              }}
+              onChange={setDraft}
+              onSubmit={submitTeam}
+            />
+          </div>
+        </div>
       ) : null}
 
       {editing ? (
-        <form
-          aria-label={`Изменение команды ${editing.name}`}
-          className="space-y-4 rounded-panel border border-line bg-surface p-4"
-          onSubmit={(event) => void saveEdit(event)}
-        >
-          <h2 className="m-0 text-lg font-semibold">Изменить команду {editing.name}</h2>
-          <p className="m-0 text-sm text-fg-muted">ID {editing.id} останется прежним.</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="text-sm">
-              Название
-              <input
-                className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
-                required
-                value={editing.name}
-                onChange={(event) => setEditing({ ...editing, name: event.target.value })}
-              />
-            </label>
-            <label className="text-sm">
-              Репозиторий
-              <input
-                className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
-                required
-                type="url"
-                value={editing.repo}
-                onChange={(event) => setEditing({ ...editing, repo: event.target.value })}
-              />
-            </label>
-            <label className="text-sm">
-              Ветка
-              <input
-                className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
-                required
-                value={editing.branch}
-                onChange={(event) => setEditing({ ...editing, branch: event.target.value })}
-              />
-            </label>
-            <label className="flex min-h-11 items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={editing.active}
-                onChange={(event) => setEditing({ ...editing, active: event.target.checked })}
-              />
-              Активна
-            </label>
-          </div>
-          <div className="flex gap-2">
-            <button
-              className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
-              disabled={isSaving}
-              type="submit"
-            >
-              Сохранить
-            </button>
-            <button
-              className="min-h-11 rounded-control border border-line px-4"
-              type="button"
-              onClick={() => {
-                setEditing(null)
-                setError('')
-              }}
-            >
-              Отмена
-            </button>
-          </div>
-        </form>
+        <div className="sheet-overlay" role="presentation">
+          <form
+            aria-label={`Изменение команды ${editing.name}`}
+            className="sheet-panel sheet-wide gap-4 overflow-y-auto p-5"
+            onSubmit={(event) => void saveEdit(event)}
+          >
+            <div>
+              <h2 className="m-0 text-lg font-semibold">Изменить команду {editing.name}</h2>
+              <p className="m-0 mt-1 text-sm text-fg-muted">ID {editing.id} останется прежним.</p>
+            </div>
+            <div className="grid gap-3">
+              <label className="text-sm">
+                Название
+                <input
+                  className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+                  required
+                  value={editing.name}
+                  onChange={(event) => setEditing({ ...editing, name: event.target.value })}
+                />
+              </label>
+              <label className="text-sm">
+                Репозиторий
+                <input
+                  className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+                  required
+                  type="url"
+                  value={editing.repo}
+                  onChange={(event) => setEditing({ ...editing, repo: event.target.value })}
+                />
+              </label>
+              <label className="text-sm">
+                Ветка
+                <input
+                  className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+                  required
+                  value={editing.branch}
+                  onChange={(event) => setEditing({ ...editing, branch: event.target.value })}
+                />
+              </label>
+              <label className="flex min-h-11 items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={editing.active}
+                  onChange={(event) => setEditing({ ...editing, active: event.target.checked })}
+                />
+                Активна
+              </label>
+            </div>
+            <div className="mt-auto flex gap-2 border-t border-line pt-4">
+              <button
+                className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
+                disabled={isSaving}
+                type="submit"
+              >
+                Сохранить
+              </button>
+              <button
+                className="min-h-11 rounded-control border border-line px-4"
+                type="button"
+                onClick={() => {
+                  setEditing(null)
+                  setError('')
+                }}
+              >
+                Отмена
+              </button>
+            </div>
+          </form>
+        </div>
       ) : null}
 
       {deleting ? (
-        <section
-          aria-label={`Удаление команды ${deleting.name}`}
-          className="space-y-3 rounded-panel border border-warn-border bg-warn-bg p-4"
-        >
-          <h2 className="m-0 text-lg font-semibold">Удалить команду {deleting.name}?</h2>
-          <p className="m-0 text-sm">
-            Запись исчезнет из реестра и текущего рейтинга. Сохранённые отчёты останутся на сервере.
-          </p>
-          <div className="flex gap-2">
-            <button
-              className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
-              disabled={isSaving}
-              type="button"
-              onClick={() => void confirmDelete()}
-            >
-              Удалить команду
-            </button>
-            <button
-              className="min-h-11 rounded-control border border-line px-4"
-              type="button"
-              onClick={() => {
-                setDeleting(null)
-                setError('')
-              }}
-            >
-              Отмена
-            </button>
-          </div>
-        </section>
+        <div className="sheet-overlay" role="presentation">
+          <section
+            aria-label={`Удаление команды ${deleting.name}`}
+            className="sheet-panel sheet-wide h-auto self-end gap-3 border-t p-5 sm:mr-5 sm:mb-5 sm:h-auto sm:max-h-[320px] sm:self-end sm:rounded-panel"
+          >
+            <h2 className="m-0 text-lg font-semibold">Удалить команду {deleting.name}?</h2>
+            <p className="m-0 text-sm">
+              Запись исчезнет из реестра и текущего рейтинга. Сохранённые отчёты останутся на
+              сервере.
+            </p>
+            <div className="mt-2 flex gap-2">
+              <button
+                className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
+                disabled={isSaving}
+                type="button"
+                onClick={() => void confirmDelete()}
+              >
+                Удалить команду
+              </button>
+              <button
+                className="min-h-11 rounded-control border border-line px-4"
+                type="button"
+                onClick={() => {
+                  setDeleting(null)
+                  setError('')
+                }}
+              >
+                Отмена
+              </button>
+            </div>
+          </section>
+        </div>
       ) : null}
 
       {notice ? (
@@ -491,38 +500,42 @@ export function TeamManagementPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          <button
-                            aria-label={`Изменить ${team.name}`}
-                            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-link transition-colors hover:bg-muted-surface hover:text-link-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                            type="button"
-                            title={`Изменить ${team.name}`}
-                            onClick={() => {
-                              setEditing(team)
-                              setDeleting(null)
-                              setDraft(null)
-                              setError('')
-                              setNotice('')
-                            }}
-                          >
-                            <Pencil aria-hidden="true" size={18} strokeWidth={2} />
-                          </button>
-                          <button
-                            aria-label={`Удалить ${team.name}`}
-                            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-warn-fg transition-colors hover:bg-warn-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-warn-border"
-                            type="button"
-                            title={`Удалить ${team.name}`}
-                            onClick={() => {
-                              setDeleting(team)
-                              setEditing(null)
-                              setDraft(null)
-                              setError('')
-                              setNotice('')
-                            }}
-                          >
-                            <Trash2 aria-hidden="true" size={18} strokeWidth={2} />
-                          </button>
-                        </div>
+                        <details open className="relative inline-block">
+                          <summary className="flex min-h-11 list-none cursor-pointer items-center gap-1 rounded-control border border-line px-2.5 text-sm text-fg-muted hover:bg-muted-surface">
+                            <MoreHorizontal aria-hidden="true" size={17} />
+                            Действия
+                          </summary>
+                          <div className="absolute right-0 top-[calc(100%+4px)] z-10 flex min-w-40 flex-col gap-1 rounded-panel border border-line bg-surface p-1 shadow-lg">
+                            <button
+                              aria-label={`Изменить ${team.name}`}
+                              className="min-h-10 rounded-control px-3 text-left text-sm hover:bg-muted-surface"
+                              type="button"
+                              onClick={() => {
+                                setEditing(team)
+                                setDeleting(null)
+                                setDraft(null)
+                                setError('')
+                                setNotice('')
+                              }}
+                            >
+                              Изменить
+                            </button>
+                            <button
+                              aria-label={`Удалить ${team.name}`}
+                              className="min-h-10 rounded-control px-3 text-left text-sm text-sev-critical-fg hover:bg-sev-critical-bg"
+                              type="button"
+                              onClick={() => {
+                                setDeleting(team)
+                                setEditing(null)
+                                setDraft(null)
+                                setError('')
+                                setNotice('')
+                              }}
+                            >
+                              Удалить
+                            </button>
+                          </div>
+                        </details>
                       </td>
                     </tr>
                   ))}
@@ -729,41 +742,24 @@ function TeamForm({
           Отмена
         </button>
       </div>
-      <ol
-        aria-label="Шаги добавления команды"
-        className="mb-5 mt-0 flex max-w-3xl list-none gap-3 p-0 text-sm"
-      >
-        {[
-          ['repo', 'Репозиторий'],
-          ['details', 'Данные'],
-          ['review', 'Подтверждение'],
-        ].map(([key, label], index) => {
-          const stepIndex = ['repo', 'details', 'review'].indexOf(step)
-          const status = index < stepIndex ? 'done' : index === stepIndex ? 'current' : 'pending'
-          return (
-            <li
+      <div aria-label="Шаги добавления команды" className="mb-5 mt-0 max-w-3xl" role="group">
+        <p className="m-0 text-sm font-medium">
+          Шаг {['repo', 'details', 'review'].indexOf(step) + 1} из 3 ·{' '}
+          {step === 'repo'
+            ? 'Репозиторий'
+            : step === 'details'
+              ? 'Данные команды'
+              : 'Подтверждение'}
+        </p>
+        <div aria-hidden="true" className="mt-3 flex gap-1">
+          {['repo', 'details', 'review'].map((key, index) => (
+            <span
               key={key}
-              aria-current={status === 'current' ? 'step' : undefined}
-              data-status={status}
-              className={`flex items-center gap-2 ${status === 'pending' ? 'text-fg-subtle' : 'text-fg'}`}
-            >
-              <span
-                aria-hidden="true"
-                className={`flex size-6 items-center justify-center rounded-full border text-xs tabular-nums ${
-                  status === 'current'
-                    ? 'border-brand bg-brand text-on-accent'
-                    : status === 'done'
-                      ? 'border-line-strong text-fg-muted'
-                      : 'border-line text-fg-subtle'
-                }`}
-              >
-                {index + 1}
-              </span>
-              {label}
-            </li>
-          )
-        })}
-      </ol>
+              className={`h-1 flex-1 rounded-full ${index <= ['repo', 'details', 'review'].indexOf(step) ? 'bg-brand' : 'bg-track'}`}
+            />
+          ))}
+        </div>
+      </div>
       {error && (
         <p role="alert" className="mt-4 rounded-control bg-warn-bg p-3 text-sm text-warn-fg">
           {error}
@@ -815,7 +811,7 @@ function TeamForm({
           }}
         >
           <p role="status" className="mb-0 text-sm text-fg-muted">
-            Эта ссылка ещё не зарегистрирована. Код репозитория пока не сканировался.
+            Репозиторий ещё не проверялся.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-1.5 text-sm font-medium">
@@ -891,8 +887,7 @@ function TeamForm({
             </dl>
           </div>
           <p className="m-0 text-sm text-fg-muted">
-            Команда появится в рейтинге после сохранения. Если включена следующая оценка, будет
-            проверена указанная ветка.
+            После добавления запустим проверку ветки <code>{draft.branch}</code>.
           </p>
           {isSaving && <LoadingBar />}
           <form onSubmit={onSubmit} className="flex flex-wrap gap-2">

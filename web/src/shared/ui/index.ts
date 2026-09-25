@@ -7,3 +7,4 @@ export { Source, Sources, SourcesContent, SourcesTrigger } from './ai-elements/s
 export { Tool, ToolContent, ToolHeader } from './ai-elements/tool'
 export { MessageResponse } from './ai-elements/message'
 export { Context, ContextTrigger, ContextContent } from './ai-elements/context'
+export { Modal, ModalOverlay } from './modal'

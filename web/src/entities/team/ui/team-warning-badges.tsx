@@ -32,12 +32,18 @@ export function TeamWarningBadges({ warnings, className }: TeamWarningBadgesProp
         const descId = `team-warning-desc-${warning}-${index}`
         const description =
           WARNING_DESCRIPTIONS[warning] ?? 'В отчёте есть предупреждение об этой оценке.'
+        const tone =
+          warning === 'provider_error' || warning === 'suspected_prompt_injection'
+            ? 'border-sev-critical-border bg-sev-critical-bg text-sev-critical-fg'
+            : warning === 'secret_redacted'
+              ? 'border-sev-info-border bg-sev-info-bg text-sev-info-fg'
+              : 'border-warn-border bg-warn-bg text-warn-fg'
         return (
           <span
             key={`${warning}-${index}`}
             title={description}
             aria-describedby={descId}
-            className="inline-flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-badge border border-warn-border bg-warn-bg px-2 text-[13.5px] font-medium text-warn-fg"
+            className={`inline-flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-badge border px-2 text-[13.5px] font-medium ${tone}`}
           >
             <Icon aria-hidden="true" size={12} strokeWidth={2.1} />
             {label}

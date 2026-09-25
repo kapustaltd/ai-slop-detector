@@ -1,0 +1,4 @@
+- [ ] 1. Add shared React overlay and Modal controller class with focus, stack, scroll, event, and trigger handling.
+- [ ] 2. Add modal component styling, focus states, and reduced-motion behavior.
+- [ ] 3. Add invite form and destructive confirmation demos on an app route.
+- [ ] 4. Verify TypeScript/build and archive the OpenSpec change.

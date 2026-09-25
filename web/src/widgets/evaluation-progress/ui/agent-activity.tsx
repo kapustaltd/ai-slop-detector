@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { BookOpen, ChevronDown, CircleDashed, LoaderCircle } from 'lucide-react'
+import { BookOpen, ChevronDown, LoaderCircle } from 'lucide-react'
 
 import type { RegistryEvaluationProgress } from '@/shared/api'
-import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/shared/ui'
 import { Source, Sources, SourcesContent, SourcesTrigger } from '@/shared/ui'
 import { Tool, ToolContent, ToolHeader } from '@/shared/ui'
 import { MessageResponse } from '@/shared/ui'
@@ -83,7 +82,6 @@ export function AgentActivity({ progress }: { progress: RegistryEvaluationProgre
 }
 
 function ActivityEvent({ event, active }: { event: Event; active: boolean }) {
-  const [open, setOpen] = useState(true)
   const source = event.source
   const isRunning = active && event.state === 'running'
   return (
@@ -95,35 +93,38 @@ function ActivityEvent({ event, active }: { event: Event; active: boolean }) {
         {event.category_id && <span className="font-mono">{event.category_id}</span>}
       </div>
       {event.kind === 'tool' ? (
-        <Tool defaultOpen className="mb-0 border-line">
-          <ToolHeader
-            type="dynamic-tool"
-            toolName={event.title}
-            title={event.title}
-            state={
-              event.state === 'failed'
-                ? 'output-error'
-                : isRunning
-                  ? 'input-available'
-                  : event.state === 'done'
-                    ? 'output-available'
-                    : 'output-error'
-            }
-          />
-          <ToolContent className="break-words pt-0 font-mono text-xs text-fg-muted">
-            {event.detail}
-            {!active && event.state === 'running' && <p>Завершение инструмента не подтверждено.</p>}
-          </ToolContent>
-        </Tool>
+        <>
+          <Tool defaultOpen={false} className="mb-0 border-line">
+            <ToolHeader
+              type="dynamic-tool"
+              toolName={event.title}
+              title={event.title}
+              state={
+                event.state === 'failed'
+                  ? 'output-error'
+                  : isRunning
+                    ? 'input-available'
+                    : event.state === 'done'
+                      ? 'output-available'
+                      : 'output-error'
+              }
+            />
+            <ToolContent className="break-words pt-0 font-mono text-xs text-fg-muted">
+              {event.detail}
+            </ToolContent>
+          </Tool>
+          <p className="m-0 mt-2 text-sm text-fg-muted">
+            {humanizeToolDetail(event.detail, event.title)}
+          </p>
+          {!active && event.state === 'running' ? (
+            <p className="m-0 mt-1 text-sm text-warn-fg">Завершение инструмента не подтверждено.</p>
+          ) : null}
+        </>
       ) : event.kind === 'reasoning' ? (
-        <Reasoning open={open} onOpenChange={setOpen} className="mb-0">
-          <ReasoningTrigger>
-            <CircleDashed size={15} aria-hidden="true" />
-            {event.title}
-            <ChevronDown size={14} aria-hidden="true" />
-          </ReasoningTrigger>
-          <ReasoningContent className="mt-2">{event.detail ?? ''}</ReasoningContent>
-        </Reasoning>
+        <div className="border-l-2 border-line-strong pl-3">
+          <p className="m-0 font-medium">{event.title}</p>
+          {event.detail ? <p className="m-0 mt-1 text-sm text-fg-muted">{event.detail}</p> : null}
+        </div>
       ) : (
         <>
           <p className={`m-0 font-medium ${event.kind === 'error' ? 'text-sev-critical-fg' : ''}`}>
@@ -159,4 +160,18 @@ function ActivityEvent({ event, active }: { event: Event; active: boolean }) {
       )}
     </article>
   )
+}
+
+function humanizeToolDetail(detail: string | undefined, title: string) {
+  if (!detail) return `${title} · детали появятся после завершения`
+  try {
+    const parsed = JSON.parse(detail) as { command?: string; path?: string; file?: string }
+    if (parsed.command) return `Terminal · ${parsed.command}`
+    if (parsed.path || parsed.file) return `Read · ${parsed.path ?? parsed.file}`
+  } catch {
+    // Short scanner summaries are already safe to show inline.
+  }
+  return detail.startsWith('{') || detail.startsWith('[')
+    ? `${title} · детали доступны ниже`
+    : detail
 }

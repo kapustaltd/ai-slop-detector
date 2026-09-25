@@ -1,14 +1,23 @@
 import { BarChart3, CloudOff, SearchX } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
-import { getLeaderboardIndex, loadLeaderboardIndex, type LeaderboardIndexStub } from '@/shared/api'
+import {
+  getLeaderboardIndex,
+  loadLeaderboardIndex,
+  loadTeam,
+  type LeaderboardIndexStub,
+  type LeaderboardTeam,
+  type TeamBundle,
+} from '@/shared/api'
 import { formatTeamCount, SCORE_SCALE_LEGEND } from '@/shared/lib'
 import { EmptyState } from '@/shared/ui'
 import { LeaderboardSkeleton } from './leaderboard-skeleton'
 import {
   LeaderboardRowCard,
+  LeaderboardStatusBoard,
   LeaderboardTable,
   LeaderboardToolbar,
+  TeamDetailSheet,
   useLeaderboardState,
 } from '@/widgets/leaderboard-table'
 
@@ -32,6 +41,9 @@ export function LeaderboardPage() {
   )
   const [loadFailed, setLoadFailed] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<LeaderboardTeam | null>(null)
+  const [selectedTeamDetails, setSelectedTeamDetails] = useState<TeamBundle | null>(null)
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -71,6 +83,19 @@ export function LeaderboardPage() {
 
   const resetFilters = () => onFiltersChange({ status: 'all', warningsOnly: false })
 
+  const openTeamDetails = async (team: LeaderboardTeam) => {
+    setSelectedTeam(team)
+    setSelectedTeamDetails(null)
+    setIsLoadingDetails(true)
+    try {
+      setSelectedTeamDetails(await loadTeam(team.team_id))
+    } catch {
+      // A running or not-yet-published team may not have a report yet.
+    } finally {
+      setIsLoadingDetails(false)
+    }
+  }
+
   if (loadFailed && !index) {
     return (
       <main className="mx-auto max-w-[1600px] p-6">
@@ -89,7 +114,7 @@ export function LeaderboardPage() {
   const builtAt = index.meta?.built_at ?? index.built_at
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-[18px] p-4 sm:p-6">
+    <main className="mx-auto max-w-[1600px] space-y-4 p-4 sm:p-6">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-[17px] font-semibold tracking-[-0.01em]">Рейтинг команд</h1>
@@ -114,6 +139,11 @@ export function LeaderboardPage() {
         />
       ) : (
         <>
+          <LeaderboardStatusBoard
+            teams={index.teams}
+            activeStatus={filters.status}
+            onStatusChange={(status) => onFiltersChange({ status })}
+          />
           <LeaderboardToolbar
             filters={filters}
             onFiltersChange={onFiltersChange}
@@ -133,10 +163,19 @@ export function LeaderboardPage() {
             />
           ) : (
             <>
-              <LeaderboardTable teams={teams} sort={sort} onSort={onSort} />
+              <LeaderboardTable
+                teams={teams}
+                sort={sort}
+                onSort={onSort}
+                onSelectTeam={(team) => void openTeamDetails(team)}
+              />
               <div className="flex flex-col gap-2 xl:hidden">
                 {teams.map((team) => (
-                  <LeaderboardRowCard key={team.team_id} team={team} />
+                  <LeaderboardRowCard
+                    key={team.team_id}
+                    team={team}
+                    onSelectTeam={() => void openTeamDetails(team)}
+                  />
                 ))}
               </div>
             </>
@@ -149,6 +188,12 @@ export function LeaderboardPage() {
           <ScoreScaleLegend />
         </div>
       ) : null}
+      <TeamDetailSheet
+        summary={selectedTeam}
+        team={selectedTeamDetails}
+        isLoading={isLoadingDetails}
+        onClose={() => setSelectedTeam(null)}
+      />
     </main>
   )
 }

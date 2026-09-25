@@ -18,6 +18,7 @@ export interface LeaderboardTableProps {
   teams: LeaderboardTeam[]
   sort: { key: SortKey; direction: SortDirection }
   onSort: (key: SortKey) => void
+  onSelectTeam?: (team: LeaderboardTeam) => void
 }
 
 function SortIcon({ active, direction }: { active: boolean; direction: SortDirection }) {
@@ -29,7 +30,7 @@ function SortIcon({ active, direction }: { active: boolean; direction: SortDirec
   )
 }
 
-export function LeaderboardTable({ teams, sort, onSort }: LeaderboardTableProps) {
+export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: LeaderboardTableProps) {
   return (
     <div className="hidden overflow-x-auto rounded-card border border-line xl:block">
       <table className="w-full min-w-[1100px] table-fixed border-collapse">
@@ -107,7 +108,18 @@ export function LeaderboardTable({ teams, sort, onSort }: LeaderboardTableProps)
           {teams.map((team, index) => {
             const tied = team.rank != null && team.rank === teams[index - 1]?.rank
             return (
-              <tr key={team.team_id} className="border-t border-line">
+              <tr
+                key={team.team_id}
+                className={`border-t border-line ${onSelectTeam ? 'cursor-pointer hover:bg-muted-surface' : ''}`}
+                onClick={(event) => {
+                  if (
+                    onSelectTeam &&
+                    !(event.target instanceof Element && event.target.closest('a,button'))
+                  ) {
+                    onSelectTeam(team)
+                  }
+                }}
+              >
                 <td className="px-4 py-2.5 text-[15px] text-fg-muted">
                   {team.rank ?? <span className="text-fg-subtle">—</span>}
                   {tied ? <span className="ml-1 text-[12.5px] text-fg-subtle">=</span> : null}
@@ -117,6 +129,12 @@ export function LeaderboardTable({ teams, sort, onSort }: LeaderboardTableProps)
                     <Link
                       to={`/team/${team.team_id}`}
                       className="inline-flex min-h-10 items-center text-strong no-underline"
+                      onClick={(event) => {
+                        if (onSelectTeam) {
+                          event.preventDefault()
+                          onSelectTeam(team)
+                        }
+                      }}
                     >
                       {team.name}
                     </Link>
