@@ -61,11 +61,11 @@ export function TeamWarningBadges({
     const countLabel =
       warnings.length === 1 ? '1 предупреждение' : `${warnings.length} предупреждения`
     return (
-      <details
-        className={`text-[13.5px] ${className ?? ''}`}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <summary className="inline-flex min-h-[22px] cursor-pointer items-center rounded-badge border border-warn-border bg-warn-bg px-2 text-warn-fg marker:text-warn-fg">
+      <details className={`text-[13.5px] ${className ?? ''}`}>
+        <summary
+          className="inline-flex min-h-[22px] cursor-pointer items-center rounded-badge border border-warn-border bg-warn-bg px-2 text-warn-fg marker:text-warn-fg"
+          onClick={(event) => event.stopPropagation()}
+        >
           {countLabel}
         </summary>
         <div className="mt-1.5 flex flex-wrap gap-1.5">{badges}</div>
