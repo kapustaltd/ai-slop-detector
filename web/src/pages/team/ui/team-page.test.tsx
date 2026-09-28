@@ -274,6 +274,28 @@ describe('TeamPage', () => {
     expect(screen.queryByText('Разбор по рубрике · backend')).not.toBeInTheDocument()
   })
 
+  it('переключает аналитику между Backend и Frontend', async () => {
+    Element.prototype.scrollIntoView = vi.fn()
+    renderTeam()
+
+    expect(
+      await screen.findByRole('region', { name: 'Оценки по категориям — backend' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(
+      within(screen.getByRole('navigation', { name: 'Область аналитики' })).getByRole('link', {
+        name: 'Frontend',
+      }),
+    )
+
+    expect(
+      await screen.findByRole('region', { name: 'Оценки по категориям — frontend' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('region', { name: 'Оценки по категориям — backend' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('показывает «команда не найдена» для отсутствующего id', async () => {
     renderTeam('/team/does-not-exist')
 

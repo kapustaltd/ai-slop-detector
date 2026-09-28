@@ -277,14 +277,13 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
 
   return (
     <section
-      id={`area-${areaName}`}
       aria-label={`${chartTitle} — ${areaName}`}
       className="area-profile flex flex-col gap-4 rounded-card border border-line bg-surface p-4 sm:p-5"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="m-0 text-[19px] font-medium tracking-[-0.02em]">
-            Аналитика · {areaTitle}
+            Категории · {areaTitle}
           </h2>
         </div>
         <div

@@ -287,7 +287,6 @@ export function TeamPage() {
           <div className="grid items-start gap-6 xl:grid-cols-2" aria-label="Обзор областей">
             {doneAreas.map(([areaName, area]) => {
               const findingCounts = countFindings(area)
-              const areaStats = stats?.areas.find((item) => item.area === areaName)
               return (
                 <section
                   key={areaName}
@@ -300,7 +299,6 @@ export function TeamPage() {
                     </h2>
                   </div>
                   <AreaAssessment areaName={areaName} area={area} />
-                  <AreaProfile areaName={areaName} area={area} stats={areaStats} />
                   <FindingsSummary
                     counts={findingCounts}
                     activeSeverity={findingsFilter.severity}
@@ -314,7 +312,36 @@ export function TeamPage() {
           </div>
 
           {activeArea ? (
-            <section className="space-y-4 pt-6" aria-label="Подробный разбор">
+            <section
+              id={`area-${activeArea[0]}`}
+              className="scroll-mt-20 space-y-4 pt-6"
+              aria-label="Аналитика"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <h2 className="m-0 text-[22px] font-medium tracking-[-0.03em]">Аналитика</h2>
+                {doneAreas.length > 1 ? (
+                  <AreaNavigation
+                    areas={doneAreas.map(([areaName]) => areaName)}
+                    activeArea={activeAreaName}
+                    targetPrefix="area"
+                    label="Область аналитики"
+                  />
+                ) : null}
+              </div>
+              <AreaProfile
+                areaName={activeArea[0]}
+                area={activeArea[1]}
+                stats={stats?.areas.find((item) => item.area === activeArea[0])}
+              />
+            </section>
+          ) : null}
+
+          {activeArea ? (
+            <section
+              id={`rubric-${activeArea[0]}`}
+              className="scroll-mt-20 space-y-4 pt-6"
+              aria-label="Подробный разбор"
+            >
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h2 className="m-0 text-[22px] font-medium tracking-[-0.03em]">
@@ -322,38 +349,23 @@ export function TeamPage() {
                   </h2>
                 </div>
                 {doneAreas.length > 1 ? (
-                  <nav
-                    aria-label="Область подробного разбора"
-                    className="flex rounded-control border border-line bg-surface p-1"
-                  >
-                    {doneAreas.map(([areaName]) => (
-                      <SectionLink
-                        key={areaName}
-                        target={`rubric-${areaName}`}
-                        aria-current={activeAreaName === areaName ? 'location' : undefined}
-                        className={`flex min-h-10 items-center rounded-[6px] px-4 text-[14px] font-medium transition-colors ${
-                          activeAreaName === areaName
-                            ? 'bg-muted-surface text-fg'
-                            : 'text-fg-muted hover:bg-muted-surface hover:text-fg'
-                        }`}
-                      >
-                        {areaName === 'backend' ? 'Backend' : 'Frontend'}
-                      </SectionLink>
-                    ))}
-                  </nav>
+                  <AreaNavigation
+                    areas={doneAreas.map(([areaName]) => areaName)}
+                    activeArea={activeAreaName}
+                    targetPrefix="rubric"
+                    label="Область подробного разбора"
+                  />
                 ) : null}
               </div>
-              <div id={`rubric-${activeArea[0]}`}>
-                <TaxonomyTree
-                  areaName={activeArea[0]}
-                  area={activeArea[1]}
-                  rubric={rubrics[activeArea[0]]}
-                  path={path}
-                  onPathChange={(next) => updateParams(serializeTaxonomyPath(next))}
-                  findingsFilter={findingsFilter}
-                  commitSha={team.commit_sha}
-                />
-              </div>
+              <TaxonomyTree
+                areaName={activeArea[0]}
+                area={activeArea[1]}
+                rubric={rubrics[activeArea[0]]}
+                path={path}
+                onPathChange={(next) => updateParams(serializeTaxonomyPath(next))}
+                findingsFilter={findingsFilter}
+                commitSha={team.commit_sha}
+              />
             </section>
           ) : null}
         </>
@@ -361,6 +373,37 @@ export function TeamPage() {
 
       <EvaluationMeta team={team} />
     </main>
+  )
+}
+
+function AreaNavigation({
+  areas,
+  activeArea,
+  targetPrefix,
+  label,
+}: {
+  areas: ('backend' | 'frontend')[]
+  activeArea: 'backend' | 'frontend' | undefined
+  targetPrefix: 'area' | 'rubric'
+  label: string
+}) {
+  return (
+    <nav aria-label={label} className="flex rounded-control border border-line bg-surface p-1">
+      {areas.map((areaName) => (
+        <SectionLink
+          key={areaName}
+          target={`${targetPrefix}-${areaName}`}
+          aria-current={activeArea === areaName ? 'location' : undefined}
+          className={`flex min-h-10 items-center rounded-[6px] px-4 text-[14px] font-medium transition-colors ${
+            activeArea === areaName
+              ? 'bg-muted-surface text-fg'
+              : 'text-fg-muted hover:bg-muted-surface hover:text-fg'
+          }`}
+        >
+          {areaName === 'backend' ? 'Backend' : 'Frontend'}
+        </SectionLink>
+      ))}
+    </nav>
   )
 }
 
