@@ -51,7 +51,7 @@ function SnippetView({ finding }: { finding: FindingView }) {
 
   return (
     <div className="overflow-hidden rounded-[10px] border border-line bg-code">
-      <div className="flex items-center justify-between border-b border-line bg-surface px-3 py-[7px]">
+      <div className="flex items-center justify-between bg-surface px-3 py-[7px]">
         <span className="font-mono text-[13.5px] text-fg-muted">{finding.file}</span>
         <span className="text-[13px] text-fg-subtle">
           {extension} · строки {finding.line_start}–{finding.line_end}
@@ -66,7 +66,7 @@ function SnippetView({ finding }: { finding: FindingView }) {
             return (
               <span
                 key={`${lineNumber}-${line}`}
-                className={`block px-3 ${isTarget ? 'border-l-[3px] border-l-sev-major-chart bg-sev-major-bg' : ''}`}
+                className={`block px-3 ${isTarget ? '  bg-sev-major-bg' : ''}`}
               >
                 <span className="mr-3.5 inline-block w-[30px] text-right text-fg-faint select-none tabular-nums">
                   {lineNumber}

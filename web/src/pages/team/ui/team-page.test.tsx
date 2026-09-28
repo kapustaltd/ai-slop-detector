@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -256,12 +256,22 @@ describe('TeamPage', () => {
   })
 
   it('показывает разбор по рубрике для каждой оценённой области', async () => {
+    Element.prototype.scrollIntoView = vi.fn()
     renderTeam()
 
     await waitFor(
       () => expect(screen.getByText('Разбор по рубрике · backend')).toBeInTheDocument(),
       { timeout: 10_000 },
     )
+
+    fireEvent.click(
+      within(screen.getByRole('navigation', { name: 'Область подробного разбора' })).getByRole(
+        'link',
+        { name: 'Frontend' },
+      ),
+    )
+    expect(await screen.findByText('Разбор по рубрике · frontend')).toBeInTheDocument()
+    expect(screen.queryByText('Разбор по рубрике · backend')).not.toBeInTheDocument()
   })
 
   it('показывает «команда не найдена» для отсутствующего id', async () => {

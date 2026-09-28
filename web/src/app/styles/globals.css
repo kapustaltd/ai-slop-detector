@@ -358,7 +358,6 @@
     height: 100dvh;
     flex-direction: column;
     gap: 28px;
-    border-right: 1px solid var(--ds-border);
     background: var(--ds-surface);
     padding: 22px 14px 16px;
   }
@@ -446,7 +445,6 @@
     align-items: center;
     gap: 10px;
     margin-top: auto;
-    border-top: 1px solid var(--ds-border);
     padding-top: 14px;
   }
 
@@ -479,7 +477,6 @@
     top: 0;
     z-index: 20;
     min-height: 56px;
-    border-bottom: 1px solid var(--ds-border);
     background: color-mix(in srgb, var(--ds-bg) 90%, var(--ds-primary) 10%);
     padding: max(8px, env(safe-area-inset-top)) 0 8px;
     backdrop-filter: blur(14px);
@@ -500,7 +497,6 @@
     position: sticky;
     top: 64px;
     z-index: 19;
-    border-bottom: 1px solid var(--ds-border);
     background: var(--ds-surface);
     padding: 8px 12px 12px;
   }
@@ -521,7 +517,6 @@
 
   .dashboard-team-header {
     margin-bottom: 18px;
-    border-bottom: 1px solid var(--ds-border);
     padding-bottom: 18px;
   }
 
@@ -661,13 +656,8 @@
     padding: 10px 0;
   }
 
-  .dashboard-score-summary-area + .dashboard-score-summary-area {
-    border-top: 1px solid var(--ds-border);
-  }
-
   .dashboard-score-summary-constraint {
     grid-column: 1 / -1;
-    border-top: 1px solid var(--ds-border);
     padding-top: 14px;
     color: var(--ds-fg-muted);
     font-size: 13.5px;
@@ -703,16 +693,7 @@
     transform: rotate(225deg) translate(-1px, -1px);
   }
 
-  .dashboard-score-summary-note {
-    grid-column: 1 / -1;
-    margin: 0;
-    color: var(--ds-fg-muted);
-    font-size: 13.5px;
-    line-height: 1.55;
-  }
-
   .dashboard-assessment {
-    border-block: 1px solid var(--ds-border);
     padding-block: 16px;
   }
 
@@ -1060,7 +1041,6 @@
   }
 
   .leaderboard-table-label {
-    border-bottom: 1px solid var(--ds-border);
     color: color-mix(in srgb, var(--ds-fg-muted) 82%, var(--ds-fg) 18%);
   }
 
@@ -1172,7 +1152,6 @@
   }
 
   .dashboard-activity-note {
-    border-bottom: 1px solid var(--ds-border);
     padding-bottom: 12px;
   }
 
@@ -1405,7 +1384,6 @@
     height: 100%;
     flex-direction: column;
     overflow: hidden;
-    border-left: 1px solid var(--ds-border);
     background: var(--ds-surface);
     box-shadow: -18px 0 48px rgb(0 0 0 / 14%);
     animation: sheet-in 220ms ease-out both;
@@ -1475,7 +1453,6 @@
   }
 
   .sheet-insight {
-    border-inline-start: 2px solid var(--ds-border-strong);
     padding-inline-start: 12px;
   }
 

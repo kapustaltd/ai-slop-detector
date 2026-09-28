@@ -252,7 +252,7 @@ function MetricPanel({
   const effectiveActiveSlug = activeFindingSlug ?? defaultActiveSlug
 
   return (
-    <div className="flex flex-col gap-3.5 border-t border-line bg-surface px-4 py-4 pl-[68px]">
+    <div className="flex flex-col gap-3.5 bg-surface px-4 py-4 pl-[68px]">
       {isLowConfidence(metric.confidence) ? (
         <p className="rounded-panel border border-dashed border-line-strong bg-muted-surface px-3.5 py-2.5 text-[14.5px] text-fg-muted">
           Уверенность модели низкая — балл не приглушён и учитывается на общих основаниях, но стоит

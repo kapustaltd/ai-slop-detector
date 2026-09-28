@@ -9,7 +9,7 @@ export function TeamSkeleton() {
     >
       <div aria-hidden="true" className="flex flex-wrap items-center justify-between gap-6">
         <div className="flex w-full flex-col gap-[18px]">
-          <div className="flex items-center gap-2 border-b border-line pb-3">
+          <div className="flex items-center gap-2 pb-3">
             <Skeleton className="h-4 w-16" />
             <Skeleton className="h-4 w-4" />
             <Skeleton className="h-4 w-36" />
@@ -33,7 +33,7 @@ export function TeamSkeleton() {
           <Skeleton className="h-10 w-44" />
           <Skeleton className="h-3 w-full" />
           <Skeleton className="h-3 w-4/5" />
-          <div className="mt-0.5 border-t border-line pt-3">
+          <div className="mt-0.5 pt-3">
             <Skeleton className="h-3 w-full" />
             <Skeleton className="mt-2 h-3 w-3/4" />
           </div>

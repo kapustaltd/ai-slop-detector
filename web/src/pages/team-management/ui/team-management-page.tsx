@@ -276,7 +276,6 @@ export function TeamManagementPage() {
         <div>
           <p className="dashboard-kicker">РЕЕСТР</p>
           <h1 className="dashboard-page-title">Команды</h1>
-          <p className="dashboard-page-subtitle">Реестр команд и запуск новых проверок.</p>
         </div>
         {apiAvailable ? (
           <button
@@ -428,7 +427,7 @@ export function TeamManagementPage() {
                 Активна
               </label>
             </div>
-            <div className="mt-auto flex gap-2 border-t border-line pt-4">
+            <div className="mt-auto flex gap-2 pt-4">
               <button
                 className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
                 disabled={isSaving}
@@ -465,7 +464,7 @@ export function TeamManagementPage() {
           <section
             aria-label={`Удаление команды ${deleting.name}`}
             aria-describedby="delete-team-description"
-            className="sheet-panel sheet-wide h-auto self-end gap-3 border-t p-5 sm:mr-5 sm:mb-5 sm:h-auto sm:max-h-[320px] sm:self-end sm:rounded-panel"
+            className="sheet-panel sheet-wide h-auto self-end gap-3 p-5 sm:mr-5 sm:mb-5 sm:h-auto sm:max-h-[320px] sm:self-end sm:rounded-panel"
             ref={deleteDialogRef}
             role="dialog"
             aria-modal="true"
@@ -516,7 +515,7 @@ export function TeamManagementPage() {
         <section
           aria-busy={isLoading}
           aria-label="Реестр команд"
-          className="dashboard-panel dashboard-registry-panel divide-y divide-line"
+          className="dashboard-panel dashboard-registry-panel"
         >
           {isLoading ? <RegistryLoadingSkeleton /> : null}
           {!isLoading && teams.length === 0 ? (
@@ -550,7 +549,7 @@ export function TeamManagementPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-line">
+                  <tbody className="">
                     {teams.map((team) => (
                       <tr key={team.id}>
                         <th scope="row" className="px-4 py-3 font-medium">
@@ -844,7 +843,7 @@ function RegistryLoadingSkeleton() {
         {Array.from({ length: 4 }, (_, index) => (
           <div
             key={index}
-            className="grid h-[58px] grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_0.8fr] items-center gap-4 border-t border-line px-4"
+            className="grid h-[58px] grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_0.8fr] items-center gap-4 px-4"
           >
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-5/6" />
@@ -892,7 +891,7 @@ function TeamForm({
         : 'Проверьте, что будет сохранено и проверено.'
   return (
     <section aria-label="Добавление команды" className="flex min-h-0 flex-1 flex-col">
-      <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-6 py-6">
+      <header className="flex shrink-0 items-start justify-between gap-4 px-6 py-6">
         <div className="min-w-0">
           <p className="m-0 text-xs font-semibold uppercase tracking-[0.08em] text-fg-muted">
             Добавление команды
@@ -1103,7 +1102,7 @@ function TeamForm({
         </div>
       </div>
 
-      <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-line px-6 py-4">
+      <footer className="flex shrink-0 items-center justify-between gap-3 px-6 py-4">
         <div className="min-w-0">
           {step === 'repo' ? (
             <button

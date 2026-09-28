@@ -106,7 +106,7 @@ function ComparisonBasisSwitch({
             className={`min-h-9 rounded-control border px-3 font-medium transition-colors ${
               basis === option
                 ? 'border-line-strong bg-muted-surface text-fg'
-                : 'border-line text-fg-muted hover:bg-muted-surface hover:text-fg'
+                : 'text-fg-muted hover:bg-muted-surface hover:text-fg'
             }`}
             aria-pressed={basis === option}
             onClick={() => onChange(option)}
@@ -134,7 +134,7 @@ function ChartLegendNote({
         </span>
       ) : (
         <span>
-          Состав выборки:{' '}
+          Оценено команд:{' '}
           {sampleSize > 0 ? `${sampleSize} ${pluralTeams(sampleSize)}` : 'данные недоступны'}
         </span>
       )}
@@ -286,9 +286,6 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
           <h2 className="m-0 text-[19px] font-medium tracking-[-0.02em]">
             Аналитика · {areaTitle}
           </h2>
-          <p className="m-0 mt-1 text-[14px] leading-5 text-fg-muted">
-            Баллы категорий и подтверждённые находки области на шкале 0–10.
-          </p>
         </div>
         <div
           className="flex rounded-control border border-line p-0.5"
@@ -347,14 +344,10 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
       </div>
 
       <div className="overflow-hidden rounded-panel border border-line">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-muted-surface px-3 py-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-muted-surface px-3 py-2.5">
           <div>
             <h3 className="m-0 text-[14.5px] font-medium">Точные значения</h3>
-            <p className="m-0 mt-0.5 text-[13px] text-fg-muted">
-              Нажмите на категорию, чтобы перейти к её разбору и находкам.
-            </p>
           </div>
-          <span className="text-[13px] text-fg-muted">Шкала 0–10</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -390,7 +383,7 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
             </thead>
             <tbody>
               {data.map((row) => (
-                <tr key={row.id} className="border-t border-line">
+                <tr key={row.id} className="">
                   <th scope="row" className="px-3 py-2 text-left text-[14px] font-normal text-fg">
                     <SectionLink
                       target={`area-${areaName}-category-${row.id}`}
@@ -415,7 +408,7 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
             </tbody>
           </table>
         </div>
-        <details className="border-t border-line px-3 py-2.5">
+        <details className="px-3 py-2.5">
           <summary className="cursor-pointer text-[13.5px] font-medium text-link">
             Показать расчёт
           </summary>
@@ -430,7 +423,7 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
               </thead>
               <tbody>
                 {data.map((row) => (
-                  <tr key={row.id} className="border-t border-line">
+                  <tr key={row.id} className="">
                     <th scope="row" className="py-2 text-left font-normal text-fg">
                       {row.name}
                     </th>

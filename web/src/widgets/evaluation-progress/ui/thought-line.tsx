@@ -101,10 +101,7 @@ export function ThoughtLine({ progress, updatesUnavailable = false }: ThoughtLin
                 : `Показать предыдущие действия · ${previousCount}`}
             </button>
           ) : null}
-          <ol
-            className="m-0 list-none space-y-3 border-s border-line ps-4"
-            aria-label="Последние действия проверки"
-          >
+          <ol className="m-0 list-none space-y-3 ps-4" aria-label="Последние действия проверки">
             <AnimatePresence initial={false}>
               {steps.map((step) => (
                 <motion.li

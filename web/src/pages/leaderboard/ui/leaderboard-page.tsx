@@ -115,7 +115,7 @@ export function LeaderboardPage() {
         <EmptyState
           icon={CloudOff}
           title="Не удалось загрузить дата-бандл"
-          description="Проверьте, что пайплайн собрал web/data/index.json, и попробуйте ещё раз."
+          description="Попробуйте обновить страницу."
           action={{ label: isLoading ? 'Повтор…' : 'Повторить', onClick: () => void retry() }}
         />
       </main>

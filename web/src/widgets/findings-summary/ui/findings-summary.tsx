@@ -27,7 +27,7 @@ export function FindingsSummary({
       className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
     >
       <div className="flex items-center gap-3">
-        <span className="text-[15px] font-medium">Находки по всей области</span>
+        <span className="text-[15px] font-medium">Находки</span>
         <span className="text-[13.5px] text-fg-subtle">{total} всего</span>
       </div>
 
@@ -52,10 +52,6 @@ export function FindingsSummary({
         activeSeverity={activeSeverity}
         onSelect={onSeverityChange}
       />
-
-      <div className="border-t border-line pt-2.5 text-[13.5px] leading-[1.5] text-fg-subtle">
-        Количество находок не входит в балл: это следы, по которым балл можно проверить.
-      </div>
     </section>
   )
 }

@@ -53,9 +53,7 @@ export function EmptyState({
   }
 
   return (
-    <div
-      className={`flex flex-col items-start gap-2 border-y border-line px-1 py-6 text-left ${className ?? ''}`}
-    >
+    <div className={`flex flex-col items-start gap-2 px-1 py-6 text-left ${className ?? ''}`}>
       <Icon aria-hidden="true" size={22} strokeWidth={1.5} className="text-fg-subtle" />
       <div className="text-strong">{title}</div>
       <div className="max-w-[540px] text-[14px] leading-[1.6] text-fg-muted">{description}</div>

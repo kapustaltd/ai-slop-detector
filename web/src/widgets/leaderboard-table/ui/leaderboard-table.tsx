@@ -32,7 +32,7 @@ function SortIcon({ active, direction }: { active: boolean; direction: SortDirec
 
 export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: LeaderboardTableProps) {
   return (
-    <div className="leaderboard-table-shell hidden overflow-x-auto border-y border-line xl:block">
+    <div className="leaderboard-table-shell hidden overflow-x-auto xl:block">
       <table className="leaderboard-table w-full min-w-[980px] table-auto border-collapse">
         <caption className="sr-only">
           Рейтинг команд по автоматической оценке качества кода. Сортировка:{' '}
@@ -118,7 +118,7 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
             return (
               <tr
                 key={team.team_id}
-                className={`border-t border-line ${onSelectTeam ? 'cursor-pointer hover:bg-muted-surface' : ''}`}
+                className={` ${onSelectTeam ? 'cursor-pointer hover:bg-muted-surface' : ''}`}
                 onClick={(event) => {
                   if (
                     onSelectTeam &&

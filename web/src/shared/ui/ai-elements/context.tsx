@@ -118,7 +118,7 @@ export const ContextTrigger = ({ children, ...props }: ContextTriggerProps) => {
 export type ContextContentProps = ComponentProps<typeof HoverCardContent>
 
 export const ContextContent = ({ className, ...props }: ContextContentProps) => (
-  <HoverCardContent className={cn('min-w-60 divide-y overflow-hidden p-0', className)} {...props} />
+  <HoverCardContent className={cn('min-w-60 overflow-hidden p-0', className)} {...props} />
 )
 
 export type ContextContentHeaderProps = ComponentProps<'div'>

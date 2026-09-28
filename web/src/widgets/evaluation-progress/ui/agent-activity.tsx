@@ -104,7 +104,7 @@ function ActivityEvent({ event, active }: { event: Event; active: boolean }) {
   const source = event.source
   const isRunning = active && event.state === 'running'
   return (
-    <article className="relative border-l border-line pb-5 pl-5 text-sm">
+    <article className="relative pb-5 pl-5 text-sm">
       <span className="absolute -left-1 top-1 size-2 rounded-full bg-fg-muted" />
       <div className="mb-2 flex items-center gap-2 text-xs text-fg-muted">
         {event.area && <span>{areaLabels[event.area]}</span>}
@@ -113,7 +113,7 @@ function ActivityEvent({ event, active }: { event: Event; active: boolean }) {
       </div>
       {event.kind === 'tool' ? (
         <>
-          <Tool defaultOpen={false} className="mb-0 border-line">
+          <Tool defaultOpen={false} className="mb-0">
             <ToolHeader
               type="dynamic-tool"
               toolName={event.title}
@@ -140,7 +140,7 @@ function ActivityEvent({ event, active }: { event: Event; active: boolean }) {
           ) : null}
         </>
       ) : event.kind === 'reasoning' ? (
-        <div className="border-l-2 border-line-strong pl-3">
+        <div className="border-line-strong pl-3">
           <p className="m-0 font-medium">{event.title}</p>
           {event.detail ? <p className="m-0 mt-1 text-sm text-fg-muted">{event.detail}</p> : null}
         </div>

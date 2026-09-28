@@ -171,7 +171,7 @@ export function TeamPage() {
   if (state === 'pending') {
     return (
       <main className="dashboard-page max-w-[1080px] space-y-8">
-        <header className="border-b border-line pb-4">
+        <header className="pb-4">
           <p className="mb-1 text-sm text-fg-muted">Команда</p>
           <h1 className="m-0 break-all text-[32px]/[1.1] font-semibold tracking-[-0.04em]">
             {teamId}
@@ -242,12 +242,18 @@ export function TeamPage() {
     TeamBundle['areas'][string],
   ][]
   const doneAreas = areaEntries.filter(([, area]) => area.status === 'done')
+  const areaFromHash = hash.match(/^#(?:area|rubric)-(backend|frontend)(?:-|$)/)?.[1]
+  const activeAreaName =
+    doneAreas.find(([areaName]) => areaName === areaFromHash)?.[0] ??
+    doneAreas.find(([areaName]) => areaName === path.area)?.[0] ??
+    doneAreas[0]?.[0]
+  const activeArea = doneAreas.find(([areaName]) => areaName === activeAreaName)
   const displayTeam: TeamBundle =
     liveStatus === 'running' ? { ...team, status: 'running', total: null, partial: true } : team
   const rankContext = teamRankContext(team.team_id)
 
   return (
-    <main className="dashboard-page max-w-[1200px] space-y-[18px]">
+    <main className="dashboard-page space-y-6">
       <TeamHeader
         team={displayTeam}
         rankContext={liveStatus === 'running' ? { ...rankContext, rank: null } : rankContext}
@@ -278,32 +284,78 @@ export function TeamPage() {
         <>
           <ScoreSummary team={displayTeam} />
 
-          {doneAreas.map(([areaName, area]) => {
-            const findingCounts = countFindings(area)
-            const areaStats = stats?.areas.find((item) => item.area === areaName)
-            return (
-              <div key={areaName} className="flex flex-col gap-[18px]">
-                <AreaAssessment areaName={areaName} area={area} />
-                <AreaProfile areaName={areaName} area={area} stats={areaStats} />
-                <FindingsSummary
-                  counts={findingCounts}
-                  activeSeverity={findingsFilter.severity}
-                  onSeverityChange={(severity) =>
-                    updateParams({ severity: severity === 'all' ? null : severity })
-                  }
-                />
+          <div className="grid items-start gap-6 xl:grid-cols-2" aria-label="Обзор областей">
+            {doneAreas.map(([areaName, area]) => {
+              const findingCounts = countFindings(area)
+              const areaStats = stats?.areas.find((item) => item.area === areaName)
+              return (
+                <section
+                  key={areaName}
+                  className="min-w-0 space-y-4"
+                  aria-label={`Обзор · ${areaName}`}
+                >
+                  <div className="pb-3">
+                    <h2 className="m-0 text-[22px] font-medium tracking-[-0.03em]">
+                      {areaName === 'backend' ? 'Backend' : 'Frontend'}
+                    </h2>
+                  </div>
+                  <AreaAssessment areaName={areaName} area={area} />
+                  <AreaProfile areaName={areaName} area={area} stats={areaStats} />
+                  <FindingsSummary
+                    counts={findingCounts}
+                    activeSeverity={findingsFilter.severity}
+                    onSeverityChange={(severity) =>
+                      updateParams({ severity: severity === 'all' ? null : severity })
+                    }
+                  />
+                </section>
+              )
+            })}
+          </div>
+
+          {activeArea ? (
+            <section className="space-y-4 pt-6" aria-label="Подробный разбор">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h2 className="m-0 text-[22px] font-medium tracking-[-0.03em]">
+                    Подробный разбор
+                  </h2>
+                </div>
+                {doneAreas.length > 1 ? (
+                  <nav
+                    aria-label="Область подробного разбора"
+                    className="flex rounded-control border border-line bg-surface p-1"
+                  >
+                    {doneAreas.map(([areaName]) => (
+                      <SectionLink
+                        key={areaName}
+                        target={`rubric-${areaName}`}
+                        aria-current={activeAreaName === areaName ? 'location' : undefined}
+                        className={`flex min-h-10 items-center rounded-[6px] px-4 text-[14px] font-medium transition-colors ${
+                          activeAreaName === areaName
+                            ? 'bg-muted-surface text-fg'
+                            : 'text-fg-muted hover:bg-muted-surface hover:text-fg'
+                        }`}
+                      >
+                        {areaName === 'backend' ? 'Backend' : 'Frontend'}
+                      </SectionLink>
+                    ))}
+                  </nav>
+                ) : null}
+              </div>
+              <div id={`rubric-${activeArea[0]}`}>
                 <TaxonomyTree
-                  areaName={areaName}
-                  area={area}
-                  rubric={rubrics[areaName]}
+                  areaName={activeArea[0]}
+                  area={activeArea[1]}
+                  rubric={rubrics[activeArea[0]]}
                   path={path}
                   onPathChange={(next) => updateParams(serializeTaxonomyPath(next))}
                   findingsFilter={findingsFilter}
                   commitSha={team.commit_sha}
                 />
               </div>
-            )
-          })}
+            </section>
+          ) : null}
         </>
       )}
 
@@ -368,10 +420,6 @@ function AreaAssessment({
           <h2 className="m-0 text-[19px] font-medium tracking-[-0.02em]">
             Что влияет на результат
           </h2>
-          <p className="m-0 mt-1 text-[14px] leading-5 text-fg-muted">
-            Короткий вывод по данным области {areaName}. Каждая строка ведёт к подтверждениям в
-            разборе.
-          </p>
         </div>
         <span className="text-[13.5px] text-fg-muted">
           {area.categories.length} {categoryCountLabel(area.categories.length)}
@@ -395,7 +443,7 @@ function AreaAssessment({
                     <span>
                       <span className="font-medium text-fg">{category.name}</span>
                       <span className="block text-[13.5px] text-fg-muted">
-                        Высокая оценка категории · {category.score.toFixed(1)} / 10
+                        {category.score.toFixed(1)} из 10
                       </span>
                     </span>
                     <ArrowUpRight aria-hidden="true" size={14} />
@@ -405,7 +453,7 @@ function AreaAssessment({
             </ul>
           ) : (
             <p className="m-0 mt-2.5 text-[14px] leading-5 text-fg-muted">
-              Категорий с высокой оценкой в этой области пока нет.
+              Сильных категорий пока нет.
             </p>
           )}
         </section>
@@ -441,7 +489,7 @@ function AreaAssessment({
             </ul>
           ) : (
             <p className="m-0 mt-2.5 text-[14px] leading-5 text-fg-muted">
-              Подтверждённых проблем для приоритизации в этой области нет.
+              Серьёзных проблем здесь не нашли.
             </p>
           )}
         </section>

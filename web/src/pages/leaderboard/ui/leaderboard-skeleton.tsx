@@ -9,7 +9,7 @@ export function LeaderboardSkeleton() {
     >
       <div
         aria-hidden="true"
-        className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4 pr-[52px] md:pr-[46px]"
+        className="flex flex-wrap items-center justify-between gap-3 pb-4 pr-[52px] md:pr-[46px]"
       >
         <div className="flex flex-col gap-2">
           <Skeleton className="h-[17px] w-40" />
@@ -40,7 +40,7 @@ export function LeaderboardSkeleton() {
           <Skeleton className="h-3 w-24" />
         </div>
         {Array.from({ length: 6 }, (_, index) => (
-          <div key={index} className="flex h-[54px] items-center gap-5 border-t border-line px-4">
+          <div key={index} className="flex h-[54px] items-center gap-5 px-4">
             <Skeleton className="h-4 w-5" />
             <Skeleton className="h-4 w-48" />
             <Skeleton className="ml-auto h-2 w-24" />

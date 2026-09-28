@@ -111,7 +111,7 @@ export function TeamDetailSheet({
         ref={dialogRef}
         role="dialog"
       >
-        <header className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
+        <header className="flex items-start justify-between gap-4 px-6 py-5">
           <div className="min-w-0">
             <p className="text-overline m-0 text-fg-muted uppercase">Быстрый просмотр</p>
             <h2 id="team-detail-title" className="mt-1 m-0 overflow-wrap-anywhere text-h2">
@@ -183,7 +183,7 @@ export function TeamDetailSheet({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-5 gap-y-4 border-y border-line py-4">
+            <div className="grid grid-cols-2 gap-x-5 gap-y-4 py-4">
               {DETAIL_AREA_KEYS.map((areaName) => {
                 const area = team?.areas[areaName]
                 const areaMessage = team
@@ -294,7 +294,7 @@ export function TeamDetailSheet({
             ) : null}
 
             {team && findings.length > 0 ? (
-              <div className="mt-5 border-t border-line pt-4">
+              <div className="mt-5 pt-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="m-0 text-[14px] font-medium">Доказательства по серьёзности</p>
                   <span className="text-[13px] text-fg-muted">
@@ -317,7 +317,7 @@ export function TeamDetailSheet({
             ) : null}
           </section>
 
-          <section aria-labelledby="detail-meta-title" className="mt-8 border-t border-line pt-5">
+          <section aria-labelledby="detail-meta-title" className="mt-8 pt-5">
             <h3 id="detail-meta-title" className="m-0 text-strong">
               Детали проверки
             </h3>
@@ -377,7 +377,7 @@ export function TeamDetailSheet({
           </section>
         </div>
 
-        <footer className="border-t border-line px-6 py-5">
+        <footer className="px-6 py-5">
           {summary.status === 'done' || summary.status === 'running' ? (
             <Link
               className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-control bg-primary px-4 text-[14.5px] font-medium text-primary-foreground no-underline transition-transform active:scale-[0.96]"

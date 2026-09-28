@@ -51,7 +51,7 @@ export function EvaluationMeta({ team }: EvaluationMetaProps) {
       </dl>
 
       {warnings.length > 0 ? (
-        <div className="flex flex-col gap-2 border-t border-line pt-3.5">
+        <div className="flex flex-col gap-2 pt-3.5">
           <span className="text-[15px] font-medium">Предупреждения оценки</span>
           <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
             {warnings.map((warning) => {

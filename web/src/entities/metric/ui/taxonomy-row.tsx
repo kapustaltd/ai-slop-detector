@@ -64,12 +64,8 @@ export function TaxonomyRow({
       type="button"
       aria-expanded={expanded}
       onClick={onToggle}
-      className={`flex w-full items-start gap-3.5 border-t pr-4 text-left ${LEVEL_PADDING[level]} ${
-        isExpandedMetricHeader
-          ? 'border-line bg-muted-open border-l-[3px] border-l-brand'
-          : level === 2
-            ? 'border-dashed border-line bg-muted-open'
-            : 'border-line bg-surface'
+      className={`flex w-full items-start gap-3.5 pr-4 text-left ${LEVEL_PADDING[level]} ${
+        isExpandedMetricHeader ? 'bg-muted-open' : level === 2 ? 'bg-muted-open' : 'bg-surface'
       } ${lowConfidence ? 'border-dashed' : ''} ${className ?? ''}`}
     >
       <span className={`mt-0.5 flex shrink-0 text-fg-subtle ${level === 1 ? 'text-fg-muted' : ''}`}>

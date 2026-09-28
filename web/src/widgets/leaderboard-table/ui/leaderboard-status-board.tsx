@@ -47,8 +47,8 @@ export function LeaderboardStatusBoard({
   onStatusChange,
 }: LeaderboardStatusBoardProps) {
   return (
-    <section aria-label="Состояние проверок" className="border-y border-line py-3">
-      <div className="grid grid-cols-2 divide-x divide-line sm:grid-cols-5">
+    <section aria-label="Состояние проверок" className="py-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5">
         {items.map(({ status, icon: Icon, tone }) => {
           const count = teams.filter((team) => displayStatus(team) === status).length
           const active = activeStatus === status
@@ -58,7 +58,7 @@ export function LeaderboardStatusBoard({
               type="button"
               aria-pressed={active}
               aria-label={`${statusLabel(status)}: ${count}`}
-              className={`flex min-h-[56px] items-center gap-2 border-b-2 px-3 text-left transition-colors first:pl-0 last:pr-0 hover:bg-muted-surface sm:px-4 ${active ? 'border-brand bg-muted-surface font-medium' : 'border-transparent'}`}
+              className={`flex min-h-[56px] items-center gap-2  px-3 text-left transition-colors first:pl-0 last:pr-0 hover:bg-muted-surface sm:px-4 ${active ? 'bg-muted-surface font-medium' : ''}`}
               onClick={() => onStatusChange(active ? 'all' : status)}
             >
               <Icon

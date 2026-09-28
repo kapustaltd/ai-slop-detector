@@ -21,7 +21,7 @@ export interface TeamHeaderProps {
 export function TeamHeader({ team, rankContext }: TeamHeaderProps) {
   return (
     <header className="dashboard-team-header flex flex-col gap-[18px]">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pb-3">
         <nav
           aria-label="Хлебные крошки"
           className="flex items-center gap-2 text-[14.5px] text-fg-muted"

@@ -1,7 +1,7 @@
 import { ArrowRight, Info } from 'lucide-react'
 
 import type { TeamArea, TeamBundle } from '@/shared/api'
-import { formatScore, scoreWord } from '@/shared/lib'
+import { formatScore } from '@/shared/lib'
 import { SectionLink } from '@/shared/ui'
 
 import { describeAreaStatus } from '../model/area-status'
@@ -106,11 +106,11 @@ export function ScoreSummary({ team }: ScoreSummaryProps) {
                     </SectionLink>
                   ) : null}
                 </div>
-                <div className="mt-1.5 text-[13.5px] leading-5 text-fg-muted">
-                  {score != null
-                    ? `Уровень по шкале: ${scoreWord(score)}`
-                    : `Причина: ${status.detail}`}
-                </div>
+                {score == null ? (
+                  <div className="mt-1.5 text-[13.5px] leading-5 text-fg-muted">
+                    Причина: {status.detail}
+                  </div>
+                ) : null}
               </li>
             )
           })}
@@ -133,19 +133,13 @@ export function ScoreSummary({ team }: ScoreSummaryProps) {
                     {areaLabel(areaName)} · {categoryName} · {metric.name}
                   </div>
                   <div className="text-fg-muted">Причина: {metric.rationale}</div>
-                  <div className="text-fg-muted">
-                    Влияние: критерий учтён в балле, но вывод по нему стоит проверить вручную.
-                  </div>
+                  <div className="text-fg-muted">Этот вывод стоит проверить вручную.</div>
                 </div>
               ))}
             </div>
           </details>
         ) : null}
       </div>
-
-      <p className="dashboard-score-summary-note">
-        Автоматическая оценка качества кода, а не результат команды на хакатоне.
-      </p>
     </section>
   )
 }
