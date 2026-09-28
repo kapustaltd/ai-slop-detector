@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 import { TeamStatusBadge, TeamWarningBadges } from '@/entities/team'
 import type { LeaderboardTeam } from '@/shared/api'
-import { ScoreGauge } from '@/shared/ui'
+import { formatScore } from '@/shared/lib'
 
 /**
  * Карточка рейтинга на узком экране (< 768px) — `design/reference/screens/03-leaderboard-
@@ -24,35 +24,21 @@ export function LeaderboardRowCard({ team, onSelectTeam }: LeaderboardRowCardPro
         <span className="w-5 shrink-0 text-[15px] text-fg-muted">
           {team.rank ?? <span className="text-fg-subtle">—</span>}
         </span>
-        <span className="flex-grow text-[17px] font-medium text-fg">{team.name}</span>
-        <ScoreGauge
-          value={team.total}
-          size="row"
-          trackWidth={72}
-          showWord={false}
-          partial={team.partial}
-        />
+        <span className="min-w-0 flex-grow overflow-wrap-anywhere text-[17px] font-medium text-fg">
+          {team.name}
+        </span>
+        <span className="text-[18px] font-medium tabular-nums text-fg">
+          {formatScore(team.total)}
+        </span>
       </div>
       <div className="flex items-center gap-3.5 text-[13.5px] text-fg-muted">
         <span className="flex items-center gap-1.5">
           backend
-          <ScoreGauge
-            value={team.areas?.backend ?? null}
-            size="micro"
-            trackWidth={34}
-            showMax={false}
-            showWord={false}
-          />
+          <strong className="font-medium text-fg">{formatScore(team.areas?.backend)}</strong>
         </span>
         <span className="flex items-center gap-1.5">
           frontend
-          <ScoreGauge
-            value={team.areas?.frontend ?? null}
-            size="micro"
-            trackWidth={34}
-            showMax={false}
-            showWord={false}
-          />
+          <strong className="font-medium text-fg">{formatScore(team.areas?.frontend)}</strong>
         </span>
       </div>
       {hasBadges ? (
@@ -66,25 +52,18 @@ export function LeaderboardRowCard({ team, onSelectTeam }: LeaderboardRowCardPro
     </>
   )
   const className =
-    'flex flex-col gap-[9px] rounded-card border border-line bg-surface px-[13px] py-3 no-underline'
+    'flex flex-col gap-2 rounded-card border border-line bg-surface px-[13px] py-2.5 no-underline'
   return (
     <article className={`${className} ${onSelectTeam ? 'transition-colors' : ''}`}>
       {onSelectTeam ? (
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           aria-label={`Быстрый просмотр ${team.name}`}
-          className="cursor-pointer rounded-control hover:bg-muted-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          className="w-full cursor-pointer rounded-control border-0 bg-transparent p-0 text-left hover:bg-muted-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           onClick={onSelectTeam}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault()
-              onSelectTeam()
-            }
-          }}
         >
           {content}
-        </div>
+        </button>
       ) : (
         content
       )}

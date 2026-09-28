@@ -2,14 +2,17 @@ import { Link } from 'react-router-dom'
 
 export function NotFoundPage() {
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-2xl font-semibold">Страница не найдена</h1>
-      <Link
-        className="mt-2 inline-flex min-h-11 items-center underline underline-offset-4 md:min-h-10"
-        to="/"
-      >
-        К рейтингу
-      </Link>
+    <main className="dashboard-page">
+      <section className="dashboard-panel dashboard-not-found-panel">
+        <p className="dashboard-kicker">404 · НЕ НАЙДЕНО</p>
+        <h1 className="dashboard-page-title">Страница не найдена</h1>
+        <p className="dashboard-page-subtitle">
+          Такой маршрут отсутствует в текущей версии контрольной панели.
+        </p>
+        <Link className="dashboard-action-button mt-6" to="/">
+          Вернуться к рейтингу
+        </Link>
+      </section>
     </main>
   )
 }

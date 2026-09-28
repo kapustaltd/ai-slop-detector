@@ -30,7 +30,7 @@ export function TeamHeader({ team, rankContext }: TeamHeaderProps) {
       : null
 
   return (
-    <header className="flex flex-col gap-[18px]">
+    <header className="dashboard-team-header flex flex-col gap-[18px]">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line pb-3">
         <nav
           aria-label="Хлебные крошки"

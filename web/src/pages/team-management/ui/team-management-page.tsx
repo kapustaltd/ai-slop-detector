@@ -25,7 +25,7 @@ import {
   type RegistryEvaluationStatus,
   type RegistryTeam,
 } from '@/shared/api'
-import { Skeleton } from '@/shared/ui'
+import { Skeleton, useDialogFocus } from '@/shared/ui'
 import { EvaluationProgressView } from '@/widgets/evaluation-progress'
 
 type TeamDraft = Pick<RegistryTeam, 'id' | 'name' | 'repo' | 'branch' | 'active'>
@@ -47,6 +47,26 @@ export function TeamManagementPage() {
   const [deleting, setDeleting] = useState<RegistryTeam | null>(null)
   const [retryingTeamId, setRetryingTeamId] = useState<string | null>(null)
   const [statuses, setStatuses] = useState<Record<string, RegistryEvaluationStatus>>({})
+  const createDialogRef = useRef<HTMLDivElement>(null)
+  const editDialogRef = useRef<HTMLFormElement>(null)
+  const deleteDialogRef = useRef<HTMLElement>(null)
+
+  useDialogFocus(createDialogRef, draft !== null, () => {
+    if (isSaving) return
+    setDraft(null)
+    setError('')
+    setStep('repo')
+  })
+  useDialogFocus(editDialogRef, editing !== null, () => {
+    if (isSaving) return
+    setEditing(null)
+    setError('')
+  })
+  useDialogFocus(deleteDialogRef, deleting !== null, () => {
+    if (isSaving) return
+    setDeleting(null)
+    setError('')
+  })
 
   const checkRepository = async () => {
     if (!draft || isChecking) return
@@ -189,10 +209,16 @@ export function TeamManagementPage() {
   const saveEdit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!editing) return
+    const nextEditing = normaliseTeamDraft(editing)
+    const validationError = validateTeamDraft(nextEditing)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
     setIsSaving(true)
     setError('')
     try {
-      await updateRegistryTeam(editing)
+      await updateRegistryTeam(nextEditing)
       setEditing(null)
       await loadTeams()
       setNotice('Команда обновлена.')
@@ -239,12 +265,18 @@ export function TeamManagementPage() {
   const submitTeam = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!draft) return
+    const nextDraft = normaliseTeamDraft(draft)
+    const validationError = validateTeamDraft(nextDraft)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
     setIsSaving(true)
     setError('')
     setNotice('')
     try {
-      await createRegistryTeam(draft)
-      setTrackedTeam(draft)
+      await createRegistryTeam(nextDraft)
+      setTrackedTeam(nextDraft)
       setDraft(null)
       setNotice('Команда добавлена в реестр.')
       setStep('repo')
@@ -257,15 +289,16 @@ export function TeamManagementPage() {
   }
 
   return (
-    <main className="mx-auto max-w-[1040px] space-y-4 p-4 sm:p-6">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
+    <main className="dashboard-page max-w-[1040px] space-y-4">
+      <header className="dashboard-page-header">
         <div>
-          <h1 className="text-h1 m-0">Команды</h1>
-          <p className="mt-1 text-sm text-fg-muted">Реестр команд и запуск новых проверок.</p>
+          <p className="dashboard-kicker">РЕЕСТР</p>
+          <h1 className="dashboard-page-title">Команды</h1>
+          <p className="dashboard-page-subtitle">Реестр команд и запуск новых проверок.</p>
         </div>
         {apiAvailable ? (
           <button
-            className="inline-flex min-h-11 items-center gap-2 rounded-control bg-primary px-4 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className="dashboard-action-button"
             disabled={draft !== null || editing !== null || deleting !== null || isSaving}
             type="button"
             onClick={() => {
@@ -288,7 +321,7 @@ export function TeamManagementPage() {
         </p>
       ) : null}
 
-      {error && !draft ? (
+      {error && !draft && !editing && !deleting ? (
         <div
           role="alert"
           className="rounded-panel border border-warn-border bg-warn-bg p-4 text-sm text-warn-fg"
@@ -298,9 +331,20 @@ export function TeamManagementPage() {
       ) : null}
 
       {draft ? (
-        <div className="sheet-overlay" role="presentation">
+        <div
+          className="sheet-overlay"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isSaving) {
+              setDraft(null)
+              setError('')
+              setStep('repo')
+            }
+          }}
+        >
           <div
             className="sheet-panel sheet-wide"
+            ref={createDialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Добавление команды"
@@ -327,21 +371,46 @@ export function TeamManagementPage() {
       ) : null}
 
       {editing ? (
-        <div className="sheet-overlay" role="presentation">
+        <div
+          className="sheet-overlay"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isSaving) {
+              setEditing(null)
+              setError('')
+            }
+          }}
+        >
           <form
+            ref={editDialogRef}
             aria-label={`Изменение команды ${editing.name}`}
+            aria-describedby={error ? 'edit-team-error' : undefined}
             className="sheet-panel sheet-wide gap-4 overflow-y-auto p-5"
+            role="dialog"
+            aria-modal="true"
             onSubmit={(event) => void saveEdit(event)}
           >
             <div>
-              <h2 className="m-0 text-lg font-semibold">Изменить команду {editing.name}</h2>
+              <h2 id="edit-team-title" className="m-0 text-lg font-semibold">
+                Изменить команду {editing.name}
+              </h2>
               <p className="m-0 mt-1 text-sm text-fg-muted">ID {editing.id} останется прежним.</p>
             </div>
+            {error ? (
+              <p
+                id="edit-team-error"
+                role="alert"
+                className="rounded-control bg-warn-bg p-3 text-sm text-warn-fg"
+              >
+                {error}
+              </p>
+            ) : null}
             <div className="grid gap-3">
               <label className="text-sm">
                 Название
                 <input
                   className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+                  maxLength={120}
                   required
                   value={editing.name}
                   onChange={(event) => setEditing({ ...editing, name: event.target.value })}
@@ -351,6 +420,7 @@ export function TeamManagementPage() {
                 Репозиторий
                 <input
                   className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+                  maxLength={240}
                   required
                   type="url"
                   value={editing.repo}
@@ -361,6 +431,7 @@ export function TeamManagementPage() {
                 Ветка
                 <input
                   className="mt-1 block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3"
+                  maxLength={120}
                   required
                   value={editing.branch}
                   onChange={(event) => setEditing({ ...editing, branch: event.target.value })}
@@ -399,16 +470,36 @@ export function TeamManagementPage() {
       ) : null}
 
       {deleting ? (
-        <div className="sheet-overlay" role="presentation">
+        <div
+          className="sheet-overlay"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isSaving) {
+              setDeleting(null)
+              setError('')
+            }
+          }}
+        >
           <section
             aria-label={`Удаление команды ${deleting.name}`}
+            aria-describedby="delete-team-description"
             className="sheet-panel sheet-wide h-auto self-end gap-3 border-t p-5 sm:mr-5 sm:mb-5 sm:h-auto sm:max-h-[320px] sm:self-end sm:rounded-panel"
+            ref={deleteDialogRef}
+            role="dialog"
+            aria-modal="true"
           >
-            <h2 className="m-0 text-lg font-semibold">Удалить команду {deleting.name}?</h2>
-            <p className="m-0 text-sm">
+            <h2 id="delete-team-title" className="m-0 text-lg font-semibold">
+              Удалить команду {deleting.name}?
+            </h2>
+            <p id="delete-team-description" className="m-0 text-sm">
               Запись исчезнет из реестра и текущего рейтинга. Сохранённые отчёты останутся на
               сервере.
             </p>
+            {error ? (
+              <p role="alert" className="rounded-control bg-warn-bg p-3 text-sm text-warn-fg">
+                {error}
+              </p>
+            ) : null}
             <div className="mt-2 flex gap-2">
               <button
                 className="min-h-11 rounded-control bg-primary px-4 text-primary-foreground disabled:opacity-50"
@@ -445,7 +536,7 @@ export function TeamManagementPage() {
         <section
           aria-busy={isLoading}
           aria-label="Реестр команд"
-          className="divide-y divide-line border-y border-line"
+          className="dashboard-panel dashboard-registry-panel divide-y divide-line"
         >
           {isLoading ? <RegistryLoadingSkeleton /> : null}
           {!isLoading && teams.length === 0 ? (
@@ -457,102 +548,104 @@ export function TeamManagementPage() {
             </div>
           ) : null}
           {!isLoading && teams.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[820px] border-collapse text-left text-sm">
-                <thead className="bg-muted-surface text-xs text-fg-muted">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
-                      Команда
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
-                      Репозиторий
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
-                      Ветка
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
-                      Оценка
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
-                      Действия
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {teams.map((team) => (
-                    <tr key={team.id}>
-                      <th scope="row" className="px-4 py-3 font-medium">
-                        {team.active && statuses[team.id] === 'done' ? (
-                          <Link
-                            className="block min-h-8 content-center text-link underline-offset-2 hover:underline"
-                            to={`/team/${encodeURIComponent(team.id)}`}
-                          >
-                            {team.name}
-                          </Link>
-                        ) : (
-                          <span className="block min-h-8 content-center">{team.name}</span>
-                        )}
-                        {team.name === team.id ? null : (
-                          <code className="text-xs font-normal text-fg-muted">{team.id}</code>
-                        )}
+            <>
+              <div className="overflow-x-auto">
+                <table className="dashboard-registry-table w-full min-w-[820px] border-collapse text-left text-sm">
+                  <thead className="bg-muted-surface text-xs text-fg-muted">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Команда
                       </th>
-                      <td className="max-w-[22rem] truncate px-4 py-3">
-                        <RepositoryLink value={team.repo} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <code>{team.branch}</code>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col items-start gap-1">
-                          <span>
-                            {team.active
-                              ? statuses[team.id] === 'done'
-                                ? 'Готова'
-                                : statuses[team.id] === 'failed'
-                                  ? 'Ошибка'
-                                  : statuses[team.id] === 'running'
-                                    ? 'Проверяется'
-                                    : 'Нет оценки'
-                              : 'Отключена'}
-                          </span>
-                          {team.active &&
-                          (statuses[team.id] === 'done' || statuses[team.id] === 'running') ? (
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Репозиторий
+                      </th>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Ветка
+                      </th>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Оценка
+                      </th>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Действия
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {teams.map((team) => (
+                      <tr key={team.id}>
+                        <th scope="row" className="px-4 py-3 font-medium">
+                          {team.active && statuses[team.id] === 'done' ? (
                             <Link
-                              className="inline-flex min-h-9 items-center text-sm text-link"
+                              className="block min-h-8 content-center text-link underline-offset-2 hover:underline"
                               to={`/team/${encodeURIComponent(team.id)}`}
                             >
-                              {statuses[team.id] === 'running' ? 'Ход оценки' : 'Открыть отчёт'}
+                              {team.name}
                             </Link>
-                          ) : null}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <TeamActionsMenu
-                          team={team}
-                          canRetry={statuses[team.id] === 'failed'}
-                          isRetrying={retryingTeamId === team.id}
-                          onRetry={() => void retryEvaluation(team)}
-                          onEdit={() => {
-                            setEditing(team)
-                            setDeleting(null)
-                            setDraft(null)
-                            setError('')
-                            setNotice('')
-                          }}
-                          onDelete={() => {
-                            setDeleting(team)
-                            setEditing(null)
-                            setDraft(null)
-                            setError('')
-                            setNotice('')
-                          }}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                          ) : (
+                            <span className="block min-h-8 content-center">{team.name}</span>
+                          )}
+                          {team.name === team.id ? null : (
+                            <code className="text-xs font-normal text-fg-muted">{team.id}</code>
+                          )}
+                        </th>
+                        <td data-label="Репозиторий" className="max-w-[22rem] truncate px-4 py-3">
+                          <RepositoryLink value={team.repo} />
+                        </td>
+                        <td data-label="Ветка" className="px-4 py-3">
+                          <code>{team.branch}</code>
+                        </td>
+                        <td data-label="Оценка" className="px-4 py-3">
+                          <div className="flex flex-col items-start gap-1">
+                            <span>
+                              {team.active
+                                ? statuses[team.id] === 'done'
+                                  ? 'Готова'
+                                  : statuses[team.id] === 'failed'
+                                    ? 'Ошибка'
+                                    : statuses[team.id] === 'running'
+                                      ? 'Проверяется'
+                                      : 'Нет оценки'
+                                : 'Отключена'}
+                            </span>
+                            {team.active &&
+                            (statuses[team.id] === 'done' || statuses[team.id] === 'running') ? (
+                              <Link
+                                className="inline-flex min-h-9 items-center text-sm text-link"
+                                to={`/team/${encodeURIComponent(team.id)}`}
+                              >
+                                {statuses[team.id] === 'running' ? 'Ход оценки' : 'Открыть отчёт'}
+                              </Link>
+                            ) : null}
+                          </div>
+                        </td>
+                        <td data-label="Действия" className="px-4 py-3">
+                          <TeamActionsMenu
+                            team={team}
+                            canRetry={statuses[team.id] === 'failed'}
+                            isRetrying={retryingTeamId === team.id}
+                            onRetry={() => void retryEvaluation(team)}
+                            onEdit={() => {
+                              setEditing(team)
+                              setDeleting(null)
+                              setDraft(null)
+                              setError('')
+                              setNotice('')
+                            }}
+                            onDelete={() => {
+                              setDeleting(team)
+                              setEditing(null)
+                              setDraft(null)
+                              setError('')
+                              setNotice('')
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : null}
         </section>
       ) : null}
@@ -984,6 +1077,7 @@ function TeamForm({
             <input
               className={input}
               type="url"
+              maxLength={240}
               required
               placeholder="https://github.com/owner/repository"
               value={draft.repo}
@@ -1049,6 +1143,7 @@ function TeamForm({
               <input
                 className={input}
                 required
+                maxLength={120}
                 value={draft.branch}
                 onChange={(event) => change('branch', event.target.value)}
               />
@@ -1123,6 +1218,25 @@ function safeRepositoryHref(value: string) {
   } catch {
     return null
   }
+}
+
+function normaliseTeamDraft(team: TeamDraft): TeamDraft {
+  return {
+    ...team,
+    id: team.id.trim(),
+    name: team.name.trim(),
+    repo: team.repo.trim(),
+    branch: team.branch.trim(),
+  }
+}
+
+function validateTeamDraft(team: TeamDraft) {
+  if (!team.name) return 'Укажите название команды.'
+  if (!team.branch) return 'Укажите ветку репозитория.'
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(team.id)) {
+    return 'ID команды: латинские буквы, цифры, точка, дефис и подчёркивание; первый символ — буква или цифра.'
+  }
+  return null
 }
 
 function loadErrorMessage(cause: unknown) {

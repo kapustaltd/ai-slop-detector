@@ -82,7 +82,7 @@ describe('TeamPage', () => {
     renderTeam()
     expect(await screen.findByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
     expect(screen.getByText(/46 файлов · 3 пропущено/)).toBeInTheDocument()
-    expect(screen.getByText('Структура файлов проверена')).toBeInTheDocument()
+    expect(await screen.findByText('Структура файлов проверена')).toBeInTheDocument()
     expect(await screen.findByText('Разбор по рубрике · backend')).toBeInTheDocument()
     expect(screen.queryByText('Разбор по рубрике · frontend')).not.toBeInTheDocument()
   })

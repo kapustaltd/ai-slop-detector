@@ -1,5 +1,7 @@
 import type { EvaluationProgress } from './generated/evaluation-progress'
 
+const REQUEST_TIMEOUT_MS = 15_000
+
 export interface RegistryTeam {
   id: string
   name: string
@@ -20,7 +22,7 @@ export class RegistryApiError extends Error {
 
 export async function checkRegistryApi() {
   try {
-    const response = await fetch('/api/teams', { cache: 'no-store' })
+    const response = await fetchWithTimeout('/api/teams', { cache: 'no-store' })
     return response.ok
   } catch {
     return false
@@ -57,9 +59,12 @@ export type RegistryEvaluationProgress = EvaluationProgress & { legacy?: boolean
 export async function getRegistryEvaluationProgress(
   teamId: string,
 ): Promise<RegistryEvaluationProgress> {
-  const response = await fetch(`/api/evaluation/progress/${encodeURIComponent(teamId)}`, {
-    cache: 'no-store',
-  })
+  const response = await fetchWithTimeout(
+    `/api/evaluation/progress/${encodeURIComponent(teamId)}`,
+    {
+      cache: 'no-store',
+    },
+  )
   if (response.status === 404) {
     const status = await getRegistryEvaluationStatus(teamId)
     return {
@@ -94,7 +99,7 @@ export async function getRegistryEvaluationStatus(
 export async function getRegistryEvaluationStatuses(): Promise<
   Record<string, RegistryEvaluationStatus>
 > {
-  const response = await fetch('/api/bundle/index', { cache: 'no-store' })
+  const response = await fetchWithTimeout('/api/bundle/index', { cache: 'no-store' })
   if (!response.ok)
     throw new RegistryApiError('Не удалось получить статус обработки', response.status)
   const index = (await response.json()) as {
@@ -106,7 +111,7 @@ export async function getRegistryEvaluationStatuses(): Promise<
 async function request<T>(url: string, method = 'GET', body?: RegistryTeam): Promise<T> {
   let response: Response
   try {
-    response = await fetch(url, {
+    response = await fetchWithTimeout(url, {
       method,
       cache: 'no-store',
       headers: {
@@ -125,4 +130,22 @@ async function request<T>(url: string, method = 'GET', body?: RegistryTeam): Pro
     throw new RegistryApiError(message || 'Не удалось выполнить запрос', response.status)
   }
   return result as T
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } catch (cause) {
+    if (controller.signal.aborted) {
+      throw new RegistryApiError(
+        'Сервер отвечает слишком долго. Проверьте соединение и повторите попытку.',
+        0,
+      )
+    }
+    throw cause
+  } finally {
+    clearTimeout(timer)
+  }
 }

@@ -25,6 +25,7 @@ export type BundleSchemaVersion = string
 
 /** Поддерживаемая приложением версия схемы бандла (FR-010). */
 export const SUPPORTED_BUNDLE_SCHEMA = '0.1'
+const REQUEST_TIMEOUT_MS = 15_000
 
 export type EvaluationStatus = 'done' | 'failed' | 'no_data' | 'running'
 
@@ -78,7 +79,7 @@ export function getLeaderboardIndex(): LeaderboardIndexStub {
 /** Live API replaces the build-time snapshot when the registry service is available. */
 export async function loadLeaderboardIndex(): Promise<LeaderboardIndexStub> {
   try {
-    const response = await fetch('/api/bundle/index', { cache: 'no-store' })
+    const response = await fetchWithTimeout('/api/bundle/index', { cache: 'no-store' })
     if (response.ok) {
       const index = (await response.json()) as LeaderboardIndexStub
       if (index.bundle_schema === SUPPORTED_BUNDLE_SCHEMA) return index
@@ -87,7 +88,7 @@ export async function loadLeaderboardIndex(): Promise<LeaderboardIndexStub> {
     // The older registry service has no live-bundle route.
   }
   try {
-    const registryResponse = await fetch('/api/teams', { cache: 'no-store' })
+    const registryResponse = await fetchWithTimeout('/api/teams', { cache: 'no-store' })
     if (registryResponse.ok) {
       const registry = (await registryResponse.json()) as RegistryTeam[]
       const staticIndex = getLeaderboardIndex()
@@ -119,7 +120,7 @@ export async function loadLeaderboardIndex(): Promise<LeaderboardIndexStub> {
 export async function loadTeam(teamId: string): Promise<TeamBundle> {
   let liveIndexAvailable = false
   try {
-    const response = await fetch(`/api/bundle/teams/${encodeURIComponent(teamId)}`, {
+    const response = await fetchWithTimeout(`/api/bundle/teams/${encodeURIComponent(teamId)}`, {
       cache: 'no-store',
     })
     if (response.ok) {
@@ -134,7 +135,7 @@ export async function loadTeam(teamId: string): Promise<TeamBundle> {
       (response.headers.get('content-type') ?? '').includes('application/json')
     )
       throw new BundleError('Не удалось загрузить оценку команды')
-    const indexResponse = await fetch('/api/bundle/index', { cache: 'no-store' })
+    const indexResponse = await fetchWithTimeout('/api/bundle/index', { cache: 'no-store' })
     if (indexResponse.ok) {
       const liveIndex = await readJson<{
         bundle_schema?: string
@@ -160,7 +161,7 @@ export async function loadTeam(teamId: string): Promise<TeamBundle> {
   } catch {
     // The static JSON fallback below keeps dev servers and older static hosts resilient.
   }
-  const staticResponse = await fetch(`/data/teams/${encodeURIComponent(teamId)}.json`, {
+  const staticResponse = await fetchWithTimeout(`/data/teams/${encodeURIComponent(teamId)}.json`, {
     cache: 'no-store',
   })
   if (staticResponse.ok) {
@@ -199,10 +200,20 @@ export function getStats(): StatsBundle {
 
 export async function loadStats(): Promise<StatsBundle> {
   try {
-    const response = await fetch('/api/bundle/stats', { cache: 'no-store' })
+    const response = await fetchWithTimeout('/api/bundle/stats', { cache: 'no-store' })
     if (response.ok) return (await response.json()) as StatsBundle
   } catch {
     // Static-only deployments use the bundled snapshot.
   }
   return getStats()
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
 }

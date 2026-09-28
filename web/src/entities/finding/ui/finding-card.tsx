@@ -207,7 +207,7 @@ export function FindingCard({
         ) : null}
 
         {finding.kind === 'issue' && finding.suggestion ? (
-          <div className="flex items-start gap-2.5 rounded-r-[8px] border-l-2 border-line-strong bg-muted-surface px-3.5 py-[11px]">
+          <div className="flex items-start gap-2.5 rounded-control border border-line bg-muted-surface px-3.5 py-[11px]">
             <span className="mt-px shrink-0 text-[12.5px] tracking-[0.05em] text-fg-subtle uppercase">
               Рекомендация
             </span>

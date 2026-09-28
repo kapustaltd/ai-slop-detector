@@ -1,5 +1,6 @@
-import { BarChart3, CloudOff, SearchX } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { BarChart3, CloudOff, Plus, SearchX } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import {
   getLeaderboardIndex,
@@ -9,12 +10,12 @@ import {
   type LeaderboardTeam,
   type TeamBundle,
 } from '@/shared/api'
-import { formatTeamCount, SCORE_SCALE_LEGEND } from '@/shared/lib'
+import { formatTeamCount } from '@/shared/lib'
 import { EmptyState } from '@/shared/ui'
 import { LeaderboardSkeleton } from './leaderboard-skeleton'
 import {
+  LeaderboardFocusPanel,
   LeaderboardRowCard,
-  LeaderboardStatusBoard,
   LeaderboardTable,
   LeaderboardToolbar,
   TeamDetailSheet,
@@ -44,6 +45,8 @@ export function LeaderboardPage() {
   const [selectedTeam, setSelectedTeam] = useState<LeaderboardTeam | null>(null)
   const [selectedTeamDetails, setSelectedTeamDetails] = useState<TeamBundle | null>(null)
   const [isLoadingDetails, setIsLoadingDetails] = useState(false)
+  const [detailsLoadFailed, setDetailsLoadFailed] = useState(false)
+  const detailsRequestId = useRef(0)
 
   useEffect(() => {
     let cancelled = false
@@ -84,15 +87,18 @@ export function LeaderboardPage() {
   const resetFilters = () => onFiltersChange({ status: 'all', warningsOnly: false, query: '' })
 
   const openTeamDetails = async (team: LeaderboardTeam) => {
+    const requestId = ++detailsRequestId.current
     setSelectedTeam(team)
     setSelectedTeamDetails(null)
+    setDetailsLoadFailed(false)
     setIsLoadingDetails(true)
     try {
-      setSelectedTeamDetails(await loadTeam(team.team_id))
+      const details = await loadTeam(team.team_id)
+      if (requestId === detailsRequestId.current) setSelectedTeamDetails(details)
     } catch {
-      // A running or not-yet-published team may not have a report yet.
+      if (requestId === detailsRequestId.current) setDetailsLoadFailed(true)
     } finally {
-      setIsLoadingDetails(false)
+      if (requestId === detailsRequestId.current) setIsLoadingDetails(false)
     }
   }
 
@@ -111,114 +117,109 @@ export function LeaderboardPage() {
 
   if (!index) return <LeaderboardSkeleton />
 
-  const builtAt = index.meta?.built_at ?? index.built_at
+  const focusTeam =
+    (selectedTeam && teams.some((team) => team.team_id === selectedTeam.team_id)
+      ? selectedTeam
+      : null) ??
+    teams.find((team) => team.total != null) ??
+    teams[0]
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-4 p-4 sm:p-6">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-[17px] font-semibold tracking-[-0.01em]">Рейтинг команд</h1>
-          <p className="text-[13.5px] text-fg-subtle">{formatTeamCount(total)}</p>
-        </div>
-        <p className="text-[14px] text-fg-muted">
-          Данные собраны {new Date(builtAt).toLocaleString('ru-RU')}
-        </p>
-      </header>
-
+    <main className="dashboard-page">
       {loadFailed ? (
         <p role="status" className="text-sm text-warn-fg">
           Не удалось обновить рейтинг. Показываем последние загруженные данные.
         </p>
       ) : null}
 
-      {total === 0 ? (
-        <EmptyState
-          icon={BarChart3}
-          title="Рейтинг появится после проверки команд"
-          description="Добавьте команды в реестр. Результаты появятся здесь после проверки репозиториев."
-        />
-      ) : (
-        <>
-          <LeaderboardStatusBoard
-            teams={index.teams}
-            activeStatus={filters.status}
-            onStatusChange={(status) => onFiltersChange({ status })}
-          />
-          <LeaderboardToolbar
-            filters={filters}
-            onFiltersChange={onFiltersChange}
-            sort={sort}
-            onSort={onSort}
-            shown={teams.length}
-            total={total}
-          />
+      {focusTeam ? (
+        <div className="dashboard-focus-grid">
+          <LeaderboardFocusPanel team={focusTeam} />
+        </div>
+      ) : null}
 
-          {teams.length === 0 ? (
+      <section className="dashboard-ranking-column" aria-labelledby="ranking-section-title">
+        <div className="dashboard-ranking-panel">
+          <div className="dashboard-panel-heading">
+            <div className="flex items-center gap-3">
+              <h2 id="ranking-section-title" className="dashboard-panel-title">
+                Рейтинг команд
+              </h2>
+              <span className="dashboard-section-count">{formatTeamCount(total)}</span>
+            </div>
+          </div>
+
+          {total === 0 ? (
             <EmptyState
-              layout="inline"
-              icon={SearchX}
-              title="Под фильтры не попала ни одна команда"
-              description="Попробуйте ослабить условия отбора."
-              action={{ label: 'Сбросить фильтры', onClick: resetFilters }}
+              icon={BarChart3}
+              title="Рейтинг появится после проверки команд"
+              description="Добавьте команды в реестр. Результаты появятся здесь после проверки репозиториев."
             />
           ) : (
             <>
-              <LeaderboardTable
-                teams={teams}
+              <LeaderboardToolbar
+                filters={filters}
+                onFiltersChange={onFiltersChange}
                 sort={sort}
                 onSort={onSort}
-                onSelectTeam={(team) => void openTeamDetails(team)}
+                shown={teams.length}
+                total={total}
+                action={
+                  <Link
+                    className="dashboard-action-button dashboard-action-button-secondary"
+                    to="/manage/teams"
+                  >
+                    <Plus aria-hidden="true" size={16} />
+                    Добавить команду
+                  </Link>
+                }
               />
-              <div className="flex flex-col gap-2 xl:hidden">
-                {teams.map((team) => (
-                  <LeaderboardRowCard
-                    key={team.team_id}
-                    team={team}
-                    onSelectTeam={() => void openTeamDetails(team)}
+
+              {teams.length === 0 ? (
+                <EmptyState
+                  layout="inline"
+                  icon={SearchX}
+                  title="Под фильтры не попала ни одна команда"
+                  description="Попробуйте ослабить условия отбора."
+                  action={{ label: 'Сбросить фильтры', onClick: resetFilters }}
+                />
+              ) : (
+                <>
+                  <LeaderboardTable
+                    teams={teams}
+                    sort={sort}
+                    onSort={onSort}
+                    onSelectTeam={(team) => void openTeamDetails(team)}
                   />
-                ))}
-              </div>
+                  <div className="flex flex-col gap-2 px-3 pb-3 xl:hidden">
+                    {teams.map((team) => (
+                      <LeaderboardRowCard
+                        key={team.team_id}
+                        team={team}
+                        onSelectTeam={() => void openTeamDetails(team)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </>
           )}
-        </>
-      )}
-
-      {teams.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-3 text-[13.5px] text-fg-subtle">
-          <ScoreScaleLegend />
         </div>
-      ) : null}
+      </section>
+
       <TeamDetailSheet
         summary={selectedTeam}
         team={selectedTeamDetails}
         isLoading={isLoadingDetails}
-        onClose={() => setSelectedTeam(null)}
+        loadFailed={detailsLoadFailed}
+        onClose={() => {
+          detailsRequestId.current += 1
+          setSelectedTeam(null)
+        }}
+        onRetry={() => {
+          if (selectedTeam) void openTeamDetails(selectedTeam)
+        }}
       />
     </main>
-  )
-}
-
-function ScoreScaleLegend() {
-  return (
-    <div className="flex flex-wrap items-center gap-2.5">
-      <span>Шкала оценки</span>
-      {SCORE_SCALE_LEGEND.map((step) => (
-        <span key={step.level} className="flex items-center gap-[5px] text-fg-muted">
-          <span
-            aria-hidden="true"
-            className="block h-[6px] w-[18px] rounded-[3px]"
-            style={{ background: step.colorVar }}
-          />
-          {step.rangeLabel}
-        </span>
-      ))}
-      <span className="flex items-center gap-[5px]">
-        <span
-          aria-hidden="true"
-          className="block h-[6px] w-[18px] rounded-[3px] border border-dashed border-line-strong"
-        />
-        нет данных
-      </span>
-    </div>
   )
 }

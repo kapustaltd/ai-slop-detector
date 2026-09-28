@@ -8,7 +8,7 @@ describe('LeaderboardToolbar', () => {
   it('показывает счётчик показанных строк через aria-live', () => {
     render(
       <LeaderboardToolbar
-        filters={{ status: 'all', warningsOnly: false, query: '' }}
+        filters={{ status: 'failed', warningsOnly: false, query: '' }}
         onFiltersChange={vi.fn()}
         sort={{ key: 'rank', direction: 'asc' }}
         onSort={vi.fn()}
@@ -19,6 +19,21 @@ describe('LeaderboardToolbar', () => {
 
     const counter = screen.getByText('Показано: 5 из 24')
     expect(counter).toHaveAttribute('aria-live', 'polite')
+  })
+
+  it('не показывает дублирующий счётчик без активного фильтра', () => {
+    render(
+      <LeaderboardToolbar
+        filters={{ status: 'all', warningsOnly: false, query: '' }}
+        onFiltersChange={vi.fn()}
+        sort={{ key: 'rank', direction: 'asc' }}
+        onSort={vi.fn()}
+        shown={4}
+        total={4}
+      />,
+    )
+
+    expect(screen.queryByText('Показано: 4 из 4')).not.toBeInTheDocument()
   })
 
   it('сообщает об изменении фильтра статуса', async () => {

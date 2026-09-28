@@ -61,7 +61,11 @@ export function LeaderboardStatusBoard({
               className={`flex min-h-[56px] items-center gap-2 border-b-2 px-3 text-left transition-colors first:pl-0 last:pr-0 hover:bg-muted-surface sm:px-4 ${active ? 'border-brand bg-muted-surface font-medium' : 'border-transparent'}`}
               onClick={() => onStatusChange(active ? 'all' : status)}
             >
-              <Icon aria-hidden="true" size={16} className={tone} />
+              <Icon
+                aria-hidden="true"
+                size={16}
+                className={`${tone} ${status === 'running' ? 'animate-spin motion-reduce:animate-none' : ''}`}
+              />
               <span>
                 <span className="block text-count leading-none">{count}</span>
                 <span className="mt-1 block text-[12.5px] text-fg-muted">

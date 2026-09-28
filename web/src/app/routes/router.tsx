@@ -1,10 +1,5 @@
 import { createHashRouter } from 'react-router-dom'
 
-import { LeaderboardPage } from '@/pages/leaderboard'
-import { NotFoundPage } from '@/pages/not-found'
-import { TeamPage } from '@/pages/team'
-import { TeamManagementPage } from '@/pages/team-management'
-
 import { AppShell } from '../layout/app-shell'
 
 /**
@@ -15,10 +10,30 @@ export const router = createHashRouter([
   {
     element: <AppShell />,
     children: [
-      { path: '/', element: <LeaderboardPage /> },
-      { path: '/team/:teamId', element: <TeamPage /> },
-      { path: '/manage/teams', element: <TeamManagementPage /> },
-      { path: '*', element: <NotFoundPage /> },
+      {
+        path: '/',
+        lazy: async () => ({
+          Component: (await import('@/pages/leaderboard')).LeaderboardPage,
+        }),
+      },
+      {
+        path: '/team/:teamId',
+        lazy: async () => ({
+          Component: (await import('@/pages/team')).TeamPage,
+        }),
+      },
+      {
+        path: '/manage/teams',
+        lazy: async () => ({
+          Component: (await import('@/pages/team-management')).TeamManagementPage,
+        }),
+      },
+      {
+        path: '*',
+        lazy: async () => ({
+          Component: (await import('@/pages/not-found')).NotFoundPage,
+        }),
+      },
     ],
   },
 ])

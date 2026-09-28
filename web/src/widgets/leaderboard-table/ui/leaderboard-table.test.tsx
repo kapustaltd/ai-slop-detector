@@ -28,7 +28,7 @@ function renderTable(teams: LeaderboardTeam[]) {
 }
 
 describe('LeaderboardTable', () => {
-  it('показывает колонки место/команда/итог/backend/frontend/статус/признаки (FR-001)', () => {
+  it('показывает колонки место/команда/итог/backend/frontend/статус/признаки/отчёт (FR-001)', () => {
     renderTable([team({ team_id: 'a', name: 'Команда А' })])
 
     expect(screen.getByRole('columnheader', { name: '№' })).toHaveAttribute(
@@ -38,7 +38,7 @@ describe('LeaderboardTable', () => {
     expect(screen.getByRole('button', { name: 'Сортировать по месту' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Команда' })).toBeInTheDocument()
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent?.trim())).toEqual(
-      ['№', 'Команда', 'Итог', 'Backend', 'Frontend', 'Статус', 'Признаки'],
+      ['№', 'Команда', 'Итог', 'Backend', 'Frontend', 'Статус', 'Признаки', 'Отчёт'],
     )
     expect(screen.getByRole('columnheader', { name: /Итог/ })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: /Backend/ })).toBeInTheDocument()

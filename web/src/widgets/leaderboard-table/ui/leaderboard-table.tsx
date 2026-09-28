@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { TeamStatusBadge, TeamWarningBadges } from '@/entities/team'
 import type { SortDirection, SortKey } from '@/entities/team'
 import type { LeaderboardTeam } from '@/shared/api'
-import { ScoreGauge } from '@/shared/ui'
+import { formatScore } from '@/shared/lib'
 
 import { SORT_COLUMNS } from '../model/columns'
 
@@ -32,24 +32,15 @@ function SortIcon({ active, direction }: { active: boolean; direction: SortDirec
 
 export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: LeaderboardTableProps) {
   return (
-    <div className="hidden overflow-x-auto rounded-card border border-line xl:block">
-      <table className="w-full min-w-[1100px] table-fixed border-collapse">
+    <div className="leaderboard-table-shell hidden overflow-x-auto border-y border-line xl:block">
+      <table className="leaderboard-table w-full min-w-[980px] table-auto border-collapse">
         <caption className="sr-only">
           Рейтинг команд по автоматической оценке качества кода. Сортировка:{' '}
           {SORT_COLUMNS.find((column) => column.key === sort.key)?.label},{' '}
           {sort.direction === 'asc' ? 'по возрастанию' : 'по убыванию'}.
         </caption>
-        <colgroup>
-          <col style={{ width: 62 }} />
-          <col />
-          <col style={{ width: 152 }} />
-          <col style={{ width: 152 }} />
-          <col style={{ width: 132 }} />
-          <col style={{ width: 180 }} />
-          <col style={{ width: 250 }} />
-        </colgroup>
         <thead>
-          <tr className="bg-muted-surface">
+          <tr>
             <th
               scope="col"
               aria-sort={
@@ -59,7 +50,7 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                     : 'descending'
                   : 'none'
               }
-              className="text-overline px-4 py-2.5 text-left text-fg-muted uppercase"
+              className="leaderboard-table-label text-overline px-4 py-2.5 text-left uppercase"
             >
               <button
                 type="button"
@@ -70,7 +61,10 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                 № <SortIcon active={sort.key === 'rank'} direction={sort.direction} />
               </button>
             </th>
-            <th scope="col" className="text-overline px-4 py-2.5 text-left text-fg-muted uppercase">
+            <th
+              scope="col"
+              className="leaderboard-table-label text-overline px-4 py-2.5 text-left uppercase"
+            >
               Команда
             </th>
             {SORT_COLUMNS.filter(({ key }) => key !== 'rank').map(({ key, label, align }) => (
@@ -84,7 +78,7 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                       : 'descending'
                     : 'none'
                 }
-                className={`text-overline px-4 py-2.5 uppercase ${align === 'right' ? 'text-right' : 'text-left'} ${sort.key === key ? 'text-fg' : 'text-fg-muted'}`}
+                className={`leaderboard-table-label text-overline px-4 py-2.5 uppercase ${align === 'right' ? 'text-right' : 'text-left'} ${sort.key === key ? 'is-active' : ''}`}
               >
                 <button
                   type="button"
@@ -96,11 +90,23 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                 </button>
               </th>
             ))}
-            <th scope="col" className="text-overline px-4 py-2.5 text-left text-fg-muted uppercase">
+            <th
+              scope="col"
+              className="leaderboard-table-label text-overline px-4 py-2.5 text-left uppercase"
+            >
               Статус
             </th>
-            <th scope="col" className="text-overline px-4 py-2.5 text-left text-fg-muted uppercase">
+            <th
+              scope="col"
+              className="leaderboard-table-label leaderboard-table-signals text-overline px-4 py-2.5 text-left uppercase"
+            >
               Признаки
+            </th>
+            <th
+              scope="col"
+              className="leaderboard-table-label leaderboard-table-report text-overline px-4 py-2.5 text-left uppercase"
+            >
+              Отчёт
             </th>
           </tr>
         </thead>
@@ -120,11 +126,11 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                   }
                 }}
               >
-                <td className="px-4 py-2.5 text-[15px] text-fg-muted">
+                <td className="px-4 py-2 text-[15px] text-fg-muted">
                   {team.rank ?? <span className="text-fg-subtle">—</span>}
                   {tied ? <span className="ml-1 text-[12.5px] text-fg-subtle">=</span> : null}
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="px-4 py-2">
                   {team.status === 'done' || team.status === 'running' ? (
                     <Link
                       to={`/team/${team.team_id}`}
@@ -136,61 +142,46 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                         }
                       }}
                     >
-                      {team.name}
+                      <span className="overflow-wrap-anywhere">{team.name}</span>
                     </Link>
                   ) : (
-                    <span className="text-strong">{team.name}</span>
+                    <button
+                      type="button"
+                      className="inline-flex min-h-10 max-w-full items-center text-left text-strong underline-offset-2 hover:text-link hover:underline"
+                      onClick={() => onSelectTeam?.(team)}
+                    >
+                      {team.name}
+                    </button>
                   )}
                 </td>
-                <td className="px-4 py-2.5">
-                  <div className="flex justify-end">
-                    <ScoreGauge
-                      value={team.total}
-                      size="row"
-                      trackWidth={72}
-                      showMax={false}
-                      showWord={false}
-                      partial={team.partial}
-                    />
-                  </div>
+                <td className="px-4 py-2 text-right">
+                  <span className="table-score table-score-total">{formatScore(team.total)}</span>
                 </td>
-                <td className="px-4 py-2.5">
-                  <div className="flex justify-end">
-                    <ScoreGauge
-                      value={team.areas?.backend ?? null}
-                      size="micro"
-                      trackWidth={58}
-                      showMax={false}
-                      showWord={false}
-                    />
-                  </div>
+                <td className="px-4 py-2 text-right">
+                  <span className="table-score">{formatScore(team.areas?.backend)}</span>
                 </td>
-                <td className="px-4 py-2.5">
-                  <div className="flex justify-end">
-                    <ScoreGauge
-                      value={team.areas?.frontend ?? null}
-                      size="micro"
-                      trackWidth={58}
-                      showMax={false}
-                      showWord={false}
-                    />
-                  </div>
+                <td className="px-4 py-2 text-right">
+                  <span className="table-score">{formatScore(team.areas?.frontend)}</span>
                 </td>
-                <td className="px-4 py-2.5">
-                  <div className="flex flex-col items-start gap-1">
+                <td className="px-4 py-2 align-middle">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <TeamStatusBadge status={team.status} partial={team.partial} />
-                    {team.status === 'running' || team.status === 'done' ? (
-                      <Link
-                        className="inline-flex min-h-9 items-center text-sm text-link"
-                        to={`/team/${team.team_id}`}
-                      >
-                        {team.status === 'running' ? 'Смотреть ход оценки' : 'Открыть отчёт'}
-                      </Link>
-                    ) : null}
                   </div>
                 </td>
-                <td className="px-4 py-2.5">
+                <td className="leaderboard-table-signals px-4 py-2">
                   <TeamWarningBadges warnings={team.warnings} compact />
+                </td>
+                <td className="leaderboard-table-report px-4 py-2 whitespace-nowrap">
+                  {team.status === 'running' || team.status === 'done' ? (
+                    <Link
+                      className="inline-flex min-h-8 items-center text-[13px] text-link"
+                      to={`/team/${team.team_id}`}
+                    >
+                      {team.status === 'running' ? 'Смотреть ход оценки' : 'Открыть отчёт'}
+                    </Link>
+                  ) : (
+                    <span className="text-fg-faint">—</span>
+                  )}
                 </td>
               </tr>
             )

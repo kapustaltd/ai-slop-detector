@@ -42,7 +42,7 @@ describe('LeaderboardStatusBoard', () => {
     expect(screen.getByRole('button', { name: 'Ошибка: 1' })).toBeInTheDocument()
   })
 
-  it('не анимирует иконку «Проверяется» в сводке', () => {
+  it('анимирует иконку «Проверяется» в сводке', () => {
     render(
       <LeaderboardStatusBoard
         teams={[team({ status: 'running' })]}
@@ -53,7 +53,7 @@ describe('LeaderboardStatusBoard', () => {
 
     expect(
       screen.getByRole('button', { name: 'Проверяется: 1' }).querySelector('svg'),
-    ).not.toHaveClass('animate-spin')
+    ).toHaveClass('animate-spin')
   })
 
   it('переключает фильтр частичных оценок', async () => {

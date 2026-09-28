@@ -53,7 +53,7 @@ describe('LeaderboardPage', () => {
       '/team/new-team',
     )
   })
-  it('отрисовывает команды из фикстурного бандла и время сборки бандла (FR-011)', () => {
+  it('отрисовывает команды из фикстурного бандла (FR-011)', () => {
     render(
       <MemoryRouter>
         <LeaderboardPage />
@@ -61,7 +61,19 @@ describe('LeaderboardPage', () => {
     )
 
     expect(screen.getAllByText('Команда 01').length).toBeGreaterThan(0)
-    expect(screen.getByText(/Данные собраны/)).toBeInTheDocument()
+  })
+
+  it('показывает на главной переход к добавлению команды', () => {
+    render(
+      <MemoryRouter>
+        <LeaderboardPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('link', { name: 'Добавить команду' })).toHaveAttribute(
+      'href',
+      '/manage/teams',
+    )
   })
 
   it('показывает прочерк вместо балла у неоценённой команды', () => {

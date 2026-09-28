@@ -15,6 +15,38 @@ function json(data: unknown, status = 200) {
 }
 
 describe('guided team entry', () => {
+  it('closes the add-team sheet with Escape and restores the trigger focus', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        json([
+          {
+            id: 'alpha',
+            name: 'Альфа',
+            repo: 'https://github.com/org/alpha',
+            branch: 'main',
+            active: true,
+          },
+        ]),
+      ),
+    )
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>,
+    )
+
+    const trigger = await screen.findByRole('button', { name: 'Добавить команду' })
+    await user.click(trigger)
+    expect(screen.getByRole('dialog', { name: 'Добавление команды' })).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog', { name: 'Добавление команды' })).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+  })
+
   it('keeps action menus closed until their row is opened', async () => {
     const teams = [
       {

@@ -1,5 +1,12 @@
 import { Moon, Sun } from 'lucide-react'
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ButtonHTMLAttributes,
+  type ReactNode,
+} from 'react'
 
 import { applyTheme, getInitialTheme, type Theme } from '@/shared/config'
 
@@ -25,7 +32,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
   const context = useContext(ThemeContext)
   if (!context) return null
   const { theme, setTheme } = context
@@ -35,7 +42,8 @@ export function ThemeToggle() {
       aria-label="Сменить тему"
       title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="flex size-10 shrink-0 items-center justify-center rounded-control border border-line text-fg hover:bg-muted-surface"
+      className={`flex size-10 shrink-0 items-center justify-center rounded-control border border-line text-fg hover:bg-muted-surface sm:size-11 ${className}`}
+      {...props}
     >
       {theme === 'dark' ? (
         <Sun aria-hidden="true" size={18} strokeWidth={1.9} />

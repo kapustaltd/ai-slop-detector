@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { RegistryEvaluationProgress } from '@/shared/api'
@@ -6,7 +6,7 @@ import type { RegistryEvaluationProgress } from '@/shared/api'
 import { EvaluationProgressView } from './evaluation-progress-view'
 
 describe('EvaluationProgressView', () => {
-  it('shows area progress, confirmed events and verified source links', () => {
+  it('shows area progress, confirmed events and verified source links', async () => {
     const progress: RegistryEvaluationProgress = {
       status: 'running',
       stage: 'analyzing',
@@ -60,10 +60,12 @@ describe('EvaluationProgressView', () => {
     expect(screen.getByText('Анализируется')).toBeInTheDocument()
     expect(screen.getByText(/0 из 5 категорий/)).toBeInTheDocument()
     expect(screen.getByText(/46 файлов · 3 пропущено/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'src/agent.ts:18' })).toHaveAttribute(
-      'href',
-      'https://github.com/acme/repo/blob/abc/src/agent.ts#L18-L24',
-    )
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'src/agent.ts:18' })).toHaveAttribute(
+        'href',
+        'https://github.com/acme/repo/blob/abc/src/agent.ts#L18-L24',
+      )
+    })
     expect(screen.getByText('Ожидает запуска')).toBeInTheDocument()
   })
 })

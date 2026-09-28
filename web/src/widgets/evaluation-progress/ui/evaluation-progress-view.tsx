@@ -1,10 +1,14 @@
+import { lazy, Suspense } from 'react'
 import { AlertCircle, Check, CircleDashed, LoaderCircle } from 'lucide-react'
 
 import type { RegistryEvaluationProgress } from '@/shared/api'
-import { Context, ContextTrigger, ContextContent } from '@/shared/ui'
-import { AgentActivity } from './agent-activity'
+import { Context, ContextTrigger, ContextContent } from '@/shared/ui/evaluation-context'
 
 import { areaLabels, getCurrentAction, type EvaluationAreaName } from '../model/labels'
+
+const AgentActivity = lazy(() =>
+  import('./agent-activity').then(({ AgentActivity: Activity }) => ({ default: Activity })),
+)
 
 interface EvaluationProgressViewProps {
   progress: RegistryEvaluationProgress
@@ -80,7 +84,15 @@ export function EvaluationProgressView({ progress, className = '' }: EvaluationP
         })}
       </ul>
 
-      <AgentActivity progress={progress} />
+      <Suspense
+        fallback={
+          <p role="status" className="mb-0 mt-4 border-t border-line pt-4 text-sm text-fg-muted">
+            Загружаем события проверки…
+          </p>
+        }
+      >
+        <AgentActivity progress={progress} />
+      </Suspense>
     </section>
   )
 }
@@ -151,7 +163,8 @@ function Pipeline({ progress }: { progress: RegistryEvaluationProgress }) {
             ) : null}
             <div className="relative flex items-center gap-2 bg-surface pr-2">
               <span
-                className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${pipelineTone(status)}`}
+                className={`evaluation-pipeline-step flex size-4 shrink-0 items-center justify-center rounded-full border ${pipelineTone(status)}`}
+                data-status={status}
               >
                 <Icon
                   size={10}

@@ -2,9 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { BookOpen, ChevronDown, LoaderCircle } from 'lucide-react'
 
 import type { RegistryEvaluationProgress } from '@/shared/api'
-import { Source, Sources, SourcesContent, SourcesTrigger } from '@/shared/ui'
-import { Tool, ToolContent, ToolHeader } from '@/shared/ui'
-import { MessageResponse } from '@/shared/ui'
+import {
+  MessageResponse,
+  Source,
+  Sources,
+  SourcesContent,
+  SourcesTrigger,
+  Tool,
+  ToolContent,
+  ToolHeader,
+} from '@/shared/ui/activity-elements'
 
 import { areaLabels } from '../model/labels'
 
@@ -30,7 +37,7 @@ export function AgentActivity({ progress }: { progress: RegistryEvaluationProgre
               type="button"
               key={area}
               aria-pressed={filter === area}
-              className={`rounded-md px-3 py-1.5 text-xs transition-colors ${filter === area ? 'bg-surface-raised text-fg' : 'text-fg-muted hover:text-fg'}`}
+              className={`rounded-md px-3 py-1.5 text-xs transition-colors ${filter === area ? 'bg-muted-open text-fg' : 'text-fg-muted hover:text-fg'}`}
               onClick={() => setFilter(area)}
             >
               {area === 'all' ? 'Все' : areaLabels[area as 'backend' | 'frontend']}
@@ -49,7 +56,12 @@ export function AgentActivity({ progress }: { progress: RegistryEvaluationProgre
         role="region"
       >
         {events.map((event) => (
-          <ActivityEvent key={event.sequence} event={event} active={active} />
+          <ActivityEvent
+            key={event.sequence}
+            event={event}
+            active={active}
+            isLatest={active && event.sequence === events.at(-1)?.sequence}
+          />
         ))}
         {events.length === 0 && (
           <p className="text-sm text-fg-muted">
@@ -81,11 +93,21 @@ export function AgentActivity({ progress }: { progress: RegistryEvaluationProgre
   )
 }
 
-function ActivityEvent({ event, active }: { event: Event; active: boolean }) {
+function ActivityEvent({
+  event,
+  active,
+  isLatest,
+}: {
+  event: Event
+  active: boolean
+  isLatest: boolean
+}) {
   const source = event.source
   const isRunning = active && event.state === 'running'
   return (
-    <article className="relative border-l border-line pb-5 pl-5 text-sm">
+    <article
+      className={`relative border-l border-line pb-5 pl-5 text-sm ${isLatest ? 'evaluation-event-latest' : ''}`}
+    >
       <span className="absolute -left-1 top-1 size-2 rounded-full bg-fg-muted" />
       <div className="mb-2 flex items-center gap-2 text-xs text-fg-muted">
         {event.area && <span>{areaLabels[event.area]}</span>}

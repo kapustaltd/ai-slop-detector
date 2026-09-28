@@ -154,7 +154,7 @@ export function TeamPage() {
 
   if (state === 'pending') {
     return (
-      <main className="mx-auto max-w-[960px] space-y-[18px] p-4 sm:p-6" aria-live="polite">
+      <main className="dashboard-page max-w-[960px] space-y-[18px]">
         <header className="border-b border-line pb-4">
           <p className="mb-1 text-sm text-fg-muted">Команда</p>
           <h1 className="m-0 break-all text-h1">{teamId}</h1>
@@ -196,7 +196,7 @@ export function TeamPage() {
 
   if (state === 'missing' || !team) {
     return (
-      <main className="mx-auto max-w-[1600px] p-6">
+      <main className="dashboard-page">
         <EmptyState
           icon={FileQuestion}
           title="Команда не найдена"
@@ -208,7 +208,7 @@ export function TeamPage() {
 
   if (state === 'error') {
     return (
-      <main className="mx-auto max-w-[1600px] p-6">
+      <main className="dashboard-page">
         <EmptyState
           icon={CloudOff}
           title="Не удалось загрузить данные команды"
@@ -229,7 +229,7 @@ export function TeamPage() {
   const rankContext = teamRankContext(team.team_id)
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-[18px] p-4 sm:p-6">
+    <main className="dashboard-page space-y-[18px]">
       <TeamHeader
         team={displayTeam}
         rankContext={liveStatus === 'running' ? { ...rankContext, rank: null } : rankContext}

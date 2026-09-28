@@ -1,26 +1,31 @@
 import { ArrowUpRight, CircleDashed, X, XCircle } from 'lucide-react'
-import { useEffect } from 'react'
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 
 import { TeamStatusBadge, TeamWarningBadges } from '@/entities/team'
 import type { LeaderboardTeam, TeamBundle } from '@/shared/api'
+import { useDialogFocus } from '@/shared/ui/modal'
 
 interface TeamDetailSheetProps {
   summary: LeaderboardTeam | null
   team: TeamBundle | null
   isLoading: boolean
+  loadFailed: boolean
   onClose: () => void
+  onRetry: () => void
 }
 
-export function TeamDetailSheet({ summary, team, isLoading, onClose }: TeamDetailSheetProps) {
-  useEffect(() => {
-    if (!summary) return
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose, summary])
+export function TeamDetailSheet({
+  summary,
+  team,
+  isLoading,
+  loadFailed,
+  onClose,
+  onRetry,
+}: TeamDetailSheetProps) {
+  const dialogRef = useRef<HTMLElement>(null)
+
+  useDialogFocus(dialogRef, summary !== null, onClose)
 
   if (!summary) return null
 
@@ -46,6 +51,7 @@ export function TeamDetailSheet({ summary, team, isLoading, onClose }: TeamDetai
         aria-label={`Быстрый просмотр ${summary.name}`}
         aria-modal="true"
         className="sheet-panel"
+        ref={dialogRef}
         role="dialog"
       >
         <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
@@ -104,6 +110,19 @@ export function TeamDetailSheet({ summary, team, isLoading, onClose }: TeamDetai
             <h3 className="m-0 text-strong">Последняя проверка</h3>
             {isLoading ? (
               <p className="mt-2 text-sm text-fg-muted">Загружаем детали проверки…</p>
+            ) : loadFailed ? (
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <p className="m-0 text-sm text-fg-muted">
+                  Не удалось загрузить подробности проверки.
+                </p>
+                <button
+                  className="min-h-10 rounded-control border border-line-strong px-3 text-sm"
+                  type="button"
+                  onClick={onRetry}
+                >
+                  Повторить
+                </button>
+              </div>
             ) : team ? (
               <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
                 <dt className="text-fg-muted">Коммит</dt>

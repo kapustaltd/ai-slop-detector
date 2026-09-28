@@ -1,4 +1,4 @@
-import { useEffect, useRef, type HTMLAttributes, type ReactNode } from 'react'
+import { useEffect, useRef, type HTMLAttributes, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 
 export interface ModalOptions {
@@ -9,6 +9,82 @@ export interface ModalOptions {
 }
 
 type SavedStyle = { value: string; priority: string }
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/** Adds the keyboard and focus behavior required by an inline React dialog. */
+export function useDialogFocus(
+  dialogRef: RefObject<HTMLElement | null>,
+  open: boolean,
+  onClose: () => void,
+) {
+  const onCloseRef = useRef(onClose)
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
+
+  useEffect(() => {
+    if (!open) return
+    const dialog = dialogRef.current
+    if (!dialog) return
+
+    const returnTarget =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const focusable = () =>
+      [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter((element) => {
+        if (element.closest('[hidden], [inert], [aria-hidden="true"]')) return false
+        const style = getComputedStyle(element)
+        return (
+          style.display !== 'none' &&
+          style.visibility !== 'hidden' &&
+          element.getClientRects().length > 0
+        )
+      })
+
+    if (!dialog.hasAttribute('tabindex')) dialog.tabIndex = -1
+    focusable()[0]?.focus({ preventScroll: true })
+    if (document.activeElement !== focusable()[0]) dialog.focus({ preventScroll: true })
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onCloseRef.current()
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const elements = focusable()
+      if (elements.length === 0) {
+        event.preventDefault()
+        dialog.focus()
+        return
+      }
+      const first = elements[0]
+      const last = elements[elements.length - 1]
+      if (
+        event.shiftKey &&
+        (document.activeElement === first || !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault()
+        last.focus()
+      } else if (
+        !event.shiftKey &&
+        (document.activeElement === last || !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      if (returnTarget?.isConnected) returnTarget.focus({ preventScroll: true })
+    }
+  }, [dialogRef, open])
+}
 
 /** Coordinates every modal mounted in the document, including stacked dialogs. */
 export class Modal {
@@ -134,9 +210,7 @@ export class Modal {
   }
 
   private focusableElements() {
-    const selector =
-      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    return [...this.dialog.querySelectorAll<HTMLElement>(selector)].filter((element) => {
+    return [...this.dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter((element) => {
       if (
         element.closest('[hidden], [inert], [aria-hidden="true"]') ||
         element.matches(':disabled')
