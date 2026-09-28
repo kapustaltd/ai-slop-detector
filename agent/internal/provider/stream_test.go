@@ -28,7 +28,7 @@ func TestStreamPublishesBeforeResultAndOmitsPrivateContent(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("activity buffered until completion")
 	}
-	if event := <-events; event.Kind != "reasoning" || event.CategoryID != "M1" {
+	if event := <-events; event.Kind != "stage" || event.CategoryID != "M1" {
 		t.Fatalf("bad summary: %+v", event)
 	}
 	_, _ = io.WriteString(writer, `{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"t1","content":"SECRET FILE CONTENT","is_error":true}]}}`+"\n")

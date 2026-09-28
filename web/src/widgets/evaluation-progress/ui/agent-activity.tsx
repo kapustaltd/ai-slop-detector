@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { BookOpen, ChevronDown, LoaderCircle } from 'lucide-react'
+import { BookOpen, ChevronDown } from 'lucide-react'
 
 import type { RegistryEvaluationProgress } from '@/shared/api'
 import {
@@ -28,86 +28,83 @@ export function AgentActivity({ progress }: { progress: RegistryEvaluationProgre
   const events = progress.events.filter((event) => filter === 'all' || event.area === filter)
   const active = progress.status === 'running'
   return (
-    <div className="mt-4 border-t border-line pt-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="m-0 text-sm font-medium">События проверки</h3>
-        <div className="flex gap-1" role="group" aria-label="Фильтр событий">
-          {['all', 'backend', 'frontend'].map((area) => (
-            <button
-              type="button"
-              key={area}
-              aria-pressed={filter === area}
-              className={`rounded-md px-3 py-1.5 text-xs transition-colors ${filter === area ? 'bg-muted-open text-fg' : 'text-fg-muted hover:text-fg'}`}
-              onClick={() => setFilter(area)}
-            >
-              {area === 'all' ? 'Все' : areaLabels[area as 'backend' | 'frontend']}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div
-        className="mt-4 max-h-[38rem] overflow-y-auto overscroll-contain pr-2"
-        ref={scrollRef}
-        onScroll={(event) => {
-          const el = event.currentTarget
-          setFollow(el.scrollHeight - el.scrollTop - el.clientHeight < 48)
-        }}
-        aria-label="Хронология проверки"
-        role="region"
-      >
-        {events.map((event) => (
-          <ActivityEvent
-            key={event.sequence}
-            event={event}
-            active={active}
-            isLatest={active && event.sequence === events.at(-1)?.sequence}
-          />
-        ))}
-        {events.length === 0 && (
-          <p className="text-sm text-fg-muted">
-            {active
-              ? 'Ожидаем первые действия агента. Они появятся автоматически.'
-              : 'Для этой проверки события не записаны.'}
-          </p>
-        )}
-        {active && (
-          <div role="status" className="flex items-center gap-2 py-3 text-sm text-fg-muted">
-            <LoaderCircle
-              size={16}
-              className="animate-spin motion-reduce:animate-none"
-              aria-hidden="true"
-            />
-            {events.length > 0 ? 'Ожидаем следующие действия агента…' : 'Подключаемся к проверке…'}
+    <details className="evaluation-technical-log mt-8">
+      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 text-[15px]/[1.4] font-medium marker:hidden focus-visible:outline-2 focus-visible:outline-offset-2">
+        <span className="flex items-center gap-2">
+          Технический журнал
+          <span className="text-sm font-normal text-fg-muted">{progress.events.length}</span>
+        </span>
+        <ChevronDown
+          className="evaluation-log-chevron shrink-0 text-fg-muted"
+          size={16}
+          aria-hidden="true"
+        />
+      </summary>
+      <div className="evaluation-log-content pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="m-0 text-sm font-medium">События проверки</h3>
+          <div className="flex gap-1" role="group" aria-label="Фильтр событий">
+            {['all', 'backend', 'frontend'].map((area) => (
+              <button
+                type="button"
+                key={area}
+                aria-pressed={filter === area}
+                className={`min-h-10 rounded-md px-3 text-xs transition-colors ${filter === area ? 'bg-muted-open text-fg' : 'text-fg-muted hover:text-fg'}`}
+                onClick={() => setFilter(area)}
+              >
+                {area === 'all' ? 'Все' : areaLabels[area as 'backend' | 'frontend']}
+              </button>
+            ))}
           </div>
+        </div>
+        <div
+          className="mt-4 max-h-[38rem] overflow-y-auto overscroll-contain pr-2"
+          ref={scrollRef}
+          onScroll={(event) => {
+            const el = event.currentTarget
+            setFollow(el.scrollHeight - el.scrollTop - el.clientHeight < 48)
+          }}
+          aria-label="Хронология проверки"
+          role="region"
+        >
+          {events.map((event) => (
+            <ActivityEvent key={event.sequence} event={event} active={active} />
+          ))}
+          {events.length === 0 && (
+            <p className="text-sm text-fg-muted">
+              {active
+                ? 'Ожидаем первые действия агента. Они появятся автоматически.'
+                : 'Для этой проверки события не записаны.'}
+            </p>
+          )}
+          {active && (
+            <p role="status" className="py-3 text-sm text-fg-muted">
+              Следующее действие появится после подтверждённого обновления.
+            </p>
+          )}
+        </div>
+        {!follow && (
+          <button
+            type="button"
+            className="mt-2 min-h-10 text-sm text-link"
+            onClick={() => setFollow(true)}
+          >
+            К последним событиям ↓
+          </button>
+        )}
+        {progress.events.length >= 20 && (
+          <p className="text-xs text-fg-muted">Показаны последние 20 событий.</p>
         )}
       </div>
-      {!follow && (
-        <button type="button" className="mt-2 text-sm text-link" onClick={() => setFollow(true)}>
-          К последним событиям ↓
-        </button>
-      )}
-      {progress.events.length >= 500 && (
-        <p className="text-xs text-fg-muted">Показаны последние 500 событий.</p>
-      )}
-    </div>
+    </details>
   )
 }
 
-function ActivityEvent({
-  event,
-  active,
-  isLatest,
-}: {
-  event: Event
-  active: boolean
-  isLatest: boolean
-}) {
+function ActivityEvent({ event, active }: { event: Event; active: boolean }) {
   const source = event.source
   const isRunning = active && event.state === 'running'
   return (
-    <article
-      className={`relative border-l border-line pb-5 pl-5 text-sm ${isLatest ? 'evaluation-event-latest' : ''}`}
-    >
+    <article className="relative border-l border-line pb-5 pl-5 text-sm">
       <span className="absolute -left-1 top-1 size-2 rounded-full bg-fg-muted" />
       <div className="mb-2 flex items-center gap-2 text-xs text-fg-muted">
         {event.area && <span>{areaLabels[event.area]}</span>}

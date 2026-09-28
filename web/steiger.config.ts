@@ -21,6 +21,7 @@ export default defineConfig([
       './src/entities/team/**',
       './src/widgets/area-profile/**',
       './src/widgets/evaluation-meta/**',
+      './src/widgets/evaluation-progress/**',
       './src/widgets/findings-summary/**',
       './src/widgets/leaderboard-table/**',
       './src/widgets/score-summary/**',

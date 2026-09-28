@@ -51,3 +51,22 @@ func TestToolCompletionUpdatesExistingEvent(t *testing.T) {
 		t.Fatalf("completion lost tool input or duplicated row: %+v", p.value.Events)
 	}
 }
+
+func TestProgressRecorderDoesNotFinishWithPendingAreas(t *testing.T) {
+	p := newProgressRecorder(t.TempDir(), "alpha", time.Now, []contract.AreaProgress{
+		{Area: "backend", Status: "queued"},
+		{Area: "frontend", Status: "done"},
+	})
+
+	p.setStatus("done", "done")
+
+	if p.value.Status != "running" || p.value.Stage != "publishing" {
+		t.Fatalf("incomplete progress became terminal: %+v", p.value)
+	}
+
+	p.setArea("backend", "no_data", -1, -1, 0, 0)
+	p.setStatus("done", "done")
+	if p.value.Status != "done" || p.value.Stage != "done" {
+		t.Fatalf("settled progress did not become terminal: %+v", p.value)
+	}
+}

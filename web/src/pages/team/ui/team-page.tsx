@@ -1,4 +1,4 @@
-import { ArrowUpRight, BookOpen, CloudOff, FileQuestion, Minus, Plus } from 'lucide-react'
+import { ArrowUpRight, Check, CloudOff, FileQuestion } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
@@ -48,6 +48,7 @@ export function TeamPage() {
   const [liveStatus, setLiveStatus] = useState<RegistryEvaluationStatus | null>(null)
   const [progress, setProgress] = useState<RegistryEvaluationProgress | null>(null)
   const [pollError, setPollError] = useState(false)
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null)
   const [retryKey, setRetryKey] = useState(0)
 
   // Переход по prev/next (005-стиль ссылок) меняет :teamId без размонтирования страницы — состояние
@@ -61,6 +62,7 @@ export function TeamPage() {
     setLiveStatus(null)
     setProgress(null)
     setPollError(false)
+    setLastUpdatedAt(null)
   }
 
   useEffect(() => {
@@ -76,6 +78,7 @@ export function TeamPage() {
         setProgress(nextProgress)
         setLiveStatus(nextProgress.status)
         setPollError(false)
+        setLastUpdatedAt(Date.now())
         currentStatus = nextProgress.status
         delay = nextProgress.status === 'running' ? 1000 : 5000
       } catch {
@@ -132,8 +135,15 @@ export function TeamPage() {
   }, [teamId, retryKey])
 
   const retry = () => {
-    setState('loading')
+    if (!progress) setState('loading')
+    setPollError(false)
     setRetryKey((key) => key + 1)
+  }
+
+  const progressRefresh = {
+    unavailable: pollError,
+    lastUpdatedAt,
+    onRetry: retry,
   }
 
   const path = parseTaxonomyPath(searchParams)
@@ -154,10 +164,12 @@ export function TeamPage() {
 
   if (state === 'pending') {
     return (
-      <main className="dashboard-page max-w-[960px] space-y-[18px]">
+      <main className="dashboard-page max-w-[1080px] space-y-8">
         <header className="border-b border-line pb-4">
           <p className="mb-1 text-sm text-fg-muted">Команда</p>
-          <h1 className="m-0 break-all text-h1">{teamId}</h1>
+          <h1 className="m-0 break-all text-[32px]/[1.1] font-semibold tracking-[-0.04em]">
+            {teamId}
+          </h1>
           <p className="mb-0 mt-2 text-sm text-fg-muted">
             {progress?.status === 'failed'
               ? 'Проверка прервана'
@@ -167,21 +179,21 @@ export function TeamPage() {
           </p>
         </header>
         {progress ? (
-          <>
-            <EvaluationProgressView progress={progress} />
-            {pollError ? (
-              <p role="status" className="text-sm text-fg-muted">
-                Не удалось обновить ход оценки. Последние подтверждённые данные сохранены.
-              </p>
-            ) : null}
-          </>
+          <EvaluationProgressView progress={progress} refresh={progressRefresh} />
         ) : pollError ? (
-          <p
+          <div
             role="status"
-            className="rounded-panel border border-line bg-surface p-4 text-sm text-fg-muted"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-panel border border-line bg-surface p-4 text-sm text-fg-muted"
           >
-            Не удалось обновить ход оценки. Повторяем запрос…
-          </p>
+            <span>Обновления недоступны. Последние данные ещё не получены.</span>
+            <button
+              type="button"
+              className="min-h-10 rounded-control px-3 font-medium text-link underline underline-offset-4"
+              onClick={retry}
+            >
+              Повторить
+            </button>
+          </div>
         ) : (
           <p
             role="status"
@@ -229,7 +241,7 @@ export function TeamPage() {
   const rankContext = teamRankContext(team.team_id)
 
   return (
-    <main className="dashboard-page space-y-[18px]">
+    <main className="dashboard-page max-w-[1200px] space-y-[18px]">
       <TeamHeader
         team={displayTeam}
         rankContext={liveStatus === 'running' ? { ...rankContext, rank: null } : rankContext}
@@ -239,12 +251,7 @@ export function TeamPage() {
         liveStatus === 'failed' ||
         progress.areas.some((area) => area.status === 'failed')) ? (
         <>
-          <EvaluationProgressView progress={progress} />
-          {pollError ? (
-            <p role="status" className="text-sm text-fg-muted">
-              Не удалось обновить ход оценки. Последние подтверждённые данные сохранены.
-            </p>
-          ) : null}
+          <EvaluationProgressView progress={progress} refresh={progressRefresh} />
         </>
       ) : null}
       {doneAreas.length === 0 ? (
@@ -270,8 +277,8 @@ export function TeamPage() {
             const areaStats = stats?.areas.find((item) => item.area === areaName)
             return (
               <div key={areaName} className="flex flex-col gap-[18px]">
-                <AreaProfile areaName={areaName} area={area} stats={areaStats} />
                 <AreaAssessment areaName={areaName} area={area} />
+                <AreaProfile areaName={areaName} area={area} stats={areaStats} />
                 <FindingsSummary
                   counts={findingCounts}
                   activeSeverity={findingsFilter.severity}
@@ -299,6 +306,29 @@ export function TeamPage() {
   )
 }
 
+const SEVERITY_WEIGHT = { info: 0, minor: 1, major: 2, critical: 3 } as const
+
+function issueFindings(category: TeamBundle['areas'][string]['categories'][number]) {
+  return category.subcategories
+    .flatMap((subcategory) => subcategory.metrics)
+    .flatMap((metric) => metric.findings)
+    .filter((finding) => finding.kind === 'issue')
+}
+
+function severityLabel(severity: keyof typeof SEVERITY_WEIGHT): string {
+  return { critical: 'Критичная', major: 'Серьёзная', minor: 'Небольшая', info: 'Информационная' }[
+    severity
+  ]
+}
+
+function categoryCountLabel(count: number): string {
+  if (count % 10 === 1 && count % 100 !== 11) return 'категория'
+  if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) {
+    return 'категории'
+  }
+  return 'категорий'
+}
+
 function AreaAssessment({
   areaName,
   area,
@@ -306,78 +336,110 @@ function AreaAssessment({
   areaName: string
   area: TeamBundle['areas'][string]
 }) {
-  const metrics = area.categories.flatMap((category) =>
-    category.subcategories.flatMap((subcategory) => subcategory.metrics),
-  )
-  const findings = metrics.flatMap((metric) => metric.findings)
-  const strengths = findings.filter((finding) => finding.kind === 'strength').slice(0, 3)
-  const issues = findings.filter((finding) => finding.kind === 'issue').slice(0, 3)
+  const categories = area.categories
+  const strongCategories = [...categories]
+    .filter((category) => category.score >= 7)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+  const priorityCategories = [...categories]
+    .map((category) => ({ category, issues: issueFindings(category) }))
+    .filter(({ issues }) => issues.length > 0)
+    .sort((a, b) => {
+      const severityDelta =
+        Math.max(...b.issues.map((finding) => SEVERITY_WEIGHT[finding.severity])) -
+        Math.max(...a.issues.map((finding) => SEVERITY_WEIGHT[finding.severity]))
+      return severityDelta || a.category.score - b.category.score
+    })
+    .slice(0, 3)
 
   return (
-    <section aria-label={`Почему такая оценка: ${areaName}`} className="border-y border-line py-4">
+    <section
+      aria-label={`Что влияет на результат: ${areaName}`}
+      className="dashboard-assessment dashboard-fade"
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <h3 className="m-0 text-strong">Почему {area.score?.toFixed(1) ?? '—'}</h3>
-          <p className="m-0 mt-1 text-sm text-fg-muted">
-            Короткое объяснение оценки {areaName}. Доказательства доступны по конкретным файлам.
+          <h2 className="m-0 text-[19px] font-medium tracking-[-0.02em]">
+            Что влияет на результат
+          </h2>
+          <p className="m-0 mt-1 text-[14px] leading-5 text-fg-muted">
+            Короткий вывод по данным области {areaName}. Каждая строка ведёт к подтверждениям в
+            разборе.
           </p>
         </div>
-        <span className="text-sm text-fg-muted">{findings.length} доказательств</span>
+        <span className="text-[13.5px] text-fg-muted">
+          {area.categories.length} {categoryCountLabel(area.categories.length)}
+        </span>
       </div>
 
-      {strengths.length || issues.length ? (
-        <ul className="mt-4 grid list-none gap-2 p-0 sm:grid-cols-2">
-          {strengths.map((finding) => (
-            <li
-              key={`strength-${finding.file}-${finding.line_start}-${finding.title}`}
-              className="flex gap-2 text-sm"
-            >
-              <Plus aria-hidden="true" size={16} className="mt-0.5 shrink-0 text-sev-strength-fg" />
-              <span>{finding.title}</span>
-            </li>
-          ))}
-          {issues.map((finding) => (
-            <li
-              key={`issue-${finding.file}-${finding.line_start}-${finding.title}`}
-              className="flex gap-2 text-sm"
-            >
-              <Minus aria-hidden="true" size={16} className="mt-0.5 shrink-0 text-sev-major-fg" />
-              <span>{finding.title}</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <section className="dashboard-assessment-column" aria-label="Сильные стороны">
+          <h3 className="m-0 flex items-center gap-2 text-[15px] font-medium">
+            <Check aria-hidden="true" size={16} className="text-sev-strength-fg" />
+            Сильные стороны
+          </h3>
+          {strongCategories.length > 0 ? (
+            <ul className="mt-2.5 grid list-none gap-2 p-0">
+              {strongCategories.map((category) => (
+                <li key={category.id}>
+                  <a
+                    href={`#area-${areaName}-category-${category.id}`}
+                    className="dashboard-assessment-link"
+                  >
+                    <span>
+                      <span className="font-medium text-fg">{category.name}</span>
+                      <span className="block text-[13.5px] text-fg-muted">
+                        Высокая оценка категории · {category.score.toFixed(1)} / 10
+                      </span>
+                    </span>
+                    <ArrowUpRight aria-hidden="true" size={14} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="m-0 mt-2.5 text-[14px] leading-5 text-fg-muted">
+              Категорий с высокой оценкой в этой области пока нет.
+            </p>
+          )}
+        </section>
 
-      <details className="mt-4 border-t border-line pt-3">
-        <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 text-sm font-medium text-link">
-          <BookOpen aria-hidden="true" size={15} />
-          Показать доказательства ({findings.length})
-        </summary>
-        <div className="mt-3 grid gap-3">
-          {findings.slice(0, 8).map((finding) => (
-            <article
-              key={`${finding.file}-${finding.line_start}-${finding.title}`}
-              className="border-l-2 border-line-strong pl-3"
-            >
-              <p className="m-0 text-sm font-medium">{finding.title}</p>
-              <p className="m-0 mt-1 text-sm text-fg-muted">{finding.explanation}</p>
-              <a
-                className="mt-2 inline-flex items-center gap-1 font-mono text-xs text-link"
-                href={
-                  finding.permalink && /^https?:\/\//.test(finding.permalink)
-                    ? finding.permalink
-                    : undefined
-                }
-                target={finding.permalink ? '_blank' : undefined}
-                rel={finding.permalink ? 'noreferrer' : undefined}
-              >
-                {finding.file}:{finding.line_start}–{finding.line_end}
-                {finding.permalink ? <ArrowUpRight aria-hidden="true" size={13} /> : null}
-              </a>
-            </article>
-          ))}
-        </div>
-      </details>
+        <section className="dashboard-assessment-column" aria-label="Приоритеты улучшения">
+          <h3 className="m-0 flex items-center gap-2 text-[15px] font-medium">
+            <ArrowUpRight aria-hidden="true" size={16} className="text-sev-major-fg" />
+            Приоритеты улучшения
+          </h3>
+          {priorityCategories.length > 0 ? (
+            <ul className="mt-2.5 grid list-none gap-2 p-0">
+              {priorityCategories.map(({ category, issues }) => {
+                const primaryFinding = [...issues].sort(
+                  (a, b) => SEVERITY_WEIGHT[b.severity] - SEVERITY_WEIGHT[a.severity],
+                )[0]
+                return (
+                  <li key={category.id}>
+                    <a
+                      href={`#area-${areaName}-category-${category.id}`}
+                      className="dashboard-assessment-link"
+                    >
+                      <span>
+                        <span className="font-medium text-fg">{category.name}</span>
+                        <span className="block text-[13.5px] text-fg-muted">
+                          {severityLabel(primaryFinding.severity)} находка · {primaryFinding.title}
+                        </span>
+                      </span>
+                      <ArrowUpRight aria-hidden="true" size={14} />
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <p className="m-0 mt-2.5 text-[14px] leading-5 text-fg-muted">
+              Подтверждённых проблем для приоритизации в этой области нет.
+            </p>
+          )}
+        </section>
+      </div>
     </section>
   )
 }

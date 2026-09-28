@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { RegistryEvaluationProgress } from '@/shared/api'
@@ -56,10 +56,11 @@ describe('EvaluationProgressView', () => {
 
     render(<EvaluationProgressView progress={progress} />)
 
-    expect(screen.getByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
-    expect(screen.getByText('Анализируется')).toBeInTheDocument()
-    expect(screen.getByText(/0 из 5 категорий/)).toBeInTheDocument()
-    expect(screen.getByText(/46 файлов · 3 пропущено/)).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Ход проверки' })).toBeInTheDocument()
+    expect(screen.getByText('Проверка выполняется')).toBeInTheDocument()
+    expect(screen.getByText('Проверено категорий: 0 из 5')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Контекст проверки' })).toHaveLength(2)
+    fireEvent.click(await screen.findByText('Технический журнал'))
     await waitFor(() => {
       expect(screen.getByRole('link', { name: 'src/agent.ts:18' })).toHaveAttribute(
         'href',

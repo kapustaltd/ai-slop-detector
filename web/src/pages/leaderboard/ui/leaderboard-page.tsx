@@ -14,13 +14,14 @@ import { formatTeamCount } from '@/shared/lib'
 import { EmptyState } from '@/shared/ui'
 import { LeaderboardSkeleton } from './leaderboard-skeleton'
 import {
-  LeaderboardFocusPanel,
   LeaderboardRowCard,
   LeaderboardTable,
   LeaderboardToolbar,
   TeamDetailSheet,
   useLeaderboardState,
 } from '@/widgets/leaderboard-table'
+
+import { formatLeaderboardSummary } from '../model/summary'
 
 /**
  * Главная — рейтинг команд (спека 005). Композиция и значения —
@@ -84,6 +85,12 @@ export function LeaderboardPage() {
 
   const { teams, total, sort, filters, onSort, onFiltersChange } = useLeaderboardState(index)
 
+  const selectedTeamIndex = selectedTeam
+    ? teams.findIndex((team) => team.team_id === selectedTeam.team_id)
+    : -1
+  const previousTeam = selectedTeamIndex > 0 ? teams[selectedTeamIndex - 1] : null
+  const nextTeam = selectedTeamIndex >= 0 ? (teams[selectedTeamIndex + 1] ?? null) : null
+
   const resetFilters = () => onFiltersChange({ status: 'all', warningsOnly: false, query: '' })
 
   const openTeamDetails = async (team: LeaderboardTeam) => {
@@ -117,25 +124,12 @@ export function LeaderboardPage() {
 
   if (!index) return <LeaderboardSkeleton />
 
-  const focusTeam =
-    (selectedTeam && teams.some((team) => team.team_id === selectedTeam.team_id)
-      ? selectedTeam
-      : null) ??
-    teams.find((team) => team.total != null) ??
-    teams[0]
-
   return (
     <main className="dashboard-page">
       {loadFailed ? (
         <p role="status" className="text-sm text-warn-fg">
           Не удалось обновить рейтинг. Показываем последние загруженные данные.
         </p>
-      ) : null}
-
-      {focusTeam ? (
-        <div className="dashboard-focus-grid">
-          <LeaderboardFocusPanel team={focusTeam} />
-        </div>
       ) : null}
 
       <section className="dashboard-ranking-column" aria-labelledby="ranking-section-title">
@@ -148,6 +142,7 @@ export function LeaderboardPage() {
               <span className="dashboard-section-count">{formatTeamCount(total)}</span>
             </div>
           </div>
+          <p className="dashboard-ranking-summary">{formatLeaderboardSummary(index.teams)}</p>
 
           {total === 0 ? (
             <EmptyState
@@ -212,10 +207,13 @@ export function LeaderboardPage() {
         team={selectedTeamDetails}
         isLoading={isLoadingDetails}
         loadFailed={detailsLoadFailed}
+        previousTeam={previousTeam}
+        nextTeam={nextTeam}
         onClose={() => {
           detailsRequestId.current += 1
           setSelectedTeam(null)
         }}
+        onNavigate={(team) => void openTeamDetails(team)}
         onRetry={() => {
           if (selectedTeam) void openTeamDetails(selectedTeam)
         }}

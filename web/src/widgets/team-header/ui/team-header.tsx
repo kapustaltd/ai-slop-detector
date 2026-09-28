@@ -1,10 +1,9 @@
-import { ChevronLeft, ChevronRight, CircleDashed } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { TeamStatusBadge } from '@/entities/team'
 import type { TeamBundle } from '@/shared/api'
 
-import { countLowConfidenceMetrics } from '../model/low-confidence-count'
 import type { TeamRankContext } from '../model/rank-context'
 
 /**
@@ -20,15 +19,6 @@ export interface TeamHeaderProps {
 }
 
 export function TeamHeader({ team, rankContext }: TeamHeaderProps) {
-  const lowConfidenceCount = countLowConfidenceMetrics(team)
-  const areaEntries = Object.entries(team.areas)
-  const areasSummary =
-    areaEntries.length > 1
-      ? areaEntries.every(([, area]) => area.status === 'done')
-        ? 'обе области оценены'
-        : `оценена ${areaEntries.filter(([, area]) => area.status === 'done').length} из ${areaEntries.length} областей`
-      : null
-
   return (
     <header className="dashboard-team-header flex flex-col gap-[18px]">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line pb-3">
@@ -69,17 +59,9 @@ export function TeamHeader({ team, rankContext }: TeamHeaderProps) {
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div className="flex flex-col gap-[7px]">
           <div className="flex items-center gap-3">
-            <h1 className="text-h1 m-0">{team.name}</h1>
+            <h1 className="m-0 text-[32px]/[1.1] font-semibold tracking-[-0.04em]">{team.name}</h1>
             <TeamStatusBadge status={team.status} partial={team.partial} />
-            {lowConfidenceCount > 0 ? (
-              <span className="inline-flex h-6 items-center gap-[5px] rounded-control border border-dashed border-line-strong bg-muted-surface px-2.5 text-[13.5px] font-medium text-fg-muted">
-                <CircleDashed aria-hidden="true" size={12} strokeWidth={2.1} />
-                Низкая уверенность: {lowConfidenceCount}{' '}
-                {lowConfidenceCount === 1 ? 'метрика' : 'метрики'}
-              </span>
-            ) : null}
           </div>
-          {areasSummary ? <div className="text-[14.5px] text-fg-muted">{areasSummary}</div> : null}
         </div>
 
         {rankContext.rank != null ? (

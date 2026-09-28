@@ -1,4 +1,4 @@
-import { ArrowRight, Check, MoreHorizontal, Plus } from 'lucide-react'
+import { ArrowRight, Check, MoreHorizontal, Plus, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import {
   useCallback,
@@ -9,30 +9,28 @@ import {
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import {
   checkRegistryApi,
   createRegistryTeam,
   deleteRegistryTeam,
-  getRegistryEvaluationProgress,
   getRegistryEvaluationStatuses,
   getRegistryTeams,
   RegistryApiError,
   retryRegistryEvaluation,
   updateRegistryTeam,
-  type RegistryEvaluationProgress,
   type RegistryEvaluationStatus,
   type RegistryTeam,
 } from '@/shared/api'
 import { Skeleton, useDialogFocus } from '@/shared/ui'
-import { EvaluationProgressView } from '@/widgets/evaluation-progress'
 
 type TeamDraft = Pick<RegistryTeam, 'id' | 'name' | 'repo' | 'branch' | 'active'>
 
 const emptyTeam: TeamDraft = { id: '', name: '', repo: '', branch: 'main', active: true }
 
 export function TeamManagementPage() {
+  const navigate = useNavigate()
   const [teams, setTeams] = useState<RegistryTeam[]>([])
   const [draft, setDraft] = useState<TeamDraft | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -40,7 +38,6 @@ export function TeamManagementPage() {
   const [apiAvailable, setApiAvailable] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [trackedTeam, setTrackedTeam] = useState<TeamDraft | null>(null)
   const [step, setStep] = useState<'repo' | 'details' | 'review'>('repo')
   const [isChecking, setIsChecking] = useState(false)
   const [editing, setEditing] = useState<RegistryTeam | null>(null)
@@ -70,33 +67,21 @@ export function TeamManagementPage() {
 
   const checkRepository = async () => {
     if (!draft || isChecking) return
-    let url: URL
-    try {
-      url = new URL(draft.repo.trim())
-    } catch {
-      setError('Укажите ссылку вида https://github.com/owner/repository.')
+    const rawRepo = draft.repo.trim()
+    if (rawRepo !== draft.repo) {
+      setDraft((current) => (current ? { ...current, repo: rawRepo } : current))
+    }
+    if (!rawRepo) {
+      setError('Укажите ссылку на репозиторий')
       return
     }
-    const parts = url.pathname
-      .replace(/\/$/, '')
-      .replace(/\.git$/, '')
-      .split('/')
-      .filter(Boolean)
-    if (
-      url.protocol !== 'https:' ||
-      url.hostname !== 'github.com' ||
-      url.username ||
-      url.password ||
-      url.port ||
-      url.search ||
-      url.hash ||
-      parts.length !== 2 ||
-      parts.some((part) => !/^[A-Za-z0-9_.-]+$/.test(part))
-    ) {
-      setError('Укажите ссылку вида https://github.com/owner/repository.')
+    const parsed = parseRepositoryUrl(rawRepo)
+    if (!parsed.repo) {
+      setError(parsed.error ?? 'Укажите ссылку вида https://github.com/owner/repository.')
       return
     }
-    const repo = `https://github.com/${parts.join('/')}`
+    const parts = parsed.parts
+    const repo = parsed.repo
     setIsChecking(true)
     setError('')
     try {
@@ -130,8 +115,8 @@ export function TeamManagementPage() {
           : current,
       )
       setStep('details')
-    } catch {
-      setError('Не удалось сверить репозиторий с реестром. Повторите проверку.')
+    } catch (cause) {
+      setError(repositoryCheckError(cause))
     } finally {
       setIsChecking(false)
     }
@@ -235,7 +220,6 @@ export function TeamManagementPage() {
     setError('')
     try {
       await deleteRegistryTeam(deleting.id)
-      setTrackedTeam((current) => (current?.id === deleting.id ? null : current))
       setDeleting(null)
       await loadTeams()
       setNotice('Команда удалена из реестра.')
@@ -276,11 +260,9 @@ export function TeamManagementPage() {
     setNotice('')
     try {
       await createRegistryTeam(nextDraft)
-      setTrackedTeam(nextDraft)
       setDraft(null)
-      setNotice('Команда добавлена в реестр.')
       setStep('repo')
-      void loadTeams()
+      navigate(`/team/${encodeURIComponent(nextDraft.id)}`)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Не удалось сохранить команду')
     } finally {
@@ -306,7 +288,6 @@ export function TeamManagementPage() {
               setStep('repo')
               setError('')
               setNotice('')
-              setTrackedTeam(null)
             }}
           >
             <Plus aria-hidden="true" size={17} />
@@ -335,7 +316,7 @@ export function TeamManagementPage() {
           className="sheet-overlay"
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !isSaving) {
+            if (event.target === event.currentTarget && !isSaving && !hasDraftValues(draft)) {
               setDraft(null)
               setError('')
               setStep('repo')
@@ -343,11 +324,11 @@ export function TeamManagementPage() {
           }}
         >
           <div
-            className="sheet-panel sheet-wide"
+            className="sheet-panel sheet-wide sheet-create-panel"
             ref={createDialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Добавление команды"
+            aria-labelledby="create-team-title"
           >
             <TeamForm
               draft={draft}
@@ -356,6 +337,7 @@ export function TeamManagementPage() {
               step={step}
               error={error}
               onStep={setStep}
+              onError={setError}
               existingIds={teams.map((team) => team.id)}
               onCheck={() => void checkRepository()}
               onCancel={() => {
@@ -529,8 +511,6 @@ export function TeamManagementPage() {
           {notice}
         </p>
       ) : null}
-
-      {trackedTeam ? <RepositoryProgress key={trackedTeam.id} team={trackedTeam} /> : null}
 
       {apiAvailable ? (
         <section
@@ -835,117 +815,6 @@ function TeamActionsMenu({
   )
 }
 
-function RepositoryProgress({ team }: { team: TeamDraft }) {
-  const [progress, setProgress] = useState<RegistryEvaluationProgress | null>(() =>
-    team.active ? null : { status: 'no_data', stage: 'waiting', areas: [], events: [] },
-  )
-  const [pollError, setPollError] = useState(false)
-  const [elapsed, setElapsed] = useState(0)
-  const [startedAt, setStartedAt] = useState<number | null>(null)
-  const noDataPolls = useRef(0)
-
-  useEffect(() => {
-    if (progress?.status !== 'running' || startedAt === null) return
-    const timer = setInterval(
-      () => setElapsed(Math.max(0, Math.floor((Date.now() - startedAt) / 1000))),
-      1000,
-    )
-    return () => clearInterval(timer)
-  }, [progress?.status, startedAt])
-
-  useEffect(() => {
-    if (!team.active) return
-    let stopped = false
-    let timer: ReturnType<typeof setTimeout>
-    const poll = async () => {
-      try {
-        const nextProgress = await getRegistryEvaluationProgress(team.id)
-        if (stopped) return
-        setPollError(false)
-        setProgress(nextProgress)
-        if (nextProgress.status === 'no_data') {
-          noDataPolls.current += 1
-        } else {
-          noDataPolls.current = 0
-        }
-        if (nextProgress.started_at) {
-          const timestamp = new Date(nextProgress.started_at).getTime()
-          if (Number.isFinite(timestamp)) {
-            setStartedAt(timestamp)
-            setElapsed(Math.max(0, Math.floor((Date.now() - timestamp) / 1000)))
-          }
-        } else if (nextProgress.status === 'running') {
-          setStartedAt((current) => current ?? Date.now())
-        }
-        // Right after creation the registry can briefly answer `no_data` while
-        // the queued job becomes visible. Keep observing that transient state
-        // so the first submission does not require a second user action.
-        if (
-          nextProgress.status !== 'running' &&
-          (nextProgress.status !== 'no_data' || noDataPolls.current >= 30)
-        )
-          return
-      } catch {
-        if (stopped) return
-        setPollError(true)
-      }
-      timer = setTimeout(() => void poll(), 1000)
-    }
-    void poll()
-    return () => {
-      stopped = true
-      clearTimeout(timer)
-    }
-  }, [team.active, team.id])
-
-  const statusMessage = !progress
-    ? pollError
-      ? 'Не удалось получить статус. Повторяем запрос.'
-      : 'Получаем статус оценки…'
-    : progress.status === 'no_data'
-      ? 'Оценка ещё не запущена или пока недоступна.'
-      : null
-
-  return (
-    <section
-      aria-label={`Обработка репозитория ${team.name}`}
-      className="border-y border-line py-4"
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="m-0 text-base font-semibold">Оценка репозитория</h2>
-        <RepositoryLink value={team.repo} />
-      </div>
-      {progress && progress.status !== 'no_data' ? (
-        <EvaluationProgressView progress={progress} className="mt-3" />
-      ) : null}
-      {statusMessage ? (
-        <p role="status" className="mb-0 mt-3 text-sm text-fg-muted">
-          {statusMessage}
-        </p>
-      ) : null}
-      {pollError && progress ? (
-        <p role="status" className="mb-0 mt-3 text-sm text-fg-muted">
-          Не удалось обновить статус. Показываем последнее полученное состояние.
-        </p>
-      ) : null}
-      {progress?.status === 'running' ? (
-        <p className="mb-0 mt-1 text-sm text-fg-muted">
-          Прошло {Math.floor(elapsed / 60)} мин {String(elapsed % 60).padStart(2, '0')} с.
-        </p>
-      ) : null}
-      {progress?.status === 'done' || progress?.status === 'running' ? (
-        <Link
-          className="mt-3 inline-flex min-h-11 items-center gap-1 text-sm text-link"
-          to={`/team/${encodeURIComponent(team.id)}`}
-        >
-          {progress?.status === 'running' ? 'Смотреть ход оценки' : 'Открыть отчёт'}{' '}
-          <ArrowRight aria-hidden="true" size={16} />
-        </Link>
-      ) : null}
-    </section>
-  )
-}
-
 interface TeamFormProps {
   draft: TeamDraft
   existingIds: string[]
@@ -954,6 +823,7 @@ interface TeamFormProps {
   step: 'repo' | 'details' | 'review'
   error: string
   onStep: (step: 'repo' | 'details' | 'review') => void
+  onError: (error: string) => void
   onCheck: () => void
   onCancel: () => void
   onChange: (draft: TeamDraft) => void
@@ -988,14 +858,6 @@ function RegistryLoadingSkeleton() {
   )
 }
 
-function LoadingBar() {
-  return (
-    <div aria-hidden="true" className="registry-loading-track mb-3">
-      <span className="registry-loading-fill" />
-    </div>
-  )
-}
-
 function TeamForm({
   draft,
   existingIds,
@@ -1004,6 +866,7 @@ function TeamForm({
   step,
   error,
   onStep,
+  onError,
   onCheck,
   onCancel,
   onChange,
@@ -1013,201 +876,338 @@ function TeamForm({
     onChange({ ...draft, [key]: value })
   const input = 'block min-h-11 w-full rounded-control border border-line-strong bg-bg px-3 text-fg'
   const button =
-    'inline-flex min-h-11 items-center gap-2 rounded-control bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50'
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-medium text-primary-foreground transition-transform active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50'
+  const steps = [
+    { key: 'repo', label: 'Репозиторий' },
+    { key: 'details', label: 'Настройки' },
+    { key: 'review', label: 'Подтверждение' },
+  ] as const
+  const currentStepIndex = steps.findIndex((item) => item.key === step)
+  const repository = repositoryParts(draft.repo)
+  const description =
+    step === 'repo'
+      ? 'Сначала добавим репозиторий в новую команду.'
+      : step === 'details'
+        ? 'Задайте имя, ID и ветку для новой команды.'
+        : 'Проверьте, что будет сохранено и проверено.'
   return (
-    <section aria-label="Добавление команды" className="py-4">
-      <div className="mb-4 flex items-start justify-between gap-4 border-b border-line pb-3">
-        <div>
-          <h2 className="m-0 text-base font-semibold">
-            {step === 'repo'
-              ? 'Новый репозиторий'
-              : step === 'details'
-                ? 'Данные команды'
-                : 'Проверьте данные команды'}
-          </h2>
-          <p className="mb-0 mt-1 text-sm text-fg-muted">
-            {step === 'repo'
-              ? 'Укажите GitHub-ссылку.'
-              : step === 'details'
-                ? 'Название и ветка, которые попадут в реестр.'
-                : 'Проверьте название, репозиторий и ветку.'}
+    <section aria-label="Добавление команды" className="flex min-h-0 flex-1 flex-col">
+      <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-6 py-6">
+        <div className="min-w-0">
+          <p className="m-0 text-xs font-semibold uppercase tracking-[0.08em] text-fg-muted">
+            Добавление команды
           </p>
+          <h2 id="create-team-title" className="m-0 mt-2 text-xl font-semibold leading-tight">
+            Добавить команду
+          </h2>
+          <p className="m-0 mt-2 max-w-[34rem] text-sm leading-5 text-fg-muted">{description}</p>
         </div>
         <button
-          className="min-h-11 rounded-control px-3 text-sm text-fg-muted"
+          aria-label="Закрыть добавление команды"
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-control text-fg-muted transition-colors hover:bg-muted-surface hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          title="Закрыть"
           type="button"
           onClick={onCancel}
         >
-          Отмена
+          <X aria-hidden="true" size={19} strokeWidth={2} />
         </button>
-      </div>
-      <div aria-label="Шаги добавления команды" className="mb-5 mt-0 max-w-3xl" role="group">
-        <p className="m-0 text-sm font-medium">
-          Шаг {['repo', 'details', 'review'].indexOf(step) + 1} из 3 ·{' '}
-          {step === 'repo'
-            ? 'Репозиторий'
-            : step === 'details'
-              ? 'Данные команды'
-              : 'Подтверждение'}
-        </p>
-        <div aria-hidden="true" className="mt-3 flex gap-1">
-          {['repo', 'details', 'review'].map((key, index) => (
-            <span
-              key={key}
-              className={`h-1 flex-1 rounded-full ${index <= ['repo', 'details', 'review'].indexOf(step) ? 'bg-brand' : 'bg-track'}`}
-            />
-          ))}
+      </header>
+
+      <div className="sheet-form-content min-h-0 flex-1 overflow-y-auto px-6 py-6">
+        <ol aria-label="Шаги добавления команды" className="m-0 flex list-none gap-2 p-0">
+          {steps.map((item, index) => {
+            const isCurrent = item.key === step
+            const isComplete = index < currentStepIndex
+            return (
+              <li key={item.key} className="flex min-w-0 flex-1 items-center gap-2">
+                <span
+                  aria-current={isCurrent ? 'step' : undefined}
+                  className={`inline-flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold ${
+                    isCurrent
+                      ? 'border-brand bg-brand text-on-accent'
+                      : isComplete
+                        ? 'border-brand bg-brand-soft text-brand'
+                        : 'border-line-strong bg-bg text-fg-muted'
+                  }`}
+                >
+                  {isComplete ? <Check aria-hidden="true" size={14} /> : index + 1}
+                </span>
+                <span
+                  className={`min-w-0 text-xs leading-4 ${isCurrent ? 'font-semibold text-fg' : 'text-fg-muted'}`}
+                >
+                  {item.label}
+                </span>
+                {index < steps.length - 1 ? (
+                  <span
+                    aria-hidden="true"
+                    className={`h-px min-w-2 flex-1 ${index < currentStepIndex ? 'bg-brand' : 'bg-line'}`}
+                  />
+                ) : null}
+              </li>
+            )
+          })}
+        </ol>
+
+        <div key={step} className="sheet-step-transition mt-8">
+          {error && step !== 'repo' ? (
+            <p role="alert" className="mb-6 rounded-control bg-warn-bg p-3 text-sm text-warn-fg">
+              {error}
+            </p>
+          ) : null}
+
+          {step === 'repo' ? (
+            <form
+              id="repo-step-form"
+              className="space-y-5"
+              noValidate
+              onSubmit={(event) => {
+                event.preventDefault()
+                onCheck()
+              }}
+            >
+              <div>
+                <label className="block text-sm font-semibold" htmlFor="repository-url">
+                  Ссылка на репозиторий
+                </label>
+                <input
+                  id="repository-url"
+                  aria-describedby={error ? 'repository-hint repository-error' : 'repository-hint'}
+                  aria-invalid={Boolean(error)}
+                  className={`${input} mt-2`}
+                  type="url"
+                  maxLength={240}
+                  placeholder="https://github.com/owner/repository"
+                  value={draft.repo}
+                  onBlur={(event) => {
+                    const value = event.currentTarget.value.trim()
+                    if (value !== draft.repo) change('repo', value)
+                    if (!value) return
+                    const parsed = parseRepositoryUrl(value)
+                    onError(parsed.error ?? '')
+                  }}
+                  onChange={(event) => change('repo', event.target.value)}
+                />
+                <p id="repository-hint" className="m-0 mt-2 text-sm leading-5 text-fg-muted">
+                  Вставьте ссылку на публичный репозиторий GitHub.
+                </p>
+                {error ? (
+                  <p id="repository-error" role="alert" className="m-0 mt-2 text-sm text-warn-fg">
+                    {error}
+                  </p>
+                ) : null}
+              </div>
+              <p className="m-0 text-sm leading-5 text-fg-muted">
+                Мы проверим формат ссылки и убедимся, что репозиторий ещё не добавлен в реестр.
+              </p>
+            </form>
+          ) : null}
+
+          {step === 'details' ? (
+            <form
+              id="details-step-form"
+              className="space-y-6"
+              noValidate
+              onSubmit={(event) => {
+                event.preventDefault()
+                const nextDraft = normaliseTeamDraft(draft)
+                const validationError = validateTeamDraft(nextDraft)
+                if (validationError) {
+                  onError(validationError)
+                  return
+                }
+                if (existingIds.some((id) => id.toLowerCase() === nextDraft.id.toLowerCase())) {
+                  onError('Такой ID уже есть в реестре.')
+                  return
+                }
+                onChange(nextDraft)
+                onStep('review')
+              }}
+            >
+              <div
+                aria-label="Распознанный репозиторий"
+                className="rounded-control border border-line bg-muted-surface p-4"
+                role="status"
+              >
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Check aria-hidden="true" className="text-brand" size={16} />
+                  Ссылка распознана
+                </div>
+                <code className="mt-2 block break-all text-sm text-fg">{repository.slug}</code>
+                <p className="m-0 mt-2 text-sm leading-5 text-fg-muted">
+                  Доступность содержимого проверится при запуске оценки.
+                </p>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <label className="space-y-1.5 text-sm font-medium">
+                  Название команды
+                  <input
+                    className={input}
+                    maxLength={120}
+                    value={draft.name}
+                    onChange={(event) => change('name', event.target.value)}
+                  />
+                </label>
+                <label className="space-y-1.5 text-sm font-medium">
+                  ID команды
+                  <input
+                    className={input}
+                    maxLength={64}
+                    pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,63}"
+                    value={draft.id}
+                    onChange={(event) => change('id', event.target.value)}
+                  />
+                </label>
+                <label className="space-y-1.5 text-sm font-medium">
+                  Ветка
+                  <input
+                    className={input}
+                    maxLength={120}
+                    value={draft.branch}
+                    onChange={(event) => change('branch', event.target.value)}
+                  />
+                </label>
+                <label className="flex min-h-11 items-center gap-2 self-end text-sm">
+                  <input
+                    type="checkbox"
+                    checked={draft.active}
+                    onChange={(event) => change('active', event.target.checked)}
+                  />
+                  Включить в следующую оценку
+                </label>
+              </div>
+            </form>
+          ) : null}
+
+          {step === 'review' ? (
+            <div className="space-y-6">
+              <div className="rounded-control border border-line bg-bg p-4 text-sm">
+                <dl className="m-0 grid gap-3 sm:grid-cols-[9rem_1fr]">
+                  <dt className="text-fg-muted">Команда</dt>
+                  <dd className="m-0">
+                    {draft.name} <code className="text-xs text-fg-muted">{draft.id}</code>
+                  </dd>
+                  <dt className="text-fg-muted">Репозиторий</dt>
+                  <dd className="m-0 break-all">{repository.slug}</dd>
+                  <dt className="text-fg-muted">Ветка</dt>
+                  <dd className="m-0">{draft.branch}</dd>
+                  <dt className="text-fg-muted">Проверка</dt>
+                  <dd className="m-0">{draft.active ? 'Запустится сразу' : 'Не запускается'}</dd>
+                </dl>
+              </div>
+              <p className="m-0 text-sm leading-5 text-fg-muted">
+                Команда сохранится в реестре. Для активной команды начнётся проверка ветки{' '}
+                <code>{draft.branch}</code>.
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
-      {error && (
-        <p role="alert" className="mt-4 rounded-control bg-warn-bg p-3 text-sm text-warn-fg">
-          {error}
-        </p>
-      )}
-      {step === 'repo' && (
-        <form
-          className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end"
-          onSubmit={(event) => {
-            event.preventDefault()
-            onCheck()
-          }}
-        >
-          <label className="flex-1 space-y-1.5 text-sm font-medium">
-            Ссылка на репозиторий
-            <input
-              className={input}
-              type="url"
-              maxLength={240}
-              required
-              placeholder="https://github.com/owner/repository"
-              value={draft.repo}
-              onChange={(event) => change('repo', event.target.value)}
-            />
-          </label>
-          <button className={button} disabled={isChecking} type="submit">
-            Продолжить <ArrowRight size={16} aria-hidden="true" />
-          </button>
-          {isChecking && (
-            <div className="w-full text-sm text-fg-muted">
-              <LoadingBar />
-              Проверяем ссылку и реестр…
-            </div>
-          )}
-        </form>
-      )}
-      {step === 'details' && (
-        <form
-          className="mt-5 space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault()
-            if (existingIds.some((id) => id.toLowerCase() === draft.id.toLowerCase())) {
-              event.currentTarget
-                .querySelector<HTMLInputElement>('input[pattern]')
-                ?.setCustomValidity('Такой ID уже есть в реестре')
-              event.currentTarget.reportValidity()
-              return
-            }
-            onStep('review')
-          }}
-        >
-          <p role="status" className="mb-0 text-sm text-fg-muted">
-            Репозиторий ещё не проверялся.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="space-y-1.5 text-sm font-medium">
-              Название команды
-              <input
-                className={input}
-                maxLength={120}
-                required
-                value={draft.name}
-                onChange={(event) => change('name', event.target.value)}
-              />
-            </label>
-            <label className="space-y-1.5 text-sm font-medium">
-              ID команды
-              <input
-                className={input}
-                maxLength={64}
-                pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,63}"
-                required
-                value={draft.id}
-                onChange={(event) => {
-                  event.target.setCustomValidity('')
-                  change('id', event.target.value)
-                }}
-              />
-            </label>
-            <label className="space-y-1.5 text-sm font-medium">
-              Ветка
-              <input
-                className={input}
-                required
-                maxLength={120}
-                value={draft.branch}
-                onChange={(event) => change('branch', event.target.value)}
-              />
-            </label>
-            <label className="flex min-h-11 items-center gap-2 self-end text-sm">
-              <input
-                type="checkbox"
-                checked={draft.active}
-                onChange={(event) => change('active', event.target.checked)}
-              />
-              Включить в следующую оценку
-            </label>
-          </div>
-          <div className="flex flex-wrap gap-2">
+
+      <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-line px-6 py-4">
+        <div className="min-w-0">
+          {step === 'repo' ? (
             <button
-              className="min-h-11 rounded-control border border-line-strong px-4 text-sm"
+              className="min-h-11 rounded-control px-3 text-sm text-fg-muted transition-colors hover:bg-muted-surface hover:text-fg"
               type="button"
-              onClick={() => onStep('repo')}
+              onClick={onCancel}
+            >
+              Отмена
+            </button>
+          ) : (
+            <button
+              className="min-h-11 rounded-control border border-line-strong px-4 text-sm transition-transform active:scale-[0.96]"
+              type="button"
+              onClick={() => onStep(step === 'review' ? 'details' : 'repo')}
             >
               Назад
             </button>
-            <button className={button} type="submit">
-              Посмотреть итог <ArrowRight size={16} aria-hidden="true" />
-            </button>
-          </div>
-        </form>
-      )}
-      {step === 'review' && (
-        <div className="mt-5 space-y-4">
-          <div className="border-y border-line py-3 text-sm">
-            <dl className="m-0 grid gap-2 sm:grid-cols-[9rem_1fr]">
-              <dt className="text-fg-muted">Команда</dt>
-              <dd className="m-0">
-                {draft.name} <code className="text-xs text-fg-muted">{draft.id}</code>
-              </dd>
-              <dt className="text-fg-muted">Репозиторий</dt>
-              <dd className="m-0 break-all">{draft.repo}</dd>
-              <dt className="text-fg-muted">Ветка</dt>
-              <dd className="m-0">{draft.branch}</dd>
-              <dt className="text-fg-muted">Следующая оценка</dt>
-              <dd className="m-0">{draft.active ? 'Включена' : 'Отключена'}</dd>
-            </dl>
-          </div>
-          <p className="m-0 text-sm text-fg-muted">
-            После добавления запустим проверку ветки <code>{draft.branch}</code>.
-          </p>
-          {isSaving && <LoadingBar />}
-          <form onSubmit={onSubmit} className="flex flex-wrap gap-2">
-            <button
-              className="min-h-11 rounded-control border border-line-strong px-4 text-sm"
-              disabled={isSaving}
-              type="button"
-              onClick={() => onStep('details')}
-            >
-              Изменить
-            </button>
-            <button className={button} disabled={isSaving} type="submit">
-              <Check size={16} aria-hidden="true" />
-              {isSaving ? 'Сохраняем…' : 'Сохранить команду'}
-            </button>
-          </form>
+          )}
         </div>
-      )}
+        <div className="flex shrink-0 items-center gap-3">
+          {step === 'repo' ? (
+            <button className={button} disabled={isChecking} form="repo-step-form" type="submit">
+              {isChecking ? 'Проверяем…' : 'Продолжить'}
+              {!isChecking ? <ArrowRight aria-hidden="true" size={16} /> : null}
+            </button>
+          ) : null}
+          {step === 'details' ? (
+            <button className={button} form="details-step-form" type="submit">
+              Продолжить <ArrowRight aria-hidden="true" size={16} />
+            </button>
+          ) : null}
+          {step === 'review' ? (
+            <form id="review-step-form" onSubmit={onSubmit}>
+              <button className={button} disabled={isSaving} type="submit">
+                <Check aria-hidden="true" size={16} />
+                {isSaving ? 'Сохраняем…' : draft.active ? 'Запустить проверку' : 'Добавить команду'}
+              </button>
+            </form>
+          ) : null}
+        </div>
+      </footer>
     </section>
+  )
+}
+
+function parseRepositoryUrl(value: string): {
+  repo: string | null
+  parts: string[]
+  error: string | null
+} {
+  try {
+    const url = new URL(value)
+    const parts = url.pathname
+      .replace(/\/$/, '')
+      .replace(/\.git$/, '')
+      .split('/')
+      .filter(Boolean)
+    if (
+      url.protocol !== 'https:' ||
+      url.hostname.toLowerCase() !== 'github.com' ||
+      url.username ||
+      url.password ||
+      url.port ||
+      url.search ||
+      url.hash ||
+      parts.length !== 2 ||
+      parts.some((part) => !/^[A-Za-z0-9_.-]+$/.test(part))
+    ) {
+      return {
+        repo: null,
+        parts,
+        error: 'Укажите ссылку вида https://github.com/owner/repository.',
+      }
+    }
+    return { repo: `https://github.com/${parts.join('/')}`, parts, error: null }
+  } catch {
+    return {
+      repo: null,
+      parts: [],
+      error: 'Укажите ссылку вида https://github.com/owner/repository.',
+    }
+  }
+}
+
+function repositoryParts(value: string) {
+  const parsed = parseRepositoryUrl(value)
+  return { slug: parsed.parts.join('/') || value }
+}
+
+function repositoryCheckError(cause: unknown) {
+  if (cause instanceof RegistryApiError && cause.status === 0) {
+    return 'Не удалось проверить реестр. Проверьте соединение и повторите попытку.'
+  }
+  if (cause instanceof Error) return cause.message
+  return 'Репозиторий не найден или недоступен. Повторите попытку.'
+}
+
+function hasDraftValues(draft: TeamDraft) {
+  return Boolean(
+    draft.repo.trim() ||
+    draft.name.trim() ||
+    draft.id.trim() ||
+    draft.branch.trim() !== emptyTeam.branch ||
+    draft.active !== emptyTeam.active,
   )
 }
 

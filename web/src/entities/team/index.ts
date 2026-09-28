@@ -1,4 +1,5 @@
 export {
+  displayRank,
   displayStatus,
   normalizeStatus,
   sortTeams,

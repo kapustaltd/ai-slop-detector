@@ -103,7 +103,7 @@ func readStream(reader io.Reader, request Request) ([]byte, error) {
 						}
 						if json.Unmarshal([]byte(strings.TrimPrefix(line, "PROGRESS ")), &summary) == nil && request.Categories[summary.Category] != "" && summary.Summary != "" {
 							currentCategory = summary.Category
-							emit(Activity{Kind: "reasoning", Title: request.Categories[summary.Category], CategoryID: summary.Category, Detail: summary.Summary, State: "running"})
+							emit(Activity{Kind: "stage", Title: request.Categories[summary.Category], CategoryID: summary.Category, Detail: summary.Summary, State: "running"})
 						}
 					}
 				}

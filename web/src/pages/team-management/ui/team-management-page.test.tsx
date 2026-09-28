@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { TeamManagementPage } from './team-management-page'
@@ -14,7 +14,61 @@ function json(data: unknown, status = 200) {
   })
 }
 
+function RouteIndicator() {
+  const location = useLocation()
+  return <output aria-label="Текущий маршрут">{location.pathname}</output>
+}
+
 describe('guided team entry', () => {
+  it('explains an empty repository submission without disabling the action', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => json([])),
+    )
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Добавить команду' }))
+    const continueButton = screen.getByRole('button', { name: 'Продолжить' })
+    await user.click(continueButton)
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Укажите ссылку на репозиторий')
+    expect(continueButton).toBeEnabled()
+  })
+
+  it('normalizes the repository and keeps the draft when the backdrop is clicked', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => json([])),
+    )
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <TeamManagementPage />
+      </MemoryRouter>,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Добавить команду' }))
+    const repositoryInput = screen.getByRole('textbox', { name: 'Ссылка на репозиторий' })
+    await user.type(repositoryInput, '  https://github.com/org/project.git  ')
+    await user.click(screen.getByRole('presentation'))
+
+    expect(screen.getByRole('dialog', { name: 'Добавить команду' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Продолжить' }))
+    expect(screen.getByRole('status', { name: 'Распознанный репозиторий' })).toHaveTextContent(
+      'org/project',
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Назад' }))
+    expect(screen.getByRole('textbox', { name: 'Ссылка на репозиторий' })).toHaveValue(
+      'https://github.com/org/project',
+    )
+  })
+
   it('closes the add-team sheet with Escape and restores the trigger focus', async () => {
     vi.stubGlobal(
       'fetch',
@@ -39,11 +93,11 @@ describe('guided team entry', () => {
 
     const trigger = await screen.findByRole('button', { name: 'Добавить команду' })
     await user.click(trigger)
-    expect(screen.getByRole('dialog', { name: 'Добавление команды' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Добавить команду' })).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
 
-    expect(screen.queryByRole('dialog', { name: 'Добавление команды' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Добавить команду' })).not.toBeInTheDocument()
     expect(trigger).toHaveFocus()
   })
 
@@ -254,36 +308,29 @@ describe('guided team entry', () => {
     expect(screen.getByRole('textbox', { name: 'ID команды' })).toHaveValue('project')
     expect(postCount).toBe(0)
 
-    await user.click(screen.getByRole('button', { name: 'Посмотреть итог' }))
-    expect(screen.getByText('https://github.com/org/project')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Продолжить' }))
+    expect(screen.getByText('org/project')).toBeInTheDocument()
     expect(postCount).toBe(0)
-    await user.click(screen.getByRole('button', { name: 'Сохранить команду' }))
+    await user.click(screen.getByRole('button', { name: 'Запустить проверку' }))
     expect(await screen.findAllByText('Сервис занят')).toHaveLength(1)
-    expect(screen.getByRole('button', { name: 'Сохранить команду' })).toBeEnabled()
-    await user.click(screen.getByRole('button', { name: 'Сохранить команду' }))
-    await waitFor(() => expect(screen.getByText(/Команда добавлена/)).toBeInTheDocument())
-    expect(postCount).toBe(2)
+    expect(screen.getByRole('button', { name: 'Запустить проверку' })).toBeEnabled()
+    await user.click(screen.getByRole('button', { name: 'Запустить проверку' }))
+    await waitFor(() => expect(postCount).toBe(2))
   })
 
-  it('shows live processing steps and the report when evaluation completes', async () => {
-    let progressCalls = 0
-    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
-      if (url === '/api/evaluation/progress/project') {
-        progressCalls++
-        return json(
-          progressCalls === 1
-            ? { status: 'running', stage: 'waiting', areas: [], events: [] }
-            : { status: 'done', stage: 'done', areas: [], events: [] },
-        )
-      }
+  it('opens the team page after creating a team', async () => {
+    const fetchMock = vi.fn(async (_url: string, options?: RequestInit) => {
       if (options?.method === 'POST') return json({ id: 'project' }, 201)
       return json([])
     })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
     render(
-      <MemoryRouter>
-        <TeamManagementPage />
+      <MemoryRouter initialEntries={['/manage/teams']}>
+        <Routes>
+          <Route path="/manage/teams" element={<TeamManagementPage />} />
+          <Route path="/team/:teamId" element={<RouteIndicator />} />
+        </Routes>
       </MemoryRouter>,
     )
 
@@ -293,58 +340,11 @@ describe('guided team entry', () => {
       'https://github.com/org/project',
     )
     await user.click(screen.getByRole('button', { name: 'Продолжить' }))
-    await user.click(await screen.findByRole('button', { name: 'Посмотреть итог' }))
-    await user.click(screen.getByRole('button', { name: 'Сохранить команду' }))
+    await user.click(await screen.findByRole('button', { name: 'Продолжить' }))
+    await user.click(screen.getByRole('button', { name: 'Запустить проверку' }))
 
-    expect(await screen.findByText('Проверка в очереди.')).toBeInTheDocument()
-    expect(await screen.findByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Смотреть ход оценки' })).toHaveAttribute(
-      'href',
+    expect(await screen.findByRole('status', { name: 'Текущий маршрут' })).toHaveTextContent(
       '/team/project',
     )
-    await waitFor(() => expect(progressCalls).toBeGreaterThan(1), { timeout: 5000 })
-    expect(await screen.findByText('Оценка готова.')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Открыть отчёт' })).toHaveAttribute(
-      'href',
-      '/team/project',
-    )
-  })
-
-  it('continues polling when the first status is temporarily unavailable', async () => {
-    let progressCalls = 0
-    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
-      if (url === '/api/evaluation/progress/project') {
-        progressCalls++
-        return json(
-          progressCalls === 1
-            ? { status: 'no_data', stage: 'waiting', areas: [], events: [] }
-            : { status: 'done', stage: 'done', areas: [], events: [] },
-        )
-      }
-      if (options?.method === 'POST') return json({ id: 'project' }, 201)
-      return json([])
-    })
-    vi.stubGlobal('fetch', fetchMock)
-    const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <TeamManagementPage />
-      </MemoryRouter>,
-    )
-
-    await user.click(await screen.findByRole('button', { name: 'Добавить команду' }))
-    await user.type(
-      screen.getByRole('textbox', { name: 'Ссылка на репозиторий' }),
-      'https://github.com/org/project',
-    )
-    await user.click(screen.getByRole('button', { name: 'Продолжить' }))
-    await user.click(await screen.findByRole('button', { name: 'Посмотреть итог' }))
-    await user.click(screen.getByRole('button', { name: 'Сохранить команду' }))
-
-    expect(
-      await screen.findByText('Оценка ещё не запущена или пока недоступна.'),
-    ).toBeInTheDocument()
-    await waitFor(() => expect(progressCalls).toBeGreaterThan(1), { timeout: 5000 })
-    expect(await screen.findByText('Оценка готова.')).toBeInTheDocument()
   })
 })

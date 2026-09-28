@@ -45,6 +45,11 @@ export function displayStatus(
   return team.status === 'done' && team.partial ? 'partial' : team.status
 }
 
+/** Preliminary totals are informative, but do not claim a rank alongside complete evaluations. */
+export function displayRank(team: Pick<LeaderboardTeam, 'rank' | 'partial'>): number | null {
+  return team.partial ? null : team.rank
+}
+
 export type StatusTone = 'strength' | 'critical' | 'info' | 'neutral'
 
 /** Токены `--ds-sev-*`/`--ds-border-strong` по тону — общий словарь для всех бейджей статуса. */
@@ -142,7 +147,7 @@ export function warningIcon(warning: string): LucideIcon {
 }
 
 function sortValue(team: LeaderboardTeam, key: SortKey): number | null {
-  if (key === 'rank') return team.rank
+  if (key === 'rank') return displayRank(team)
   if (key === 'total') return team.total
   return team.areas?.[key] ?? null
 }

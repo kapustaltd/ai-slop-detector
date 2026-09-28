@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { StatsBundle, TeamArea } from '@/shared/api'
@@ -71,16 +71,20 @@ describe('AreaProfile', () => {
     expect(screen.queryByText('m1')).not.toBeInTheDocument()
   })
 
-  it('таблица содержит медиану, среднее и вклад (FR-002, FR-006, FR-020a)', () => {
+  it('показывает базу сравнения и раскрывает расчёт отдельно (FR-002, FR-006, FR-020a)', () => {
     render(<AreaProfile areaName="backend" area={area()} stats={statsArea({})} />)
 
-    expect(screen.getByText('Медиана')).toBeInTheDocument()
-    expect(screen.getByText('6.9')).toBeInTheDocument()
-    expect(screen.getByText('6.8')).toBeInTheDocument()
+    expect(screen.getAllByText('Медиана').length).toBeGreaterThan(0)
+    expect(screen.getByText('6,90')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Среднее' }))
+    expect(screen.getByText('6,80')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Показать расчёт'))
     expect(screen.getByText('1.55')).toBeInTheDocument()
   })
 
-  it('при недостатке данных сравнение не рисуется, но профиль остаётся (FR-004)', () => {
+  it('при недостатке данных скрывает сравнение, но оставляет оценки и профиль (FR-004)', () => {
     render(
       <AreaProfile
         areaName="backend"
@@ -89,7 +93,12 @@ describe('AreaProfile', () => {
       />,
     )
 
-    expect(screen.getByText(/Недостаточно оценённых команд/)).toBeInTheDocument()
+    expect(screen.getAllByText('Оценки по категориям').length).toBeGreaterThan(0)
+    expect(
+      screen.getByText('Сравнение появится, когда будут оценены минимум 2 команды.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Среднее' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Медиана' })).not.toBeInTheDocument()
     expect(screen.getAllByText('Архитектура и структура').length).toBeGreaterThan(0)
   })
 })

@@ -80,8 +80,9 @@ describe('TeamPage', () => {
       }),
     )
     renderTeam()
-    expect(await screen.findByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
-    expect(screen.getByText(/46 файлов · 3 пропущено/)).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Ход проверки' })).toBeInTheDocument()
+    expect(screen.getByText('Проверено категорий: 0 из 5')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Контекст проверки' })).toHaveLength(2)
     expect(await screen.findByText('Структура файлов проверена')).toBeInTheDocument()
     expect(await screen.findByText('Разбор по рубрике · backend')).toBeInTheDocument()
     expect(screen.queryByText('Разбор по рубрике · frontend')).not.toBeInTheDocument()
@@ -137,7 +138,7 @@ describe('TeamPage', () => {
     )
     renderTeam()
     expect(await screen.findByRole('heading', { name: 'team-01' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Ход оценки' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Ход проверки' })).toBeInTheDocument()
     expect(screen.getAllByText('Backend').length).toBeGreaterThan(0)
     expect(screen.getByText('Ожидает запуска')).toBeInTheDocument()
     expect(screen.getByText('Структура файлов проверена')).toBeInTheDocument()
@@ -202,8 +203,9 @@ describe('TeamPage', () => {
     renderTeam()
     expect(await screen.findByText('Последнее подтверждённое событие')).toBeInTheDocument()
     expect(
-      await screen.findByText(/Не удалось обновить ход оценки/, {}, { timeout: 8000 }),
+      await screen.findByText(/Обновления недоступны · последние данные/, {}, { timeout: 8000 }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Повторить' })).toBeInTheDocument()
     expect(screen.getByText('Последнее подтверждённое событие')).toBeInTheDocument()
   }, 12_000)
 

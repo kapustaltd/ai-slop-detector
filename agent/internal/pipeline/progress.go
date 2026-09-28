@@ -13,7 +13,7 @@ import (
 	"github.com/kapustaltd/ai-slop-detector/agent/internal/rubric"
 )
 
-const maxProgressEvents = 500
+const maxProgressEvents = 20
 
 // progressRecorder persists a small, user-facing trace for the active evaluation.
 // It deliberately stores pipeline facts and verified report references only.
@@ -80,8 +80,26 @@ func (p *progressRecorder) setStatus(status, stage string) {
 	}
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	p.value.Status, p.value.Stage = status, stage
+	if status == "done" && !progressAreasSettled(p.value.Areas) {
+		// A terminal run must not hide an area that is still queued or running.
+		// Keep the snapshot live until every area is done, failed, or explicitly
+		// marked as having no data.
+		p.value.Status, p.value.Stage = "running", "publishing"
+	} else {
+		p.value.Status, p.value.Stage = status, stage
+	}
 	_ = writeJSON(p.path, p.value)
+}
+
+func progressAreasSettled(areas []contract.AreaProgress) bool {
+	seen := make(map[string]bool, len(areas))
+	for _, area := range areas {
+		seen[area.Area] = true
+		if area.Status == "queued" || area.Status == "running" {
+			return false
+		}
+	}
+	return len(areas) == 0 || (seen["backend"] && seen["frontend"])
 }
 
 func (p *progressRecorder) areaStatus(area string) string {

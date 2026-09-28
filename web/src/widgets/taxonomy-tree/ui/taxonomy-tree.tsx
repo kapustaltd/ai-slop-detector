@@ -73,7 +73,7 @@ export function TaxonomyTree({
           {area.categories.map((category) => {
             const categoryExpanded = isActiveArea && path.categoryId === category.id
             return (
-              <div key={category.id}>
+              <div id={`area-${areaName}-category-${category.id}`} key={category.id}>
                 <TaxonomyRow
                   level={1}
                   name={category.name}

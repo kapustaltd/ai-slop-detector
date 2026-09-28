@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-import { TeamStatusBadge, TeamWarningBadges } from '@/entities/team'
+import { displayRank, TeamStatusBadge, TeamWarningBadges } from '@/entities/team'
 import type { LeaderboardTeam } from '@/shared/api'
 import { formatScore } from '@/shared/lib'
 
@@ -22,7 +22,7 @@ export function LeaderboardRowCard({ team, onSelectTeam }: LeaderboardRowCardPro
     <>
       <div className="flex items-center gap-2.5">
         <span className="w-5 shrink-0 text-[15px] text-fg-muted">
-          {team.rank ?? <span className="text-fg-subtle">—</span>}
+          {displayRank(team) ?? <span className="text-fg-subtle">—</span>}
         </span>
         <span className="min-w-0 flex-grow overflow-wrap-anywhere text-[17px] font-medium text-fg">
           {team.name}
@@ -48,6 +48,17 @@ export function LeaderboardRowCard({ team, onSelectTeam }: LeaderboardRowCardPro
           ) : null}
           <TeamWarningBadges warnings={team.warnings} />
         </div>
+      ) : team.status === 'failed' && onSelectTeam ? (
+        <button
+          type="button"
+          className="inline-flex min-h-10 items-center text-sm text-link"
+          onClick={(event) => {
+            event.currentTarget.focus()
+            onSelectTeam()
+          }}
+        >
+          Подробнее
+        </button>
       ) : null}
     </>
   )
@@ -60,7 +71,10 @@ export function LeaderboardRowCard({ team, onSelectTeam }: LeaderboardRowCardPro
           type="button"
           aria-label={`Быстрый просмотр ${team.name}`}
           className="w-full cursor-pointer rounded-control border-0 bg-transparent p-0 text-left hover:bg-muted-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          onClick={onSelectTeam}
+          onClick={(event) => {
+            event.currentTarget.focus()
+            onSelectTeam()
+          }}
         >
           {content}
         </button>

@@ -32,14 +32,35 @@ describe('ScoreSummary', () => {
     expect(screen.getByText('7.8')).toBeInTheDocument()
   })
 
-  it('показывает прочерк, а не 0, для области без завершённой оценки', () => {
+  it('показывает понятный статус и причину для области без завершённой оценки', () => {
     render(
       <ScoreSummary
         team={team({ areas: { backend: area({ status: 'no_data', score: null }) } })}
       />,
     )
 
-    expect(screen.getByText('—')).toBeInTheDocument()
+    expect(screen.getByText('Не оценён')).toBeInTheDocument()
+    expect(screen.getByText('Причина: Причина не указана')).toBeInTheDocument()
     expect(screen.queryByText('0.0')).not.toBeInTheDocument()
+  })
+
+  it('называет частичный результат предварительным и объясняет неоценённую область', () => {
+    render(
+      <ScoreSummary
+        team={team({
+          total: 4.9,
+          partial: true,
+          areas: {
+            backend: area({ score: null, status: 'no_data', error: undefined }),
+            frontend: area({ score: 4.9 }),
+          },
+        })}
+      />,
+    )
+
+    expect(screen.getByText('Предварительная оценка')).toBeInTheDocument()
+    expect(screen.getByText('Оценена 1 из 2 областей')).toBeInTheDocument()
+    expect(screen.getByText('Backend')).toBeInTheDocument()
+    expect(screen.getByText('Причина: Причина не указана')).toBeInTheDocument()
   })
 })

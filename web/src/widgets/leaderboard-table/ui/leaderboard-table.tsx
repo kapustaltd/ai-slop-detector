@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-import { TeamStatusBadge, TeamWarningBadges } from '@/entities/team'
+import { displayRank, TeamStatusBadge, TeamWarningBadges } from '@/entities/team'
 import type { SortDirection, SortKey } from '@/entities/team'
 import type { LeaderboardTeam } from '@/shared/api'
 import { formatScore } from '@/shared/lib'
@@ -100,7 +100,7 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
               scope="col"
               className="leaderboard-table-label leaderboard-table-signals text-overline px-4 py-2.5 text-left uppercase"
             >
-              Признаки
+              Ограничения
             </th>
             <th
               scope="col"
@@ -112,7 +112,9 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
         </thead>
         <tbody>
           {teams.map((team, index) => {
-            const tied = team.rank != null && team.rank === teams[index - 1]?.rank
+            const rank = displayRank(team)
+            const previousRank = teams[index - 1] ? displayRank(teams[index - 1]) : null
+            const tied = rank != null && rank === previousRank
             return (
               <tr
                 key={team.team_id}
@@ -122,12 +124,13 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                     onSelectTeam &&
                     !(event.target instanceof Element && event.target.closest('a,button'))
                   ) {
+                    event.currentTarget.querySelector<HTMLElement>('a[href], button')?.focus()
                     onSelectTeam(team)
                   }
                 }}
               >
                 <td className="px-4 py-2 text-[15px] text-fg-muted">
-                  {team.rank ?? <span className="text-fg-subtle">—</span>}
+                  {rank ?? <span className="text-fg-subtle">—</span>}
                   {tied ? <span className="ml-1 text-[12.5px] text-fg-subtle">=</span> : null}
                 </td>
                 <td className="px-4 py-2">
@@ -138,6 +141,7 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                       onClick={(event) => {
                         if (onSelectTeam) {
                           event.preventDefault()
+                          event.currentTarget.focus()
                           onSelectTeam(team)
                         }
                       }}
@@ -148,7 +152,10 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                     <button
                       type="button"
                       className="inline-flex min-h-10 max-w-full items-center text-left text-strong underline-offset-2 hover:text-link hover:underline"
-                      onClick={() => onSelectTeam?.(team)}
+                      onClick={(event) => {
+                        event.currentTarget.focus()
+                        onSelectTeam?.(team)
+                      }}
                     >
                       {team.name}
                     </button>
@@ -179,6 +186,18 @@ export function LeaderboardTable({ teams, sort, onSort, onSelectTeam }: Leaderbo
                     >
                       {team.status === 'running' ? 'Смотреть ход оценки' : 'Открыть отчёт'}
                     </Link>
+                  ) : team.status === 'failed' ? (
+                    <button
+                      type="button"
+                      className="inline-flex min-h-8 items-center text-[13px] text-link"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        event.currentTarget.focus()
+                        onSelectTeam?.(team)
+                      }}
+                    >
+                      Подробнее
+                    </button>
                   ) : (
                     <span className="text-fg-faint">—</span>
                   )}

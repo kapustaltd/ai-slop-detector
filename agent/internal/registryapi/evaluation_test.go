@@ -82,6 +82,44 @@ func TestReadProgressSnapshotIsRunScopedAndRejectsStaleData(t *testing.T) {
 	}
 }
 
+func TestReadProgressSnapshotDoesNotPromotePendingAreasToDone(t *testing.T) {
+	root := t.TempDir()
+	service := &evaluationService{publicDir: filepath.Join(root, "public")}
+	started := time.Date(2026, 9, 24, 10, 0, 0, 0, time.UTC)
+	path := filepath.Join(root, "runs", "job-new", "progress", "alpha.json")
+	if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
+		t.Fatal(err)
+	}
+	snapshot := evaluationProgress{
+		Status:    "running",
+		Stage:     "analyzing",
+		StartedAt: started.Format(time.RFC3339),
+		Areas: []contract.AreaProgress{
+			{Area: "backend", Status: "queued"},
+			{Area: "frontend", Status: "done"},
+		},
+		Events: []contract.Event{},
+	}
+	data, err := json.Marshal(snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	value := service.readProgressSnapshot("alpha", "job-new", started, evaluationProgress{
+		Status:    "done",
+		Stage:     "done",
+		StartedAt: started.Format(time.RFC3339),
+		Areas:     []contract.AreaProgress{},
+		Events:    []contract.Event{},
+	})
+	if value.Status != "running" || value.Stage != "publishing" {
+		t.Fatalf("pending area was promoted to done: %+v", value)
+	}
+}
+
 func TestRunningTeamReadsCurrentRunnerOutput(t *testing.T) {
 	root := t.TempDir()
 	path := filepath.Join(root, "registry.yaml")
@@ -303,6 +341,17 @@ func TestCreateQueuesEvaluationAndLiveIndexUpdates(t *testing.T) {
 		t.Fatalf("progress during evaluation: %+v", progress)
 	}
 	close(fake.release)
+	completedSnapshot, _ := json.Marshal(evaluationProgress{
+		Status: "done", Stage: "done", StartedAt: startedAt,
+		Areas: []contract.AreaProgress{
+			{Area: "backend", Status: "done", IncludedFiles: 12, TotalCategories: 8},
+			{Area: "frontend", Status: "no_data"},
+		},
+		Events: []contract.Event{{Sequence: 1, At: startedAt, Kind: "scan", Title: "Структура файлов проверена"}},
+	})
+	if err := os.WriteFile(progressPath, completedSnapshot, 0600); err != nil {
+		t.Fatal(err)
+	}
 	deadline := time.Now().Add(time.Second)
 	for time.Now().Before(deadline) {
 		if getIndex().Teams[0].Status == "done" {

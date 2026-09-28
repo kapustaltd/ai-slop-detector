@@ -259,12 +259,30 @@ func (e *evaluationService) readProgressSnapshot(id, jobID string, started time.
 	// Service state is authoritative for terminal status; event details remain run-scoped.
 	snapshot.Status = fallback.Status
 	if fallback.Status == "done" {
-		snapshot.Stage = "done"
+		if progressAreasSettled(snapshot.Areas) {
+			snapshot.Stage = "done"
+		} else {
+			// Do not let a coarse service status turn an incomplete trace into a
+			// false terminal state while the runner snapshot is catching up.
+			snapshot.Status = "running"
+			snapshot.Stage = "publishing"
+		}
 	}
 	if fallback.StartedAt != "" {
 		snapshot.StartedAt = fallback.StartedAt
 	}
 	return snapshot
+}
+
+func progressAreasSettled(areas []contract.AreaProgress) bool {
+	seen := make(map[string]bool, len(areas))
+	for _, area := range areas {
+		seen[area.Area] = true
+		if area.Status == "queued" || area.Status == "running" {
+			return false
+		}
+	}
+	return len(areas) == 0 || (seen["backend"] && seen["frontend"])
 }
 
 func (e *evaluationService) publishedTeams() map[string]bundle.IndexTeam {
