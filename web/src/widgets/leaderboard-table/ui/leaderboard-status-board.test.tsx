@@ -51,9 +51,9 @@ describe('LeaderboardStatusBoard', () => {
       />,
     )
 
-    expect(
-      screen.getByRole('button', { name: 'Проверяется: 1' }).querySelector('svg'),
-    ).toHaveClass('animate-spin')
+    expect(screen.getByRole('button', { name: 'Проверяется: 1' }).querySelector('svg')).toHaveClass(
+      'animate-spin',
+    )
   })
 
   it('переключает фильтр частичных оценок', async () => {
