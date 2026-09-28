@@ -1,9 +1,15 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render as renderComponent, screen } from '@testing-library/react'
+import type { ReactElement } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
 import type { StatsBundle, TeamArea } from '@/shared/api'
 
 import { AreaProfile } from './area-profile'
+
+function render(ui: ReactElement) {
+  return renderComponent(<MemoryRouter initialEntries={['/team/team-01']}>{ui}</MemoryRouter>)
+}
 
 function area(): TeamArea {
   return {

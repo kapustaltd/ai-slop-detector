@@ -1,5 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { loadTeam } from '@/shared/api'
@@ -16,9 +16,45 @@ function renderTeam(initialEntry = '/team/team-01') {
   )
 }
 
-afterEach(() => vi.unstubAllGlobals())
+function CurrentLocation() {
+  const location = useLocation()
+  return (
+    <output data-testid="location">{`${location.pathname}${location.search}${location.hash}`}</output>
+  )
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+  delete (Element.prototype as { scrollIntoView?: () => void }).scrollIntoView
+})
 
 describe('TeamPage', () => {
+  it('переходит к аналитике и категориям без смены маршрута команды', async () => {
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+    render(
+      <MemoryRouter initialEntries={['/team/team-01']}>
+        <CurrentLocation />
+        <Routes>
+          <Route path="/team/:teamId" element={<TeamPage />} />
+          <Route path="*" element={<div>Страница не найдена</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    const openBreakdowns = await screen.findAllByRole('link', { name: 'Открыть разбор' })
+    fireEvent.click(openBreakdowns[0])
+    expect(screen.getByTestId('location')).toHaveTextContent('/team/team-01#area-backend')
+    expect(screen.queryByText('Страница не найдена')).not.toBeInTheDocument()
+    expect(scrollIntoView).toHaveBeenCalled()
+
+    const categoryLink = screen.getByRole('link', { name: 'Архитектура и структура' })
+    fireEvent.click(categoryLink)
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/team/team-01#area-backend-category-architecture',
+    )
+    expect(screen.queryByText('Страница не найдена')).not.toBeInTheDocument()
+  })
   it('shows a published area while the rest of the team is still processing', async () => {
     const fixture = await loadTeam('team-01')
     vi.stubGlobal(

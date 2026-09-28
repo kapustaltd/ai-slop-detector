@@ -2,6 +2,7 @@ import { ArrowRight, Info } from 'lucide-react'
 
 import type { TeamArea, TeamBundle } from '@/shared/api'
 import { formatScore, scoreWord } from '@/shared/lib'
+import { SectionLink } from '@/shared/ui'
 
 import { describeAreaStatus } from '../model/area-status'
 
@@ -96,13 +97,13 @@ export function ScoreSummary({ team }: ScoreSummaryProps) {
                     )}
                   </div>
                   {score != null ? (
-                    <a
-                      href={`#area-${areaName}`}
+                    <SectionLink
+                      target={`area-${areaName}`}
                       className="inline-flex min-h-9 items-center gap-1 text-[14px] font-medium text-link underline-offset-4 hover:underline"
                     >
                       Открыть разбор
                       <ArrowRight aria-hidden="true" size={14} />
-                    </a>
+                    </SectionLink>
                   ) : null}
                 </div>
                 <div className="mt-1.5 text-[13.5px] leading-5 text-fg-muted">

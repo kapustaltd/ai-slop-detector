@@ -17,6 +17,7 @@ import {
 } from 'recharts'
 
 import type { StatsBundle, TeamArea } from '@/shared/api'
+import { SectionLink } from '@/shared/ui'
 
 import { areaChartData, type CategoryChartPoint } from '../model/chart-data'
 
@@ -391,12 +392,12 @@ export function AreaProfile({ areaName, area, stats }: AreaProfileProps) {
               {data.map((row) => (
                 <tr key={row.id} className="border-t border-line">
                   <th scope="row" className="px-3 py-2 text-left text-[14px] font-normal text-fg">
-                    <a
-                      href={`#area-${areaName}-category-${row.id}`}
+                    <SectionLink
+                      target={`area-${areaName}-category-${row.id}`}
                       className="text-link underline-offset-4 hover:underline"
                     >
                       {row.name}
-                    </a>
+                    </SectionLink>
                   </th>
                   <td className="px-3 py-2 text-right text-[14px] font-medium tabular-nums">
                     {formatExactValue(row.score)}

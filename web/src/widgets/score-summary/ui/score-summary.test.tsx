@@ -1,9 +1,15 @@
-import { render, screen } from '@testing-library/react'
+import { render as renderComponent, screen } from '@testing-library/react'
+import type { ReactElement } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
 import type { TeamArea, TeamBundle } from '@/shared/api'
 
 import { ScoreSummary } from './score-summary'
+
+function render(ui: ReactElement) {
+  return renderComponent(<MemoryRouter initialEntries={['/team/team-01']}>{ui}</MemoryRouter>)
+}
 
 function area(overrides: Partial<TeamArea>): TeamArea {
   return { status: 'done', score: 8.2, max: 10, categories: [], ...overrides }

@@ -1,6 +1,6 @@
 import { ArrowUpRight, Check, CloudOff, FileQuestion } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useParams, useSearchParams } from 'react-router-dom'
 
 import {
   getRegistryEvaluationProgress,
@@ -14,7 +14,7 @@ import {
   type RegistryEvaluationStatus,
   type RegistryEvaluationProgress,
 } from '@/shared/api'
-import { EmptyState } from '@/shared/ui'
+import { EmptyState, SectionLink } from '@/shared/ui'
 import { AreaProfile } from '@/widgets/area-profile'
 import { EvaluationMeta } from '@/widgets/evaluation-meta'
 import { countFindings, FindingsSummary } from '@/widgets/findings-summary'
@@ -40,6 +40,7 @@ type PageState = 'loading' | 'ready' | 'pending' | 'missing' | 'error'
 
 export function TeamPage() {
   const { teamId } = useParams()
+  const { hash } = useLocation()
   const [state, setState] = useState<PageState>('loading')
   const [team, setTeam] = useState<TeamBundle | null>(null)
   const [rubrics, setRubrics] = useState<Record<string, RubricBundle>>({})
@@ -50,6 +51,11 @@ export function TeamPage() {
   const [pollError, setPollError] = useState(false)
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null)
   const [retryKey, setRetryKey] = useState(0)
+
+  useEffect(() => {
+    if (state !== 'ready' || !hash) return
+    document.getElementById(hash.slice(1))?.scrollIntoView()
+  }, [hash, state])
 
   // Переход по prev/next (005-стиль ссылок) меняет :teamId без размонтирования страницы — состояние
   // сбрасывается во время рендера (react.dev: «Adjusting state when a prop changes»), не в эффекте,
@@ -382,8 +388,8 @@ function AreaAssessment({
             <ul className="mt-2.5 grid list-none gap-2 p-0">
               {strongCategories.map((category) => (
                 <li key={category.id}>
-                  <a
-                    href={`#area-${areaName}-category-${category.id}`}
+                  <SectionLink
+                    target={`area-${areaName}-category-${category.id}`}
                     className="dashboard-assessment-link"
                   >
                     <span>
@@ -393,7 +399,7 @@ function AreaAssessment({
                       </span>
                     </span>
                     <ArrowUpRight aria-hidden="true" size={14} />
-                  </a>
+                  </SectionLink>
                 </li>
               ))}
             </ul>
@@ -417,8 +423,8 @@ function AreaAssessment({
                 )[0]
                 return (
                   <li key={category.id}>
-                    <a
-                      href={`#area-${areaName}-category-${category.id}`}
+                    <SectionLink
+                      target={`area-${areaName}-category-${category.id}`}
                       className="dashboard-assessment-link"
                     >
                       <span>
@@ -428,7 +434,7 @@ function AreaAssessment({
                         </span>
                       </span>
                       <ArrowUpRight aria-hidden="true" size={14} />
-                    </a>
+                    </SectionLink>
                   </li>
                 )
               })}
